@@ -467,10 +467,68 @@
     </div>
     <div id="cart-items"></div>
     <div class="cart-footer">
+
+      <!-- ENVÍO -->
+      <div class="envio-section">
+        <p class="envio-titulo">Método de envío</p>
+        <label class="envio-opcion">
+          <input type="radio" name="envio" value="montevideo" onchange="updateEnvio()" />
+          <span class="envio-info">
+            <span class="envio-nombre">📍 Montevideo</span>
+            <span class="envio-detalle">Entrega a domicilio</span>
+          </span>
+          <span class="envio-precio">$200</span>
+        </label>
+        <!-- Campos Montevideo -->
+        <div class="envio-campos" id="campos-montevideo" style="display:none;">
+          <input type="text" class="envio-input" id="envio-direccion" placeholder="Dirección de entrega (calle, número, apartamento)" />
+        </div>
+
+        <label class="envio-opcion">
+          <input type="radio" name="envio" value="interior" onchange="updateEnvio()" />
+          <span class="envio-info">
+            <span class="envio-nombre">🚛 Interior del país</span>
+            <span class="envio-detalle">Por agencia, a cargo del comprador</span>
+          </span>
+          <span class="envio-precio">—</span>
+        </label>
+        <!-- Campos Interior -->
+        <div class="envio-campos" id="campos-interior" style="display:none;">
+          <input type="text" class="envio-input" id="envio-ciudad" placeholder="Ciudad / Localidad" />
+          <div class="envio-radio-group">
+            <label class="envio-sub">
+              <input type="radio" name="interior-tipo" value="agencia" /> Retiro en agencia
+            </label>
+            <label class="envio-sub">
+              <input type="radio" name="interior-tipo" value="domicilio" onchange="toggleDomicilioInterior()" /> Entrega a domicilio
+            </label>
+          </div>
+          <input type="text" class="envio-input" id="envio-domicilio-interior" placeholder="Dirección de entrega" style="display:none;" />
+        </div>
+
+        <label class="envio-opcion">
+          <input type="radio" name="envio" value="pickup" onchange="updateEnvio()" />
+          <span class="envio-info">
+            <span class="envio-nombre">🏡 A coordinar retiro</span>
+            <span class="envio-detalle">Zona Cordón · coordinación previa</span>
+          </span>
+          <span class="envio-precio">Gratis</span>
+        </label>
+      </div>
+
       <div class="cart-total-row">
+        <span>Subtotal</span>
+        <span id="cart-subtotal">$0</span>
+      </div>
+      <div class="cart-total-row envio-row" id="envio-row" style="display:none;">
+        <span>Envío</span>
+        <span id="cart-envio-label">$0</span>
+      </div>
+      <div class="cart-total-row total-final">
         <span>Total</span>
         <span id="cart-total">$0</span>
       </div>
+
       <div class="cart-form">
         <input type="text" id="customer-name" placeholder="Tu nombre" />
         <input type="tel" id="customer-phone" placeholder="Tu celular (ej: 099 123 456)" />
@@ -480,6 +538,9 @@
     </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
   <script src="cart.js"></script>
 </body>
 </html>
