@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sendera - Stock</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="../firebase-config.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Montserrat', sans-serif; background: #1e1a17; color: #f0ebe3; }
+
+    .navbar {
+      background: #141210;
+      border-bottom: 1px solid rgba(201,176,122,0.15);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .navbar .logo { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: #c9b07a; letter-spacing: 0.1em; }
+    .nav-links a { color: #a89880; text-decoration: none; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; margin-left: 20px; }
+    .nav-links a.active, .nav-links a:hover { color: #c9b07a; }
+    .btn-logout { font-size: 0.72rem; color: #a89880; cursor: pointer; margin-left: 20px; text-transform: uppercase; letter-spacing: 0.08em; background: none; border: none; }
+
+    .container { max-width: 860px; margin: 0 auto; padding: 32px 20px; }
+
+    .page-header { margin-bottom: 32px; }
+    .page-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: #c9b07a; }
+    .page-header p { color: #a89880; font-size: 0.8rem; margin-top: 4px; }
+
+    /* RESUMEN */
+    .resumen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 36px; }
+    .res-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(201,176,122,0.12); padding: 16px; text-align: center; }
+    .res-card .num { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: #c9b07a; }
+    .res-card .lbl { font-size: 0.68rem; color: #a89880; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+
+    /* CATEGORIA */
+    .cat-titulo {
+      font-size: 0.72rem; color: #c9b07a; letter-spacing: 0.18em; text-transform: uppercase;
+      font-weight: 500; padding-bottom: 10px; border-bottom: 1px solid rgba(201,176,122,0.15);
+      margin: 36px 0 16px;
+    }
+
+    /* GRID PRODUCTOS */
+    .productos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+
+    .prod-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(201,176,122,0.1);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: border-color 0.2s;
+    }
+    .prod-card:hover { border-color: rgba(201,176,122,0.3); }
+
+    .prod-info { flex: 1; }
+    .prod-nombre { font-size: 0.9rem; font-weight: 500; color: #f0ebe3; }
+    .prod-variante { font-size: 0.78rem; color: #a89880; margin-top: 2px; }
+    .prod-precio { font-size: 0.78rem; color: #c9b07a; margin-top: 4px; }
+
+    .prod-footer { display: flex; align-items: center; justify-content: space-between; }
+
+    .stock-ctrl { display: flex; align-items: center; gap: 0; border: 1px solid rgba(201,176,122,0.2); }
+    .stock-ctrl button {
+      width: 36px; height: 36px; background: none; border: none;
+      color: #c9b07a; font-size: 1.2rem; cursor: pointer; transition: background 0.2s;
+    }
+    .stock-ctrl button:hover { background: #c9b07a; color: #1e1a17; }
+    .stock-val {
+      min-width: 36px; text-align: center; font-size: 1rem; font-weight: 600;
+      color: #f0ebe3; cursor: pointer;
+    }
+    .stock-val:focus { outline: none; color: #c9b07a; }
+
+    .badge { font-size: 0.65rem; padding: 3px 8px; text-transform: uppercase; letter-spacing: 0.08em; border-radius: 2px; }
+    .ok { background: rgba(46,204,113,0.12); color: #2ecc71; }
+    .medio { background: rgba(243,156,18,0.12); color: #f39c12; }
+    .bajo { background: rgba(231,76,60,0.12); color: #e74c3c; }
+
+    /* GUARDADO */
+    .saved-toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #c9b07a; color: #1e1a17; padding: 10px 24px;
+      font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em;
+      opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+
+    @media (max-width: 480px) {
+      .resumen { grid-template-columns: repeat(2, 1fr); }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <div class="logo">SENDERA admin</div>
+  <div class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="stock.html" class="active">Stock</a>
+    <button class="btn-logout" onclick="logout()">Salir</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Control de Stock</h1>
+    <p>Tocá el número para editar directo o usá + y −</p>
+  </div>
+
+  <div class="resumen">
+    <div class="res-card"><div class="num" id="r-total">0</div><div class="lbl">Productos</div></div>
+    <div class="res-card"><div class="num" id="r-unidades">0</div><div class="lbl">Unidades</div></div>
+    <div class="res-card"><div class="num" id="r-sinstk" style="color:#e74c3c">0</div><div class="lbl">Sin stock</div></div>
+  </div>
+
+  <div id="catalogo"></div>
+</div>
+
+<div class="saved-toast" id="toast">✓ Guardado</div>
+
+<script>
+  if (!localStorage.getItem('sendera_admin')) window.location.href = 'login.html';
+  function logout() { localStorage.removeItem('sendera_admin'); window.location.href = 'login.html'; }
+
+  // Cache local del stock (se llena desde Firebase)
+  const stockCache = {};
+
+  const CATALOGO = [
+    { cat: 'Gorros Visera', productos: [
+      { id: 'gom-blanco',      nombre: 'Go One More',     variante: 'Blanco',       precio: 750 },
+      { id: 'gom-rosa',        nombre: 'Go One More',     variante: 'Rosa',         precio: 750 },
+      { id: 'gom-verde',       nombre: 'Go One More',     variante: 'Verde',        precio: 750 },
+      { id: 'gom-violeta',     nombre: 'Go One More',     variante: 'Violeta',      precio: 750 },
+      { id: 'trail-azul',      nombre: 'Trail Cap',       variante: 'Azul',         precio: 750 },
+      { id: 'trail-negro',     nombre: 'Trail Cap',       variante: 'Negro',        precio: 750 },
+      { id: 'sunset-amarillo', nombre: 'Sunset Flower',   variante: 'Rojo/Amarillo',precio: 850 },
+      { id: 'sunset-verde',    nombre: 'Sunset Flower',   variante: 'Gris/Verde',   precio: 850 },
+    ]},
+    { cat: 'Gorros Invierno', productos: [
+      { id: 'lana-negro', nombre: 'Gorro Lana Montaña', variante: 'Negro', precio: 390 },
+      { id: 'lana-azul',  nombre: 'Gorro Lana Montaña', variante: 'Azul',  precio: 390 },
+      { id: 'lana-rosa',  nombre: 'Gorro Lana Montaña', variante: 'Rosa',  precio: 390 },
+    ]},
+    { cat: 'Riñoneras', productos: [
+      { id: 'rinonera-sendera', nombre: 'Riñonera Sendera', variante: 'Verde',   precio: 990 },
+      { id: 'rinonera-celeste', nombre: 'Riñonera Running', variante: 'Celeste', precio: 690 },
+      { id: 'rinonera-negra',   nombre: 'Riñonera Running', variante: 'Negra',   precio: 450 },
+    ]},
+    { cat: 'Accesorios', productos: [
+      { id: 'medallero',     nombre: 'Medallero RUN', variante: 'Negro', precio: 450 },
+      { id: 'porta-celular', nombre: 'Porta Celular', variante: 'Negro', precio: 490 },
+    ]}
+  ];
+
+  function getStock(id) {
+    return stockCache[id] !== undefined ? stockCache[id] : 5;
+  }
+
+  function setStock(id, val) {
+    val = Math.max(0, parseInt(val) || 0);
+    stockCache[id] = val;
+    // Guardar en Firebase
+    db.ref('stock/' + id).set(val);
+    updateResumen();
+    showToast();
+    return val;
+  }
+
+  function badgeClass(n) { return n === 0 ? 'bajo' : n <= 3 ? 'medio' : 'ok'; }
+  function badgeLabel(n) { return n === 0 ? 'Sin stock' : n <= 3 ? 'Poco stock' : 'Disponible'; }
+
+  function cambiar(id, delta) {
+    const nuevo = setStock(id, getStock(id) + delta);
+    document.getElementById('sv-' + id).textContent = nuevo;
+    const badge = document.getElementById('bd-' + id);
+    badge.textContent = badgeLabel(nuevo);
+    badge.className = 'badge ' + badgeClass(nuevo);
+  }
+
+  function editarDirecto(id, el) {
+    el.contentEditable = true;
+    el.focus();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    el.onblur = () => {
+      el.contentEditable = false;
+      const nuevo = setStock(id, el.textContent);
+      el.textContent = nuevo;
+      const badge = document.getElementById('bd-' + id);
+      badge.textContent = badgeLabel(nuevo);
+      badge.className = 'badge ' + badgeClass(nuevo);
+    };
+    el.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } };
+  }
+
+  function updateResumen() {
+    const todos = CATALOGO.flatMap(c => c.productos);
+    document.getElementById('r-total').textContent = todos.length;
+    document.getElementById('r-unidades').textContent = todos.reduce((s, p) => s + getStock(p.id), 0);
+    document.getElementById('r-sinstk').textContent = todos.filter(p => getStock(p.id) === 0).length;
+  }
+
+  function showToast() {
+    const t = document.getElementById('toast');
+    t.style.opacity = 1;
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => t.style.opacity = 0, 1500);
+  }
+
+  // Render
+  function renderCatalogo() {
+    const cat = document.getElementById('catalogo');
+    cat.innerHTML = '';
+    CATALOGO.forEach(c => {
+      cat.innerHTML += `<div class="cat-titulo">${c.cat}</div><div class="productos-grid">` +
+        c.productos.map(p => {
+          const s = getStock(p.id);
+          return `<div class="prod-card">
+            <div class="prod-info">
+              <div class="prod-nombre">${p.nombre}</div>
+              <div class="prod-variante">${p.variante}</div>
+              <div class="prod-precio">$${p.precio.toLocaleString()}</div>
+            </div>
+            <div class="prod-footer">
+              <div class="stock-ctrl">
+                <button onclick="cambiar('${p.id}',-1)">−</button>
+                <span class="stock-val" id="sv-${p.id}" onclick="editarDirecto('${p.id}',this)">${s}</span>
+                <button onclick="cambiar('${p.id}',1)">+</button>
+              </div>
+              <span class="badge ${badgeClass(s)}" id="bd-${p.id}">${badgeLabel(s)}</span>
+            </div>
+          </div>`;
+        }).join('') + `</div>`;
+    });
+    updateResumen();
+  }
+
+  // Cargar stock desde Firebase en tiempo real
+  db.ref('stock').on('value', snapshot => {
+    const data = snapshot.val() || {};
+    // Actualizar cache
+    CATALOGO.flatMap(c => c.productos).forEach(p => {
+      stockCache[p.id] = data[p.id] !== undefined ? data[p.id] : 5;
+    });
+    // Si ya está renderizado, solo actualizar los valores
+    const yaRenderizado = document.getElementById('sv-' + CATALOGO[0].productos[0].id);
+    if (yaRenderizado) {
+      CATALOGO.flatMap(c => c.productos).forEach(p => {
+        const s = stockCache[p.id];
+        const svEl = document.getElementById('sv-' + p.id);
+        const bdEl = document.getElementById('bd-' + p.id);
+        if (svEl) svEl.textContent = s;
+        if (bdEl) { bdEl.textContent = badgeLabel(s); bdEl.className = 'badge ' + badgeClass(s); }
+      });
+      updateResumen();
+    } else {
+      renderCatalogo();
+    }
+  });
+</script>
+</body>
+</html>
