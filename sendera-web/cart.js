@@ -279,6 +279,21 @@ function sendOrder() {
     `_Pedido recibido desde sendera.uy_`
   );
 
+  // Guardar pedido en Firebase
+  if (typeof db !== 'undefined') {
+    const envioData = getEnvio();
+    const pedido = {
+      fecha: new Date().toISOString(),
+      cliente: name,
+      celular: phone,
+      productos: cart.map(i => ({ nombre: i.name, variante: i.variant, qty: i.qty, precio: i.price })),
+      envio: envioData ? envioData.label : '—',
+      total: getTotal() + (envioData ? envioData.costo : 0),
+      estado: 'pendiente'
+    };
+    db.ref('pedidos').push(pedido);
+  }
+
   WHATSAPP_NUMBERS.forEach((num, i) => {
     setTimeout(() => {
       window.open(`https://wa.me/${num}?text=${message}`, '_blank');
