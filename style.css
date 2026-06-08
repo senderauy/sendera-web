@@ -801,6 +801,24 @@ nav a:hover {
   background-color: var(--gold-light);
 }
 
+.btn-mp {
+  width: 100%;
+  padding: 13px;
+  background-color: #009ee3;
+  color: #fff;
+  border: none;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.2s;
+}
+.btn-mp:hover { background-color: #007dc1; }
+.btn-mp:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .cart-note {
   color: var(--text-muted);
   font-size: 0.74rem;

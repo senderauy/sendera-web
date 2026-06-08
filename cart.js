@@ -329,6 +329,41 @@ function checkStockOnLoad() {
   });
 }
 
+async function pagarMP() {
+  const name = document.getElementById('customer-name').value.trim();
+  const phone = document.getElementById('customer-phone').value.trim();
+
+  if (!name || !phone) { alert('Por favor completá tu nombre y celular.'); return; }
+  if (cart.length === 0) { alert('Tu carrito está vacío.'); return; }
+
+  const envio = getEnvio();
+  if (!envio.tipo) { alert('Por favor seleccioná un método de envío.'); return; }
+
+  const btn = document.querySelector('.btn-mp');
+  btn.disabled = true;
+  btn.textContent = 'Procesando...';
+
+  try {
+    const res = await fetch('/.netlify/functions/create-preference', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cliente: name,
+        celular: phone,
+        items: cart.map(i => ({ nombre: i.name, variante: i.variant, qty: i.qty, precio: i.price })),
+        envio: { label: envio.label, costo: envio.costo }
+      })
+    });
+
+    const data = await res.json();
+    window.location.href = data.sandbox_init_point || data.init_point;
+  } catch(e) {
+    alert('Error al conectar con MercadoPago. Intentá de nuevo.');
+    btn.disabled = false;
+    btn.textContent = '💳 Pagar con MercadoPago';
+  }
+}
+
 // Close on outside click
 document.addEventListener('click', function(e) {
   const modal = document.getElementById('cart-modal');
