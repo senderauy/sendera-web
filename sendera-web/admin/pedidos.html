@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sendera - Pedidos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="../firebase-config.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Montserrat', sans-serif; background: #1e1a17; color: #f0ebe3; }
+
+    .navbar {
+      background: #141210;
+      border-bottom: 1px solid rgba(201,176,122,0.15);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .navbar .logo { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: #c9b07a; letter-spacing: 0.1em; }
+    .nav-links a { color: #a89880; text-decoration: none; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; margin-left: 20px; }
+    .nav-links a.active, .nav-links a:hover { color: #c9b07a; }
+    .btn-logout { font-size: 0.72rem; color: #a89880; cursor: pointer; margin-left: 20px; text-transform: uppercase; letter-spacing: 0.08em; background: none; border: none; }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
+
+    .page-header { margin-bottom: 32px; }
+    .page-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: #c9b07a; }
+    .page-header p { color: #a89880; font-size: 0.8rem; margin-top: 4px; }
+
+    /* RESUMEN */
+    .resumen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 36px; }
+    .res-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(201,176,122,0.12); padding: 16px; text-align: center; }
+    .res-card .num { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: #c9b07a; }
+    .res-card .lbl { font-size: 0.68rem; color: #a89880; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+
+    /* FILTROS */
+    .filtros { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+    .filtro-btn { padding: 6px 16px; border: 1px solid rgba(201,176,122,0.2); background: none; color: #a89880; font-family: 'Montserrat', sans-serif; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; transition: all 0.2s; }
+    .filtro-btn.active, .filtro-btn:hover { background: #c9b07a; color: #1e1a17; border-color: #c9b07a; }
+
+    /* PEDIDOS */
+    .pedido-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(201,176,122,0.1);
+      padding: 20px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+    .pedido-card:hover { border-color: rgba(201,176,122,0.3); }
+
+    .pedido-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+    .pedido-cliente { font-size: 1rem; font-weight: 500; color: #f0ebe3; }
+    .pedido-fecha { font-size: 0.72rem; color: #a89880; margin-top: 2px; }
+    .pedido-celular { font-size: 0.78rem; color: #c9b07a; margin-top: 2px; }
+
+    .pedido-productos { margin-bottom: 14px; }
+    .pedido-producto { font-size: 0.8rem; color: #c8c0b4; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .pedido-producto:last-child { border-bottom: none; }
+
+    .pedido-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .pedido-envio { font-size: 0.75rem; color: #a89880; }
+    .pedido-total { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; color: #c9b07a; }
+
+    /* ESTADOS */
+    .estado-select {
+      padding: 6px 12px;
+      border: 1px solid rgba(201,176,122,0.2);
+      background: #1e1a17;
+      color: #f0ebe3;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      outline: none;
+    }
+    .estado-pendiente { border-color: #f39c12; color: #f39c12; }
+    .estado-confirmado { border-color: #3498db; color: #3498db; }
+    .estado-camino { border-color: #9b59b6; color: #9b59b6; }
+    .estado-entregado { border-color: #2ecc71; color: #2ecc71; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: #a89880; font-size: 0.85rem; }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+
+    @media (max-width: 480px) {
+      .resumen { grid-template-columns: repeat(2, 1fr); }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <div class="logo">SENDERA admin</div>
+  <div class="nav-links">
+    <a href="pedidos.html" class="active">Pedidos</a>
+    <a href="stock.html">Stock</a>
+    <button class="btn-logout" onclick="logout()">Salir</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Pedidos</h1>
+    <p>Se actualizan en tiempo real cuando un cliente hace un pedido</p>
+  </div>
+
+  <div class="resumen">
+    <div class="res-card"><div class="num" id="r-total">0</div><div class="lbl">Total</div></div>
+    <div class="res-card"><div class="num" id="r-pendientes" style="color:#f39c12">0</div><div class="lbl">Pendientes</div></div>
+    <div class="res-card"><div class="num" id="r-hoy">0</div><div class="lbl">Hoy</div></div>
+  </div>
+
+  <div class="filtros">
+    <button class="filtro-btn active" onclick="filtrar('todos', this)">Todos</button>
+    <button class="filtro-btn" onclick="filtrar('pendiente', this)">Pendientes</button>
+    <button class="filtro-btn" onclick="filtrar('confirmado', this)">Confirmados</button>
+    <button class="filtro-btn" onclick="filtrar('camino', this)">En camino</button>
+    <button class="filtro-btn" onclick="filtrar('entregado', this)">Entregados</button>
+  </div>
+
+  <div id="pedidos-lista"></div>
+</div>
+
+<script>
+  if (!localStorage.getItem('sendera_admin')) window.location.href = 'login.html';
+  function logout() { localStorage.removeItem('sendera_admin'); window.location.href = 'login.html'; }
+
+  let todosPedidos = [];
+  let filtroActual = 'todos';
+
+  function formatFecha(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+           ' · ' + d.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function estadoClass(estado) {
+    return { pendiente: 'estado-pendiente', confirmado: 'estado-confirmado', camino: 'estado-camino', entregado: 'estado-entregado' }[estado] || '';
+  }
+
+  function estadoLabel(estado) {
+    return { pendiente: '⏳ Pendiente', confirmado: '✅ Confirmado', camino: '🚛 En camino', entregado: '🏠 Entregado' }[estado] || estado;
+  }
+
+  function cambiarEstado(id, nuevoEstado) {
+    db.ref('pedidos/' + id + '/estado').set(nuevoEstado);
+  }
+
+  function filtrar(estado, btn) {
+    filtroActual = estado;
+    document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderPedidos();
+  }
+
+  function renderPedidos() {
+    const lista = document.getElementById('pedidos-lista');
+    const hoy = new Date().toDateString();
+
+    let pedidos = [...todosPedidos].reverse();
+    if (filtroActual !== 'todos') pedidos = pedidos.filter(p => p.estado === filtroActual);
+
+    // Resumen
+    document.getElementById('r-total').textContent = todosPedidos.length;
+    document.getElementById('r-pendientes').textContent = todosPedidos.filter(p => p.estado === 'pendiente').length;
+    document.getElementById('r-hoy').textContent = todosPedidos.filter(p => new Date(p.fecha).toDateString() === hoy).length;
+
+    if (pedidos.length === 0) {
+      lista.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No hay pedidos${filtroActual !== 'todos' ? ' en este estado' : ' todavía'}</p></div>`;
+      return;
+    }
+
+    lista.innerHTML = pedidos.map(p => `
+      <div class="pedido-card">
+        <div class="pedido-header">
+          <div>
+            <div class="pedido-cliente">${p.cliente}</div>
+            <div class="pedido-celular">📱 ${p.celular}</div>
+            <div class="pedido-fecha">${formatFecha(p.fecha)}</div>
+          </div>
+          <select class="estado-select ${estadoClass(p.estado)}" onchange="cambiarEstado('${p.id}', this.value); this.className='estado-select ' + estadoClass(this.value);">
+            <option value="pendiente" ${p.estado==='pendiente'?'selected':''}>⏳ Pendiente</option>
+            <option value="confirmado" ${p.estado==='confirmado'?'selected':''}>✅ Confirmado</option>
+            <option value="camino" ${p.estado==='camino'?'selected':''}>🚛 En camino</option>
+            <option value="entregado" ${p.estado==='entregado'?'selected':''}>🏠 Entregado</option>
+          </select>
+        </div>
+        <div class="pedido-productos">
+          ${p.productos.map(pr => `<div class="pedido-producto">• ${pr.nombre} ${pr.variante} x${pr.qty} — $${(pr.precio * pr.qty).toLocaleString()}</div>`).join('')}
+        </div>
+        <div class="pedido-footer">
+          <div class="pedido-envio">📦 ${p.envio}</div>
+          <div class="pedido-total">$${p.total.toLocaleString()}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Escuchar pedidos en tiempo real
+  db.ref('pedidos').on('value', snapshot => {
+    todosPedidos = [];
+    snapshot.forEach(child => {
+      todosPedidos.push({ id: child.key, ...child.val() });
+    });
+    renderPedidos();
+  });
+</script>
+</body>
+</html>
