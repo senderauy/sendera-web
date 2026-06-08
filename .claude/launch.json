@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "sendera",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "3000", "C:/Users/wienerlab/Desktop/sendera-web"],
+      "port": 3000
+    }
+  ]
+}
