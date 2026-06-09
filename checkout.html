@@ -468,11 +468,9 @@
       // Guardar pedido en Firebase
       if (data.status === 'approved') {
         guardarPedidoFirebase('aprobado', data.id);
-        enviarWhatsApp('tarjeta-aprobada');
         mostrarResultado('aprobado');
       } else if (data.status === 'pending' || data.status === 'in_process') {
         guardarPedidoFirebase('pendiente', data.id);
-        enviarWhatsApp('tarjeta-pendiente');
         mostrarResultado('pendiente');
       } else {
         mostrarResultado('error', data.status_detail);
@@ -492,7 +490,6 @@
     btn.disabled = true; btn.textContent = 'Registrando pedido...';
 
     guardarPedidoFirebase('pendiente-transferencia', null, 'transferencia');
-    enviarWhatsApp('transferencia');
     mostrarResultado('transferencia');
   }
 
