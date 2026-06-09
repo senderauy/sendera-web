@@ -582,7 +582,7 @@
         });
 
         const html = Object.entries(porNombre).map(([nombre, data]) => `
-          <div class="subgrupo-titulo">${nombre}</div>
+          ${data.obj.subgrupo ? `<div class="subgrupo-titulo">${data.obj.subgrupo}</div>` : ''}
           ${data.desc ? `<div class="subgrupo-desc">${data.desc}</div>` : ''}
           <div class="productos-grid">
             ${data.variantes.map(({ v, i, p }) => `

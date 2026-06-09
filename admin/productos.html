@@ -309,6 +309,11 @@
       </div>
 
       <div class="form-group">
+        <label>Subgrupo <span style="font-weight:400;color:#b0a598">(opcional)</span></label>
+        <input type="text" id="prod-subgrupo" placeholder="Ej: Trail Running · Si hay varios modelos dentro de la categoría" />
+      </div>
+
+      <div class="form-group">
         <label>Descripción</label>
         <textarea id="prod-descripcion" placeholder="Descripción del producto (opcional)"></textarea>
       </div>
@@ -426,6 +431,7 @@
     document.getElementById('prod-id').value = prod?.id || '';
     document.getElementById('prod-nombre').value = prod?.nombre || '';
     document.getElementById('prod-categoria').value = prod?.categoria || '';
+    document.getElementById('prod-subgrupo').value = prod?.subgrupo || '';
     document.getElementById('prod-descripcion').value = prod?.descripcion || '';
 
     // Variantes
@@ -537,6 +543,7 @@
   function guardarProducto() {
     const nombre = document.getElementById('prod-nombre').value.trim();
     const categoria = document.getElementById('prod-categoria').value.trim();
+    const subgrupo = document.getElementById('prod-subgrupo').value.trim();
     const descripcion = document.getElementById('prod-descripcion').value.trim();
 
     if (!nombre || !categoria) { showToast('⚠️ Completá nombre y categoría', true); return; }
@@ -559,7 +566,7 @@
     btn.disabled = true;
     btn.textContent = 'Guardando...';
 
-    const prod = { nombre, categoria, descripcion, variantes, actualizado: new Date().toISOString() };
+    const prod = { nombre, categoria, subgrupo, descripcion, variantes, actualizado: new Date().toISOString() };
 
     const isNuevo = !editandoId;
     const ref = editandoId ? db.ref('productos/' + editandoId) : db.ref('productos').push();
