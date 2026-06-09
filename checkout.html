@@ -468,9 +468,11 @@
       // Guardar pedido en Firebase
       if (data.status === 'approved') {
         guardarPedidoFirebase('aprobado', data.id);
+        enviarWhatsApp('tarjeta-aprobada');
         mostrarResultado('aprobado');
       } else if (data.status === 'pending' || data.status === 'in_process') {
         guardarPedidoFirebase('pendiente', data.id);
+        enviarWhatsApp('tarjeta-pendiente');
         mostrarResultado('pendiente');
       } else {
         mostrarResultado('error', data.status_detail);
@@ -490,7 +492,44 @@
     btn.disabled = true; btn.textContent = 'Registrando pedido...';
 
     guardarPedidoFirebase('pendiente-transferencia', null, 'transferencia');
+    enviarWhatsApp('transferencia');
     mostrarResultado('transferencia');
+  }
+
+  // ── Enviar WhatsApp ───────────────────────────────────────
+  const WA_NUMBERS = ['59895290959', '59899069384'];
+
+  function enviarWhatsApp(tipo) {
+    const nombre = document.getElementById('ch-nombre').value.trim();
+    const celular = document.getElementById('ch-celular').value.trim();
+    const { items, envio } = pedidoData;
+    const subtotal = items.reduce((s, i) => s + i.precio * i.qty, 0);
+    const total = subtotal + (envio?.costo || 0);
+
+    const lineas = items.map(i => `• ${i.name} - ${i.variant} x${i.qty} → $${(i.precio * i.qty).toLocaleString()}`).join('\n');
+
+    let metodoTexto = '';
+    if (tipo === 'transferencia') metodoTexto = '🏦 Transferencia Prex (pendiente confirmación)';
+    else if (tipo === 'tarjeta-aprobada') metodoTexto = '💳 Tarjeta · Pago aprobado ✅';
+    else if (tipo === 'tarjeta-pendiente') metodoTexto = '💳 Tarjeta · Pago en proceso ⏳';
+
+    const mensaje = encodeURIComponent(
+      `🛍️ *Nuevo pedido Sendera*\n\n` +
+      `${lineas}\n\n` +
+      `Subtotal: $${subtotal.toLocaleString()}\n` +
+      `📦 Envío: ${envio?.label || '—'}\n` +
+      `*Total: $${total.toLocaleString()}*\n\n` +
+      `👤 Cliente: ${nombre}\n` +
+      `📱 Celular: ${celular}\n` +
+      `💰 Pago: ${metodoTexto}\n\n` +
+      `_Pedido recibido desde senderauy.com_`
+    );
+
+    WA_NUMBERS.forEach((num, i) => {
+      setTimeout(() => {
+        window.open(`https://wa.me/${num}?text=${mensaje}`, '_blank');
+      }, i * 800);
+    });
   }
 
   // ── Copiar al portapapeles ────────────────────────────────
