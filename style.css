@@ -144,7 +144,7 @@ nav a:hover {
   font-weight: 600;
   color: var(--gold-light);
   letter-spacing: 0.04em;
-  margin-bottom: 32px;
+  margin-bottom: 12px;
   text-align: center;
 }
 
@@ -178,10 +178,6 @@ nav a:hover {
   background-color: var(--dark);
 }
 
-.categorias h2 {
-  color: #8fbd72;
-  letter-spacing: 0.06em;
-}
 
 .cards-grid {
   display: grid;
