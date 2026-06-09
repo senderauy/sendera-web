@@ -4,118 +4,198 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sendera Admin</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Montserrat', sans-serif;
-      background-color: #1e1a17;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
+      background-color: #f2ede6;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(120,153,100,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(180,140,90,0.1) 0%, transparent 50%);
+      padding: 20px;
     }
 
-    .login-box {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(201,176,122,0.2);
-      padding: 48px 40px;
+    .login-wrap {
       width: 100%;
-      max-width: 380px;
+      max-width: 420px;
+    }
+
+    /* Encabezado */
+    .login-header {
       text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .login-icon {
+      font-size: 2.8rem;
+      margin-bottom: 10px;
+      display: block;
     }
 
     .logo {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 2rem;
-      color: #c9b07a;
-      letter-spacing: 0.15em;
-      margin-bottom: 6px;
+      font-size: 2.2rem;
+      color: #3a3026;
+      letter-spacing: 0.18em;
+      margin-bottom: 4px;
     }
 
     .subtitle {
-      font-size: 0.72rem;
-      color: #a89880;
-      letter-spacing: 0.15em;
+      font-size: 0.7rem;
+      color: #7a6e62;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
-      margin-bottom: 40px;
+    }
+
+    /* Card */
+    .login-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px 36px;
+      box-shadow: 0 4px 24px rgba(80,60,30,0.1), 0 1px 4px rgba(80,60,30,0.06);
+      border: 1px solid rgba(180,155,100,0.15);
+    }
+
+    .card-title {
+      font-size: 0.72rem;
+      color: #9a8f82;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      text-align: center;
     }
 
     .form-group {
-      margin-bottom: 16px;
-      text-align: left;
+      margin-bottom: 18px;
     }
 
     label {
-      display: block;
+      display: flex;
+      align-items: center;
+      gap: 6px;
       font-size: 0.72rem;
-      color: #a89880;
+      color: #6b5f54;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
+      font-weight: 500;
     }
 
     input {
       width: 100%;
-      padding: 12px 14px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(201,176,122,0.2);
-      color: #f0ebe3;
+      padding: 13px 16px;
+      background: #faf8f4;
+      border: 1.5px solid #ddd5c8;
+      border-radius: 10px;
+      color: #3a3026;
       font-family: 'Montserrat', sans-serif;
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
 
-    input:focus { border-color: #c9b07a; }
+    input::placeholder { color: #c0b5a8; }
+
+    input:focus {
+      border-color: #a07d45;
+      box-shadow: 0 0 0 3px rgba(160,125,69,0.1);
+    }
 
     .btn-login {
       width: 100%;
-      padding: 14px;
-      background-color: #c9b07a;
-      color: #1e1a17;
+      padding: 15px;
+      background: linear-gradient(135deg, #6b8f52, #507a3a);
+      color: #fff;
       border: none;
+      border-radius: 10px;
       font-family: 'Montserrat', sans-serif;
       font-size: 0.82rem;
       font-weight: 600;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       cursor: pointer;
-      margin-top: 24px;
-      transition: background 0.2s;
+      margin-top: 28px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
-    .btn-login:hover { background-color: #e0cb9a; }
+    .btn-login:hover {
+      background: linear-gradient(135deg, #7aa35e, #5c8b44);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(80,122,58,0.3);
+    }
+
+    .btn-login:active { transform: translateY(0); }
 
     .error {
-      color: #e74c3c;
-      font-size: 0.78rem;
-      margin-top: 12px;
       display: none;
+      background: #fff5f5;
+      border: 1px solid #fca5a5;
+      border-radius: 8px;
+      color: #b91c1c;
+      font-size: 0.78rem;
+      padding: 10px 14px;
+      margin-top: 14px;
+      text-align: center;
+    }
+
+    .login-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.68rem;
+      color: #b0a598;
+      letter-spacing: 0.08em;
+    }
+
+    /* Mobile */
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 32px 24px;
+        border-radius: 14px;
+      }
+      .logo { font-size: 1.9rem; }
     }
   </style>
 </head>
 <body>
-  <div class="login-box">
-    <div class="logo">SENDERA</div>
-    <div class="subtitle">Panel de administración</div>
-
-    <div class="form-group">
-      <label>Usuario</label>
-      <input type="text" id="usuario" placeholder="Tu usuario" />
-    </div>
-    <div class="form-group">
-      <label>Contraseña</label>
-      <input type="password" id="password" placeholder="Tu contraseña" />
+  <div class="login-wrap">
+    <div class="login-header">
+      <span class="login-icon">🏔️</span>
+      <div class="logo">SENDERA</div>
+      <div class="subtitle">Equipamiento outdoor · Uruguay</div>
     </div>
 
-    <button class="btn-login" onclick="login()">Ingresar</button>
-    <p class="error" id="error-msg">Usuario o contraseña incorrectos.</p>
+    <div class="login-card">
+      <div class="card-title">Panel de administración</div>
+
+      <div class="form-group">
+        <label>👤 Usuario</label>
+        <input type="text" id="usuario" placeholder="Tu usuario" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label>🔒 Contraseña</label>
+        <input type="password" id="password" placeholder="Tu contraseña" autocomplete="current-password" />
+      </div>
+
+      <button class="btn-login" onclick="login()">
+        🌿 Ingresar al panel
+      </button>
+      <div class="error" id="error-msg">⚠️ Usuario o contraseña incorrectos.</div>
+    </div>
+
+    <div class="login-footer">sendera · admin v2.0</div>
   </div>
 
   <script>
-    // Credenciales del admin
     const USUARIOS = [
       { user: 'senderauy', pass: 'Lapaz2080' }
     ];
@@ -123,9 +203,7 @@
     function login() {
       const user = document.getElementById('usuario').value.trim().toLowerCase();
       const pass = document.getElementById('password').value.trim();
-
       const valido = USUARIOS.find(u => u.user === user && u.pass === pass);
-
       if (valido) {
         localStorage.setItem('sendera_admin', user);
         window.location.href = 'dashboard.html';
@@ -134,7 +212,6 @@
       }
     }
 
-    // Enter para loguear
     document.addEventListener('keydown', e => {
       if (e.key === 'Enter') login();
     });

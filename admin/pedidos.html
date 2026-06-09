@@ -10,107 +10,127 @@
   <script src="../firebase-config.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Montserrat', sans-serif; background: #1e1a17; color: #f0ebe3; }
+    body { font-family: 'Montserrat', sans-serif; background: #f2ede6; color: #3a3026; min-height: 100vh; }
 
     .navbar {
-      background: #141210;
-      border-bottom: 1px solid rgba(201,176,122,0.15);
-      padding: 14px 20px;
+      background: #fff;
+      border-bottom: 2px solid #e8dfd2;
+      padding: 0 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: sticky;
       top: 0;
       z-index: 10;
+      height: 60px;
+      box-shadow: 0 2px 8px rgba(80,60,30,0.06);
     }
-    .navbar .logo { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: #c9b07a; letter-spacing: 0.1em; }
-    .nav-links a { color: #a89880; text-decoration: none; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; margin-left: 20px; }
-    .nav-links a.active, .nav-links a:hover { color: #c9b07a; }
-    .btn-logout { font-size: 0.72rem; color: #a89880; cursor: pointer; margin-left: 20px; text-transform: uppercase; letter-spacing: 0.08em; background: none; border: none; }
+    .navbar .logo { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: #3a3026; letter-spacing: 0.12em; }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-links a { color: #7a6e62; text-decoration: none; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 500; }
+    .nav-links a:hover { background: #f2ede6; color: #3a3026; }
+    .nav-links a.active { background: #507a3a; color: #fff; }
+    .btn-logout { font-size: 0.72rem; color: #9a8f82; cursor: pointer; text-transform: uppercase; letter-spacing: 0.08em; background: none; border: 1px solid #ddd5c8; border-radius: 8px; padding: 7px 14px; margin-left: 8px; transition: all 0.2s; }
+    .btn-logout:hover { background: #f2ede6; color: #3a3026; }
 
-    .container { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
+    .mobile-nav { display: none; background: #fff; border-top: 2px solid #e8dfd2; position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; padding: 8px 0 12px; }
+    .mobile-nav-links { display: flex; justify-content: space-around; }
+    .mobile-nav-links a { display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: #9a8f82; font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 12px; border-radius: 10px; transition: all 0.2s; }
+    .mobile-nav-links a .icon { font-size: 1.3rem; }
+    .mobile-nav-links a.active { color: #507a3a; }
 
-    .page-header { margin-bottom: 32px; }
-    .page-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: #c9b07a; }
-    .page-header p { color: #a89880; font-size: 0.8rem; margin-top: 4px; }
+    .container { max-width: 900px; margin: 0 auto; padding: 28px 20px 80px; }
+
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+    .page-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: #3a3026; }
+    .page-header p { color: #9a8f82; font-size: 0.78rem; margin-top: 3px; }
 
     /* RESUMEN */
-    .resumen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 36px; }
-    .res-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(201,176,122,0.12); padding: 16px; text-align: center; }
-    .res-card .num { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: #c9b07a; }
-    .res-card .lbl { font-size: 0.68rem; color: #a89880; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+    .resumen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
+    .res-card { background: #fff; border-radius: 14px; border: 1.5px solid #e8dfd2; padding: 20px 16px; text-align: center; box-shadow: 0 2px 8px rgba(80,60,30,0.05); }
+    .res-card .num { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; color: #3a3026; }
+    .res-card .lbl { font-size: 0.68rem; color: #9a8f82; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
 
     /* FILTROS */
-    .filtros { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
-    .filtro-btn { padding: 6px 16px; border: 1px solid rgba(201,176,122,0.2); background: none; color: #a89880; font-family: 'Montserrat', sans-serif; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; transition: all 0.2s; }
-    .filtro-btn.active, .filtro-btn:hover { background: #c9b07a; color: #1e1a17; border-color: #c9b07a; }
+    .filtros { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filtro-btn { padding: 7px 16px; border: 1.5px solid #e8dfd2; background: #fff; color: #7a6e62; font-family: 'Montserrat', sans-serif; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; border-radius: 20px; transition: all 0.2s; font-weight: 500; }
+    .filtro-btn.active, .filtro-btn:hover { background: #507a3a; color: #fff; border-color: #507a3a; }
 
     /* PEDIDOS */
     .pedido-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(201,176,122,0.1);
+      background: #fff;
+      border-radius: 14px;
+      border: 1.5px solid #e8dfd2;
       padding: 20px;
       margin-bottom: 12px;
-      transition: border-color 0.2s;
+      box-shadow: 0 2px 6px rgba(80,60,30,0.04);
+      transition: all 0.2s;
     }
-    .pedido-card:hover { border-color: rgba(201,176,122,0.3); }
+    .pedido-card:hover { border-color: #b8dba8; box-shadow: 0 4px 12px rgba(80,60,30,0.08); }
 
     .pedido-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
-    .pedido-cliente { font-size: 1rem; font-weight: 500; color: #f0ebe3; }
-    .pedido-fecha { font-size: 0.72rem; color: #a89880; margin-top: 2px; }
-    .pedido-celular { font-size: 0.78rem; color: #c9b07a; margin-top: 2px; }
+    .pedido-cliente { font-size: 1rem; font-weight: 600; color: #3a3026; }
+    .pedido-fecha { font-size: 0.72rem; color: #9a8f82; margin-top: 2px; }
+    .pedido-celular { font-size: 0.78rem; color: #507a3a; margin-top: 2px; font-weight: 500; }
 
-    .pedido-productos { margin-bottom: 14px; }
-    .pedido-producto { font-size: 0.8rem; color: #c8c0b4; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .pedido-productos { margin-bottom: 14px; background: #faf8f4; border-radius: 8px; padding: 10px 14px; }
+    .pedido-producto { font-size: 0.8rem; color: #6b5f54; padding: 4px 0; border-bottom: 1px solid #f0ebe3; }
     .pedido-producto:last-child { border-bottom: none; }
 
     .pedido-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-    .pedido-envio { font-size: 0.75rem; color: #a89880; }
-    .pedido-total { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; color: #c9b07a; }
+    .pedido-envio { font-size: 0.75rem; color: #9a8f82; }
+    .pedido-total { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: #507a3a; font-weight: 600; }
 
     /* ESTADOS */
     .estado-select {
-      padding: 6px 12px;
-      border: 1px solid rgba(201,176,122,0.2);
-      background: #1e1a17;
-      color: #f0ebe3;
+      padding: 7px 12px;
+      border: 1.5px solid #e8dfd2;
+      background: #fff;
+      color: #3a3026;
       font-family: 'Montserrat', sans-serif;
       font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       cursor: pointer;
       outline: none;
+      border-radius: 8px;
+      transition: border-color 0.2s;
     }
-    .estado-pendiente { border-color: #f39c12; color: #f39c12; }
-    .estado-confirmado { border-color: #3498db; color: #3498db; }
-    .estado-camino { border-color: #9b59b6; color: #9b59b6; }
-    .estado-entregado { border-color: #2ecc71; color: #2ecc71; }
+    .estado-pendiente { border-color: #c2692b; color: #c2692b; }
+    .estado-confirmado { border-color: #2563eb; color: #2563eb; }
+    .estado-camino { border-color: #7c3aed; color: #7c3aed; }
+    .estado-entregado { border-color: #507a3a; color: #507a3a; }
 
-    .empty-state { text-align: center; padding: 60px 20px; color: #a89880; font-size: 0.85rem; }
+    .empty-state { text-align: center; padding: 60px 20px; color: #9a8f82; font-size: 0.85rem; background: #fff; border-radius: 14px; border: 1.5px solid #e8dfd2; }
     .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
 
-    @media (max-width: 480px) {
+    @media (max-width: 600px) {
       .resumen { grid-template-columns: repeat(2, 1fr); }
-      .nav-links { display: none; }
+      .nav-links, .btn-logout { display: none; }
+      .mobile-nav { display: block; }
+      .container { padding-bottom: 90px; }
+      .page-header h1 { font-size: 1.6rem; }
     }
   </style>
 </head>
 <body>
 
 <div class="navbar">
-  <div class="logo">SENDERA admin</div>
+  <div class="logo">🏔️ SENDERA</div>
   <div class="nav-links">
     <a href="dashboard.html">Dashboard</a>
     <a href="pedidos.html" class="active">Pedidos</a>
     <a href="stock.html">Stock</a>
-    <button class="btn-logout" onclick="logout()">Salir</button>
+    <button class="btn-logout" onclick="logout()">↩ Salir</button>
   </div>
 </div>
 
 <div class="container">
   <div class="page-header">
-    <h1>Pedidos</h1>
-    <p>Se actualizan en tiempo real cuando un cliente hace un pedido</p>
+    <div>
+      <h1>Pedidos 📦</h1>
+      <p>Se actualizan en tiempo real</p>
+    </div>
   </div>
 
   <div class="resumen">
@@ -128,6 +148,15 @@
   </div>
 
   <div id="pedidos-lista"></div>
+</div>
+
+<div class="mobile-nav">
+  <div class="mobile-nav-links">
+    <a href="dashboard.html"><span class="icon">📊</span>Dashboard</a>
+    <a href="pedidos.html" class="active"><span class="icon">📦</span>Pedidos</a>
+    <a href="stock.html"><span class="icon">🏷️</span>Stock</a>
+    <a href="#" onclick="logout()"><span class="icon">↩️</span>Salir</a>
+  </div>
 </div>
 
 <script>
