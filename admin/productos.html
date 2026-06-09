@@ -176,9 +176,19 @@
     .variante-row { display: grid; grid-template-columns: 1fr 100px; gap: 10px; margin-bottom: 10px; }
 
     .foto-preview-wrap { position: relative; }
-    .foto-input { width: 100%; }
+    .foto-input-row { display: flex; gap: 8px; align-items: center; }
+    .foto-input { flex: 1; }
+    .btn-examinar {
+      display: flex; align-items: center; gap: 5px; white-space: nowrap;
+      background: #f2ede6; color: #507a3a; border: 1.5px solid #b8dba8;
+      border-radius: 8px; padding: 8px 12px; font-size: 0.72rem;
+      font-weight: 600; cursor: pointer; transition: all 0.2s;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .btn-examinar:hover { background: #507a3a; color: #fff; border-color: #507a3a; }
+    .file-input-hidden { display: none; }
     .foto-preview {
-      width: 100%; height: 100px; object-fit: cover; border-radius: 8px;
+      width: 100%; height: 120px; object-fit: cover; border-radius: 10px;
       margin-top: 8px; border: 1.5px solid #e8dfd2;
       display: none;
     }
@@ -458,8 +468,12 @@
         </div>
       </div>
       <div class="form-group foto-preview-wrap" style="margin:0">
-        <label>URL de la foto</label>
-        <input type="url" id="var-foto-${id}" placeholder="https://... (Google Drive, Imgur, etc.)" value="${data?.foto || ''}" oninput="previewFoto(${id})" />
+        <label>📸 Foto</label>
+        <div class="foto-input-row">
+          <input type="url" class="foto-input" id="var-foto-${id}" placeholder="O pegá una URL de imagen..." value="${data?.foto || ''}" oninput="previewFoto(${id})" />
+          <button type="button" class="btn-examinar" onclick="document.getElementById('var-file-${id}').click()">📁 Examinar</button>
+          <input type="file" class="file-input-hidden" id="var-file-${id}" accept="image/*" onchange="cargarFotoLocal(${id}, this)" />
+        </div>
         <img class="foto-preview ${data?.foto ? 'visible' : ''}" id="var-preview-${id}" src="${data?.foto || ''}" alt="preview" />
       </div>
     `;
@@ -480,6 +494,36 @@
     } else {
       img.classList.remove('visible');
     }
+  }
+
+  function cargarFotoLocal(id, input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const original = new Image();
+      original.onload = function() {
+        // Comprimir y redimensionar a máx 800px
+        const canvas = document.createElement('canvas');
+        const MAX = 800;
+        let w = original.width, h = original.height;
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(original, 0, 0, w, h);
+        const base64 = canvas.toDataURL('image/jpeg', 0.75);
+
+        // Guardar en el campo y mostrar preview
+        document.getElementById(`var-foto-${id}`).value = base64;
+        const img = document.getElementById(`var-preview-${id}`);
+        img.src = base64;
+        img.classList.add('visible');
+      };
+      original.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
   }
 
   // ── Guardar ───────────────────────────────────────────
