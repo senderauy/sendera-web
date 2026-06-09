@@ -275,8 +275,32 @@
     el.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } };
   }
 
+  // Productos cargados desde Firebase
+  let productosFirebase = {};
+  let stockData = {};
+
+  function getAllProductos() {
+    // Hardcodeados
+    const todos = [];
+    CATALOGO.forEach(c => c.productos.forEach(p => todos.push({ ...p, origen: 'fijo' })));
+    // Firebase
+    Object.values(productosFirebase).forEach(prod => {
+      (prod.variantes || []).forEach((v, i) => {
+        todos.push({
+          id: prod.id + '-' + i,
+          nombre: prod.nombre,
+          variante: v.nombre,
+          precio: v.precio || 0,
+          categoria: prod.categoria,
+          origen: 'firebase'
+        });
+      });
+    });
+    return todos;
+  }
+
   function updateResumen() {
-    const todos = CATALOGO.flatMap(c => c.productos);
+    const todos = getAllProductos();
     document.getElementById('r-total').textContent = todos.length;
     document.getElementById('r-unidades').textContent = todos.reduce((s, p) => s + getStock(p.id), 0);
     document.getElementById('r-sinstk').textContent = todos.filter(p => getStock(p.id) === 0).length;
@@ -289,51 +313,79 @@
     window._toastTimer = setTimeout(() => t.style.opacity = 0, 1500);
   }
 
+  function cardHTML(p) {
+    const s = getStock(p.id);
+    return `<div class="prod-card">
+      <div>
+        <div class="prod-nombre">${p.nombre}</div>
+        <div class="prod-variante">${p.variante}</div>
+        <div class="prod-precio">$${(p.precio || 0).toLocaleString()}</div>
+      </div>
+      <div class="prod-footer">
+        <div class="stock-ctrl">
+          <button onclick="cambiar('${p.id}',-1)">−</button>
+          <span class="stock-val" id="sv-${p.id}" onclick="editarDirecto('${p.id}',this)">${s}</span>
+          <button onclick="cambiar('${p.id}',1)">+</button>
+        </div>
+        <span class="badge ${badgeClass(s)}" id="bd-${p.id}">${badgeLabel(s)}</span>
+      </div>
+    </div>`;
+  }
+
   function renderCatalogo() {
     const cat = document.getElementById('catalogo');
     cat.innerHTML = '';
+
+    // Hardcodeados por categoría
     CATALOGO.forEach(c => {
       cat.innerHTML += `<div class="cat-titulo">${c.cat}</div><div class="productos-grid">` +
-        c.productos.map(p => {
-          const s = getStock(p.id);
-          return `<div class="prod-card">
-            <div>
-              <div class="prod-nombre">${p.nombre}</div>
-              <div class="prod-variante">${p.variante}</div>
-              <div class="prod-precio">$${p.precio.toLocaleString()}</div>
-            </div>
-            <div class="prod-footer">
-              <div class="stock-ctrl">
-                <button onclick="cambiar('${p.id}',-1)">−</button>
-                <span class="stock-val" id="sv-${p.id}" onclick="editarDirecto('${p.id}',this)">${s}</span>
-                <button onclick="cambiar('${p.id}',1)">+</button>
-              </div>
-              <span class="badge ${badgeClass(s)}" id="bd-${p.id}">${badgeLabel(s)}</span>
-            </div>
-          </div>`;
-        }).join('') + `</div>`;
+        c.productos.map(p => cardHTML(p)).join('') + `</div>`;
+    });
+
+    // Firebase: agrupar por categoría
+    const prodsFB = Object.values(productosFirebase);
+    if (prodsFB.length > 0) {
+      const cats = {};
+      prodsFB.forEach(prod => {
+        const c = prod.categoria || 'Otros';
+        if (!cats[c]) cats[c] = [];
+        (prod.variantes || []).forEach((v, i) => {
+          cats[c].push({ id: prod.id + '-' + i, nombre: prod.nombre, variante: v.nombre, precio: v.precio || 0 });
+        });
+      });
+      Object.entries(cats).forEach(([c, items]) => {
+        cat.innerHTML += `<div class="cat-titulo">🆕 ${c}</div><div class="productos-grid">` +
+          items.map(p => cardHTML(p)).join('') + `</div>`;
+      });
+    }
+
+    updateResumen();
+  }
+
+  function actualizarUI() {
+    getAllProductos().forEach(p => {
+      const s = getStock(p.id);
+      const svEl = document.getElementById('sv-' + p.id);
+      const bdEl = document.getElementById('bd-' + p.id);
+      if (svEl) svEl.textContent = s;
+      if (bdEl) { bdEl.textContent = badgeLabel(s); bdEl.className = 'badge ' + badgeClass(s); }
     });
     updateResumen();
   }
 
-  db.ref('stock').on('value', snapshot => {
-    const data = snapshot.val() || {};
-    CATALOGO.flatMap(c => c.productos).forEach(p => {
-      stockCache[p.id] = data[p.id] !== undefined ? data[p.id] : 5;
-    });
-    const yaRenderizado = document.getElementById('sv-' + CATALOGO[0].productos[0].id);
-    if (yaRenderizado) {
-      CATALOGO.flatMap(c => c.productos).forEach(p => {
-        const s = stockCache[p.id];
-        const svEl = document.getElementById('sv-' + p.id);
-        const bdEl = document.getElementById('bd-' + p.id);
-        if (svEl) svEl.textContent = s;
-        if (bdEl) { bdEl.textContent = badgeLabel(s); bdEl.className = 'badge ' + badgeClass(s); }
+  // Cargar productos Firebase primero, luego stock
+  db.ref('productos').on('value', snapProds => {
+    productosFirebase = {};
+    snapProds.forEach(c => { productosFirebase[c.key] = { id: c.key, ...c.val() }; });
+
+    db.ref('stock').on('value', snapStock => {
+      stockData = snapStock.val() || {};
+      // Llenar stockCache
+      getAllProductos().forEach(p => {
+        stockCache[p.id] = stockData[p.id] !== undefined ? stockData[p.id] : (p.origen === 'fijo' ? 5 : 0);
       });
-      updateResumen();
-    } else {
       renderCatalogo();
-    }
+    });
   });
 </script>
 </body>
