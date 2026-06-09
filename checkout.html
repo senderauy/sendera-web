@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sendera — Checkout</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #f9f6f1;
+      color: #2a2218;
+      min-height: 100vh;
+    }
+
+    /* NAVBAR */
+    .navbar {
+      background: #fff;
+      border-bottom: 1px solid #e8dfd2;
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(80,60,30,0.06);
+    }
+    .logo { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; color: #2a2218; letter-spacing: 0.15em; text-decoration: none; }
+    .nav-back { font-size: 0.75rem; color: #9a8f82; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.2s; }
+    .nav-back:hover { color: #2a2218; }
+
+    /* LAYOUT */
+    .checkout-wrap {
+      max-width: 980px;
+      margin: 40px auto;
+      padding: 0 20px 60px;
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 28px;
+      align-items: start;
+    }
+
+    /* RESUMEN */
+    .resumen-card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1.5px solid #e8dfd2;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(80,60,30,0.06);
+    }
+
+    .resumen-header {
+      padding: 20px 24px;
+      border-bottom: 1.5px solid #f0ebe3;
+      font-size: 0.72rem;
+      color: #9a8f82;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      font-weight: 600;
+    }
+
+    .resumen-items { padding: 16px 24px; }
+
+    .resumen-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f5f0ea;
+      font-size: 0.85rem;
+    }
+    .resumen-item:last-child { border-bottom: none; }
+    .resumen-item-nombre { color: #2a2218; font-weight: 500; }
+    .resumen-item-var { font-size: 0.75rem; color: #9a8f82; margin-top: 2px; }
+    .resumen-item-precio { color: #2a2218; font-weight: 600; white-space: nowrap; }
+
+    .resumen-totales { padding: 16px 24px; border-top: 1.5px solid #f0ebe3; }
+    .total-row { display: flex; justify-content: space-between; font-size: 0.82rem; color: #7a6e62; margin-bottom: 8px; }
+    .total-row.final { font-size: 1.1rem; font-weight: 700; color: #2a2218; margin-top: 12px; padding-top: 12px; border-top: 1.5px solid #e8dfd2; }
+
+    .envio-info {
+      padding: 14px 24px;
+      background: #f5f0ea;
+      font-size: 0.78rem;
+      color: #7a6e62;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* PAGO */
+    .pago-card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1.5px solid #e8dfd2;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(80,60,30,0.06);
+    }
+
+    .pago-header {
+      padding: 20px 24px;
+      border-bottom: 1.5px solid #f0ebe3;
+    }
+    .pago-header h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: #2a2218; }
+    .pago-header p { font-size: 0.72rem; color: #9a8f82; margin-top: 3px; }
+
+    /* MÉTODOS */
+    .metodos { display: flex; gap: 10px; padding: 20px 24px 0; }
+    .metodo-btn {
+      flex: 1; padding: 12px 8px; border: 2px solid #e8dfd2; background: #fff;
+      border-radius: 12px; cursor: pointer; transition: all 0.2s;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      font-family: 'Montserrat', sans-serif; font-size: 0.68rem; color: #7a6e62;
+      font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .metodo-btn .icon { font-size: 1.5rem; }
+    .metodo-btn.active { border-color: #2d6a4f; background: #f0faf4; color: #2d6a4f; }
+    .metodo-btn:hover { border-color: #2d6a4f; }
+
+    /* FORMULARIO DATOS */
+    .datos-form { padding: 20px 24px; border-bottom: 1.5px solid #f0ebe3; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 0.7rem; color: #6b5f54; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
+    .form-group input {
+      width: 100%; padding: 11px 14px; background: #faf8f4;
+      border: 1.5px solid #ddd5c8; border-radius: 10px; color: #2a2218;
+      font-family: 'Montserrat', sans-serif; font-size: 0.88rem;
+      outline: none; transition: border-color 0.2s;
+    }
+    .form-group input:focus { border-color: #2d6a4f; box-shadow: 0 0 0 3px rgba(45,106,79,0.1); }
+
+    /* BRICKS CONTAINER */
+    .bricks-wrap { padding: 0 24px 20px; }
+    #cardPaymentBrick_container { min-height: 200px; }
+
+    /* MP BUTTON */
+    .mp-wrap { padding: 20px 24px; }
+    .btn-mp-checkout {
+      width: 100%; padding: 16px; background: #009ee3; color: #fff; border: none;
+      border-radius: 12px; font-family: 'Montserrat', sans-serif; font-size: 0.9rem;
+      font-weight: 700; cursor: pointer; transition: all 0.2s; letter-spacing: 0.04em;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn-mp-checkout:hover { background: #0082c1; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,158,227,0.3); }
+    .btn-mp-checkout:disabled { background: #b0d8f0; cursor: not-allowed; transform: none; }
+
+    /* SEGURIDAD */
+    .seguridad {
+      padding: 14px 24px;
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.68rem; color: #b0a598;
+      border-top: 1px solid #f0ebe3;
+    }
+
+    /* RESULTADO */
+    .resultado {
+      display: none; padding: 24px;
+      text-align: center;
+    }
+    .resultado.visible { display: block; }
+    .resultado-icon { font-size: 3rem; margin-bottom: 12px; }
+    .resultado-titulo { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; margin-bottom: 8px; }
+    .resultado-msg { font-size: 0.82rem; color: #7a6e62; margin-bottom: 20px; }
+    .btn-volver {
+      display: inline-block; padding: 12px 24px; background: #2d6a4f; color: #fff;
+      border-radius: 10px; text-decoration: none; font-size: 0.8rem; font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .checkout-wrap { grid-template-columns: 1fr; }
+      .resumen-card { order: 2; }
+      .pago-card { order: 1; }
+    }
+
+    @media (max-width: 480px) {
+      .form-row { grid-template-columns: 1fr; }
+      .metodos { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <a href="index.html" class="logo">SENDERA</a>
+  <a href="index.html" class="nav-back">← Volver a la tienda</a>
+</div>
+
+<div class="checkout-wrap">
+
+  <!-- RESUMEN -->
+  <div class="resumen-card">
+    <div class="resumen-header">🛍️ Resumen del pedido</div>
+    <div class="resumen-items" id="resumen-items">
+      <p style="color:#9a8f82;font-size:0.82rem;padding:10px 0">Cargando...</p>
+    </div>
+    <div class="envio-info" id="envio-info" style="display:none">
+      <span>📦</span>
+      <span id="envio-detalle">—</span>
+    </div>
+    <div class="resumen-totales">
+      <div class="total-row"><span>Subtotal</span><span id="subtotal-val">$0</span></div>
+      <div class="total-row" id="envio-row" style="display:none"><span>Envío</span><span id="envio-val">$0</span></div>
+      <div class="total-row final"><span>Total a pagar</span><span id="total-val">$0</span></div>
+    </div>
+  </div>
+
+  <!-- PAGO -->
+  <div class="pago-card">
+
+    <!-- Resultado pago -->
+    <div class="resultado" id="resultado">
+      <div class="resultado-icon" id="res-icon">✅</div>
+      <div class="resultado-titulo" id="res-titulo">¡Pago aprobado!</div>
+      <div class="resultado-msg" id="res-msg">Tu pedido fue recibido. Te contactamos a la brevedad.</div>
+      <a href="index.html" class="btn-volver">Volver a la tienda</a>
+    </div>
+
+    <div id="pago-contenido">
+      <div class="pago-header">
+        <h2>Método de pago</h2>
+        <p>Pagá de forma segura con MercadoPago</p>
+      </div>
+
+      <!-- Métodos -->
+      <div class="metodos">
+        <button class="metodo-btn active" onclick="setMetodo('tarjeta', this)" id="btn-tarjeta">
+          <span class="icon">💳</span>Tarjeta
+        </button>
+        <button class="metodo-btn" onclick="setMetodo('mp', this)" id="btn-mp">
+          <span class="icon">📱</span>MercadoPago
+        </button>
+      </div>
+
+      <!-- Datos del comprador -->
+      <div class="datos-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" id="ch-nombre" placeholder="Tu nombre" />
+          </div>
+          <div class="form-group">
+            <label>Celular</label>
+            <input type="tel" id="ch-celular" placeholder="099 123 456" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="ch-email" placeholder="tu@email.com" />
+        </div>
+      </div>
+
+      <!-- Tarjeta (Bricks) -->
+      <div id="seccion-tarjeta">
+        <div class="bricks-wrap">
+          <div id="cardPaymentBrick_container"></div>
+        </div>
+      </div>
+
+      <!-- MercadoPago -->
+      <div id="seccion-mp" style="display:none">
+        <div class="mp-wrap">
+          <button class="btn-mp-checkout" id="btn-pagar-mp" onclick="pagarConMP()">
+            <span>💳</span> Pagar con MercadoPago
+          </button>
+        </div>
+      </div>
+
+      <div class="seguridad">
+        🔒 Pago seguro procesado por MercadoPago · SSL
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  // ── Leer datos del carrito desde sessionStorage ───────────
+  const PUBLIC_KEY = 'APP_USR-c46e63e4-b1f6-49f1-8a57-b5f45b227516';
+  let pedidoData = null;
+
+  try {
+    pedidoData = JSON.parse(sessionStorage.getItem('sendera_checkout'));
+  } catch(e) {}
+
+  if (!pedidoData || !pedidoData.items || pedidoData.items.length === 0) {
+    window.location.href = 'index.html';
+  }
+
+  // ── Render resumen ────────────────────────────────────────
+  function renderResumen() {
+    const { items, envio, cliente, celular } = pedidoData;
+    const subtotal = items.reduce((s, i) => s + i.precio * i.qty, 0);
+    const total = subtotal + (envio?.costo || 0);
+
+    document.getElementById('resumen-items').innerHTML = items.map(i => `
+      <div class="resumen-item">
+        <div>
+          <div class="resumen-item-nombre">${i.name} <span style="color:#9a8f82;font-weight:400">x${i.qty}</span></div>
+          <div class="resumen-item-var">${i.variant}</div>
+        </div>
+        <div class="resumen-item-precio">$${(i.precio * i.qty).toLocaleString()}</div>
+      </div>
+    `).join('');
+
+    document.getElementById('subtotal-val').textContent = '$' + subtotal.toLocaleString();
+    document.getElementById('total-val').textContent = '$' + total.toLocaleString();
+
+    if (envio && envio.costo > 0) {
+      document.getElementById('envio-row').style.display = 'flex';
+      document.getElementById('envio-val').textContent = '$' + envio.costo.toLocaleString();
+    }
+
+    if (envio && envio.label) {
+      document.getElementById('envio-info').style.display = 'flex';
+      document.getElementById('envio-detalle').textContent = envio.label;
+    }
+
+    // Pre-llenar nombre y celular
+    if (cliente) document.getElementById('ch-nombre').value = cliente;
+    if (celular) document.getElementById('ch-celular').value = celular;
+  }
+
+  renderResumen();
+
+  // ── MercadoPago Bricks ────────────────────────────────────
+  const mp = new MercadoPago(PUBLIC_KEY, { locale: 'es-UY' });
+  let bricksController = null;
+
+  async function initBricks() {
+    const bricksBuilder = mp.bricks();
+    const total = pedidoData.items.reduce((s, i) => s + i.precio * i.qty, 0)
+      + (pedidoData.envio?.costo || 0);
+
+    bricksController = await bricksBuilder.create('cardPayment', 'cardPaymentBrick_container', {
+      initialization: {
+        amount: total,
+        payer: { email: document.getElementById('ch-email').value || '' }
+      },
+      customization: {
+        visual: {
+          style: {
+            theme: 'default',
+            customVariables: {
+              baseColor: '#2d6a4f',
+              borderRadiusFull: '10px'
+            }
+          }
+        },
+        paymentMethods: { minInstallments: 1, maxInstallments: 12 }
+      },
+      callbacks: {
+        onReady: () => {},
+        onSubmit: async (cardData) => {
+          return procesarTarjeta(cardData);
+        },
+        onError: (error) => {
+          console.error('Brick error:', error);
+        }
+      }
+    });
+  }
+
+  initBricks();
+
+  // ── Procesar pago con tarjeta ─────────────────────────────
+  async function procesarTarjeta(cardData) {
+    const nombre = document.getElementById('ch-nombre').value.trim();
+    const celular = document.getElementById('ch-celular').value.trim();
+    const email = document.getElementById('ch-email').value.trim();
+
+    if (!nombre || !celular || !email) {
+      alert('Por favor completá nombre, celular y email.');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/process-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: cardData.token,
+          installments: cardData.installments,
+          payment_method_id: cardData.payment_method_id,
+          issuer_id: cardData.issuer_id,
+          payer_email: email,
+          payer_doc_type: cardData.payer?.identification?.type || 'CI',
+          payer_doc_number: cardData.payer?.identification?.number || '',
+          cliente: nombre,
+          celular: celular,
+          items: pedidoData.items,
+          envio: pedidoData.envio
+        })
+      });
+
+      const data = await res.json();
+
+      // Guardar pedido en Firebase
+      if (data.status === 'approved') {
+        guardarPedidoFirebase('aprobado', data.id);
+        mostrarResultado('aprobado');
+      } else if (data.status === 'pending' || data.status === 'in_process') {
+        guardarPedidoFirebase('pendiente', data.id);
+        mostrarResultado('pendiente');
+      } else {
+        mostrarResultado('error', data.status_detail);
+      }
+    } catch(e) {
+      mostrarResultado('error');
+    }
+  }
+
+  // ── Pagar con MercadoPago (redirect) ─────────────────────
+  async function pagarConMP() {
+    const nombre = document.getElementById('ch-nombre').value.trim();
+    const celular = document.getElementById('ch-celular').value.trim();
+    if (!nombre || !celular) { alert('Por favor completá nombre y celular.'); return; }
+
+    const btn = document.getElementById('btn-pagar-mp');
+    btn.disabled = true; btn.textContent = 'Procesando...';
+
+    try {
+      const res = await fetch('/api/create-preference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cliente: nombre, celular,
+          items: pedidoData.items.map(i => ({ nombre: i.name, variante: i.variant, qty: i.qty, precio: i.precio })),
+          envio: pedidoData.envio
+        })
+      });
+      const data = await res.json();
+      window.location.href = data.init_point;
+    } catch(e) {
+      alert('Error al conectar. Intentá de nuevo.');
+      btn.disabled = false; btn.textContent = '💳 Pagar con MercadoPago';
+    }
+  }
+
+  // ── Cambiar método ────────────────────────────────────────
+  function setMetodo(metodo, btn) {
+    document.querySelectorAll('.metodo-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('seccion-tarjeta').style.display = metodo === 'tarjeta' ? 'block' : 'none';
+    document.getElementById('seccion-mp').style.display = metodo === 'mp' ? 'block' : 'none';
+  }
+
+  // ── Guardar pedido en Firebase ────────────────────────────
+  function guardarPedidoFirebase(estado, mpId) {
+    const nombre = document.getElementById('ch-nombre').value.trim();
+    const celular = document.getElementById('ch-celular').value.trim();
+    const pedido = {
+      fecha: new Date().toISOString(),
+      cliente: nombre, celular,
+      productos: pedidoData.items.map(i => ({ nombre: i.name, variante: i.variant, qty: i.qty, precio: i.precio })),
+      envio: pedidoData.envio?.label || '—',
+      total: pedidoData.items.reduce((s, i) => s + i.precio * i.qty, 0) + (pedidoData.envio?.costo || 0),
+      estado,
+      mp_id: mpId || '',
+      metodo_pago: 'tarjeta'
+    };
+    db.ref('pedidos').push(pedido);
+    sessionStorage.removeItem('sendera_checkout');
+  }
+
+  // ── Mostrar resultado ─────────────────────────────────────
+  function mostrarResultado(tipo, detalle = '') {
+    document.getElementById('pago-contenido').style.display = 'none';
+    const res = document.getElementById('resultado');
+    res.classList.add('visible');
+
+    if (tipo === 'aprobado') {
+      document.getElementById('res-icon').textContent = '✅';
+      document.getElementById('res-titulo').textContent = '¡Pago aprobado!';
+      document.getElementById('res-msg').textContent = 'Tu pedido fue recibido. Te contactamos a la brevedad para coordinar el envío.';
+    } else if (tipo === 'pendiente') {
+      document.getElementById('res-icon').textContent = '⏳';
+      document.getElementById('res-titulo').textContent = 'Pago en proceso';
+      document.getElementById('res-msg').textContent = 'Tu pago está siendo procesado. Te avisamos cuando se confirme.';
+    } else {
+      document.getElementById('res-icon').textContent = '❌';
+      document.getElementById('res-titulo').textContent = 'Hubo un problema';
+      document.getElementById('res-msg').textContent = 'No se pudo procesar el pago. Revisá los datos o intentá con otro método.';
+      // Volver a mostrar el formulario después de 3s
+      setTimeout(() => {
+        document.getElementById('pago-contenido').style.display = 'block';
+        res.classList.remove('visible');
+      }, 3000);
+    }
+  }
+
+  // ── Verificar resultado de redirect MP ───────────────────
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('pago') === 'ok') {
+    renderResumen();
+    mostrarResultado('aprobado');
+  } else if (urlParams.get('pago') === 'error') {
+    renderResumen();
+    mostrarResultado('error');
+  }
+</script>
+</body>
+</html>

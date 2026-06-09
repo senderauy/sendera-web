@@ -30,9 +30,9 @@ export default async function handler(req, res) {
       phone: { number: body.celular }
     },
     back_urls: {
-      success: 'https://sendera-web.vercel.app?pago=ok',
-      failure: 'https://sendera-web.vercel.app?pago=error',
-      pending: 'https://sendera-web.vercel.app?pago=pendiente'
+      success: 'https://www.senderauy.com?pago=ok',
+      failure: 'https://www.senderauy.com?pago=error',
+      pending: 'https://www.senderauy.com?pago=pendiente'
     },
     auto_return: 'approved',
     statement_descriptor: 'SENDERA'

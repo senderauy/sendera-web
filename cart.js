@@ -339,29 +339,15 @@ async function pagarMP() {
   const envio = getEnvio();
   if (!envio.tipo) { alert('Por favor seleccioná un método de envío.'); return; }
 
-  const btn = document.querySelector('.btn-mp');
-  btn.disabled = true;
-  btn.textContent = 'Procesando...';
-
-  try {
-    const res = await fetch('/api/create-preference', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        cliente: name,
-        celular: phone,
-        items: cart.map(i => ({ nombre: i.name, variante: i.variant, qty: i.qty, precio: i.price })),
-        envio: { label: envio.label, costo: envio.costo }
-      })
-    });
-
-    const data = await res.json();
-    window.location.href = data.sandbox_init_point || data.init_point;
-  } catch(e) {
-    alert('Error al conectar con MercadoPago. Intentá de nuevo.');
-    btn.disabled = false;
-    btn.textContent = '💳 Pagar con MercadoPago';
-  }
+  // Guardar datos en sessionStorage y redirigir a checkout.html
+  const checkoutData = {
+    cliente: name,
+    celular: phone,
+    items: cart.map(i => ({ name: i.name, variant: i.variant, qty: i.qty, precio: i.price })),
+    envio: { label: envio.label, costo: envio.costo, tipo: envio.tipo }
+  };
+  sessionStorage.setItem('sendera_checkout', JSON.stringify(checkoutData));
+  window.location.href = '/checkout.html';
 }
 
 // Close on outside click
