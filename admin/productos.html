@@ -467,6 +467,13 @@
           <input type="number" id="var-precio-${id}" placeholder="750" value="${data?.precio || ''}" min="0" />
         </div>
       </div>
+      <div class="variante-row">
+        <div class="form-group" style="margin:0">
+          <label>Stock inicial</label>
+          <input type="number" id="var-stock-${id}" placeholder="0" value="${data?.stockInicial ?? ''}" min="0" />
+        </div>
+        <div style="flex:1"></div>
+      </div>
       <div class="form-group foto-preview-wrap" style="margin:0">
         <label>📸 Foto</label>
         <div class="foto-input-row">
@@ -542,7 +549,8 @@
       const n = document.getElementById(`var-nombre-${idNum}`)?.value.trim();
       const p = parseInt(document.getElementById(`var-precio-${idNum}`)?.value) || 0;
       const f = document.getElementById(`var-foto-${idNum}`)?.value.trim() || '';
-      if (n) variantes.push({ nombre: n, precio: p, foto: f });
+      const s = parseInt(document.getElementById(`var-stock-${idNum}`)?.value) || 0;
+      if (n) variantes.push({ nombre: n, precio: p, foto: f, stockInicial: s });
     });
 
     if (variantes.length === 0) { showToast('⚠️ Agregá al menos una variante', true); return; }
@@ -553,10 +561,27 @@
 
     const prod = { nombre, categoria, descripcion, variantes, actualizado: new Date().toISOString() };
 
+    const isNuevo = !editandoId;
     const ref = editandoId ? db.ref('productos/' + editandoId) : db.ref('productos').push();
     ref.set(prod).then(() => {
+      const prodId = editandoId || ref.key;
+
+      // Crear stock inicial solo para productos nuevos o variantes nuevas
+      variantes.forEach((v, i) => {
+        const stockId = prodId + '-' + i;
+        if (isNuevo) {
+          // Producto nuevo: siempre setear stock inicial
+          db.ref('stock/' + stockId).set(v.stockInicial || 0);
+        } else {
+          // Editando: solo crear si no existe (no pisar stock actual)
+          db.ref('stock/' + stockId).transaction(current => {
+            return current === null ? (v.stockInicial || 0) : current;
+          });
+        }
+      });
+
       cerrarModal();
-      showToast('✅ Producto guardado');
+      showToast('✅ Producto guardado y stock creado');
       btn.disabled = false;
       btn.textContent = '💾 Guardar';
     }).catch(e => {

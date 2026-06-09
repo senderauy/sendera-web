@@ -394,6 +394,10 @@
         </div>
 
       </div>
+
+      <!-- ✅ PRODUCTOS DINÁMICOS DESDE FIREBASE (nuevas categorías aparecen acá automáticamente) -->
+      <div id="categorias-firebase"></div>
+
     </div>
   </section>
 
@@ -543,5 +547,65 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="firebase-config.js"></script>
   <script src="cart.js"></script>
+  <script>
+    // Cargar productos dinámicos desde Firebase
+    db.ref('productos').on('value', snapshot => {
+      const productos = [];
+      snapshot.forEach(c => productos.push({ id: c.key, ...c.val() }));
+
+      // Actualizar STOCK_MAP con los productos de Firebase
+      productos.forEach(p => {
+        (p.variantes || []).forEach((v, i) => {
+          STOCK_MAP[p.nombre + '-' + v.nombre] = p.id + '-' + i;
+        });
+      });
+
+      if (productos.length === 0) {
+        document.getElementById('categorias-firebase').innerHTML = '';
+        return;
+      }
+
+      // Agrupar por categoría
+      const cats = {};
+      productos.forEach(p => {
+        const cat = p.categoria || 'Otros';
+        if (!cats[cat]) cats[cat] = [];
+        cats[cat].push(p);
+      });
+
+      const cont = document.getElementById('categorias-firebase');
+      cont.innerHTML = Object.entries(cats).map(([cat, prods]) => `
+        <div class="categoria-titulo">${cat}</div>
+        <div class="productos-grid">
+          ${prods.flatMap(p => (p.variantes || []).map((v, i) => `
+            <div class="producto-card">
+              <div class="producto-img-wrap">
+                ${v.foto
+                  ? `<img src="${v.foto}" alt="${p.nombre} ${v.nombre}" />`
+                  : `<div style="height:200px;display:flex;align-items:center;justify-content:center;font-size:3.5rem;background:#f2ede6;">🏔️</div>`
+                }
+              </div>
+              <div class="producto-info">
+                <h3>${p.nombre}</h3>
+                <p class="producto-colores">${v.nombre}</p>
+                ${p.descripcion ? `<p style="font-size:0.75rem;color:#a89880;margin:4px 0 0;">${p.descripcion}</p>` : ''}
+                <div class="producto-footer">
+                  <span class="precio">$${(v.precio || 0).toLocaleString()}</span>
+                  <div class="qty-control">
+                    <button class="qty-btn qty-minus" onclick="cardChangeQty(this, -1)" style="display:none">−</button>
+                    <span class="qty-num" style="display:none">0</span>
+                    <button class="qty-btn qty-plus" onclick="cardChangeQty(this, 1)">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `)).join('')}
+        </div>
+      `).join('');
+
+      // Revisar stock de los nuevos productos
+      checkStockOnLoad();
+    });
+  </script>
 </body>
 </html>
