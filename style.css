@@ -361,6 +361,13 @@ nav a:hover {
   border-top: none;
 }
 
+/* Firebase categories always show the separator */
+#categorias-firebase .categoria-titulo {
+  margin-top: 80px;
+  padding-top: 60px;
+  border-top: 1px solid rgba(201,176,122,0.2);
+}
+
 /* No doble línea entre categoría y subgrupo */
 .categoria-titulo + .subgrupo-titulo {
   border-top: none;
