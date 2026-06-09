@@ -118,6 +118,45 @@
     .metodo-btn.active { border-color: #2d6a4f; background: #f0faf4; color: #2d6a4f; }
     .metodo-btn:hover { border-color: #2d6a4f; }
 
+    /* TRANSFERENCIA */
+    .transferencia-wrap { padding: 20px 24px; }
+    .banco-card {
+      background: #f5f0ea;
+      border: 1.5px solid #e8dfd2;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .banco-card-title {
+      font-size: 0.68rem; color: #9a8f82; text-transform: uppercase;
+      letter-spacing: 0.12em; font-weight: 600; margin-bottom: 14px;
+    }
+    .banco-dato {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; border-bottom: 1px solid #e8dfd2; font-size: 0.84rem;
+    }
+    .banco-dato:last-child { border-bottom: none; }
+    .banco-dato-label { color: #9a8f82; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .banco-dato-valor { color: #2a2218; font-weight: 600; }
+    .btn-copiar {
+      background: none; border: none; cursor: pointer; font-size: 0.75rem;
+      color: #2d6a4f; font-weight: 600; padding: 2px 6px; border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .btn-copiar:hover { background: #e0f0e8; }
+    .transferencia-aviso {
+      background: #fff8e6; border: 1.5px solid #f0d890; border-radius: 10px;
+      padding: 12px 16px; font-size: 0.76rem; color: #7a6008; margin-bottom: 16px;
+      display: flex; gap: 8px; align-items: flex-start; line-height: 1.5;
+    }
+    .btn-transferi {
+      width: 100%; padding: 15px; background: #2d6a4f; color: #fff; border: none;
+      border-radius: 12px; font-family: 'Montserrat', sans-serif; font-size: 0.88rem;
+      font-weight: 700; cursor: pointer; transition: all 0.2s; letter-spacing: 0.04em;
+    }
+    .btn-transferi:hover { background: #245a40; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(45,106,79,0.25); }
+    .btn-transferi:disabled { background: #a0c4b2; cursor: not-allowed; transform: none; }
+
     /* FORMULARIO DATOS */
     .datos-form { padding: 20px 24px; border-bottom: 1.5px solid #f0ebe3; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -225,11 +264,11 @@
 
       <!-- Métodos -->
       <div class="metodos">
-        <button class="metodo-btn active" onclick="setMetodo('tarjeta', this)" id="btn-tarjeta">
-          <span class="icon">💳</span>Tarjeta
+        <button class="metodo-btn active" onclick="setMetodo('transferencia', this)" id="btn-transferencia">
+          <span class="icon">🏦</span>Transferencia
         </button>
-        <button class="metodo-btn" onclick="setMetodo('mp', this)" id="btn-mp">
-          <span class="icon">📱</span>MercadoPago
+        <button class="metodo-btn" onclick="setMetodo('tarjeta', this)" id="btn-tarjeta">
+          <span class="icon">💳</span>MercadoPago
         </button>
       </div>
 
@@ -251,19 +290,39 @@
         </div>
       </div>
 
-      <!-- Tarjeta (Bricks) -->
-      <div id="seccion-tarjeta">
-        <div class="bricks-wrap">
-          <div id="cardPaymentBrick_container"></div>
+      <!-- Transferencia bancaria -->
+      <div id="seccion-transferencia">
+        <div class="transferencia-wrap">
+          <div class="banco-card">
+            <div class="banco-card-title">📋 Datos para transferir</div>
+            <div class="banco-dato">
+              <span class="banco-dato-label">Banco</span>
+              <span class="banco-dato-valor">Prex</span>
+            </div>
+            <div class="banco-dato">
+              <span class="banco-dato-label">Cuenta</span>
+              <span class="banco-dato-valor" id="num-cuenta">19467638</span>
+              <button class="btn-copiar" onclick="copiar('19467638', this)">Copiar</button>
+            </div>
+            <div class="banco-dato">
+              <span class="banco-dato-label">Titular</span>
+              <span class="banco-dato-valor">Edgardo Torres</span>
+            </div>
+          </div>
+          <div class="transferencia-aviso">
+            <span>⚠️</span>
+            <span>Una vez realizada la transferencia, hacé clic en <strong>"Ya transferí"</strong>. Tu pedido queda registrado y te contactamos para confirmar el pago.</span>
+          </div>
+          <button class="btn-transferi" id="btn-transferi" onclick="confirmarTransferencia()">
+            ✅ Ya transferí
+          </button>
         </div>
       </div>
 
-      <!-- MercadoPago -->
-      <div id="seccion-mp" style="display:none">
-        <div class="mp-wrap">
-          <button class="btn-mp-checkout" id="btn-pagar-mp" onclick="pagarConMP()">
-            <span>💳</span> Pagar con MercadoPago
-          </button>
+      <!-- MercadoPago Bricks (tarjeta) -->
+      <div id="seccion-tarjeta" style="display:none">
+        <div class="bricks-wrap">
+          <div id="cardPaymentBrick_container"></div>
         </div>
       </div>
 
@@ -366,7 +425,13 @@
     });
   }
 
-  initBricks();
+  // Bricks se inicializa solo cuando el usuario elige esa sección
+  let bricksInited = false;
+  async function initBricksIfNeeded() {
+    if (bricksInited) return;
+    bricksInited = true;
+    initBricks();
+  }
 
   // ── Procesar pago con tarjeta ─────────────────────────────
   async function procesarTarjeta(cardData) {
@@ -415,43 +480,39 @@
     }
   }
 
-  // ── Pagar con MercadoPago (redirect) ─────────────────────
-  async function pagarConMP() {
+  // ── Confirmar transferencia ───────────────────────────────
+  async function confirmarTransferencia() {
     const nombre = document.getElementById('ch-nombre').value.trim();
     const celular = document.getElementById('ch-celular').value.trim();
-    if (!nombre || !celular) { alert('Por favor completá nombre y celular.'); return; }
+    if (!nombre || !celular) { alert('Por favor completá tu nombre y celular.'); return; }
 
-    const btn = document.getElementById('btn-pagar-mp');
-    btn.disabled = true; btn.textContent = 'Procesando...';
+    const btn = document.getElementById('btn-transferi');
+    btn.disabled = true; btn.textContent = 'Registrando pedido...';
 
-    try {
-      const res = await fetch('/api/create-preference', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cliente: nombre, celular,
-          items: pedidoData.items.map(i => ({ nombre: i.name, variante: i.variant, qty: i.qty, precio: i.precio })),
-          envio: pedidoData.envio
-        })
-      });
-      const data = await res.json();
-      window.location.href = data.init_point;
-    } catch(e) {
-      alert('Error al conectar. Intentá de nuevo.');
-      btn.disabled = false; btn.textContent = '💳 Pagar con MercadoPago';
-    }
+    guardarPedidoFirebase('pendiente-transferencia', null, 'transferencia');
+    mostrarResultado('transferencia');
+  }
+
+  // ── Copiar al portapapeles ────────────────────────────────
+  function copiar(texto, btn) {
+    navigator.clipboard.writeText(texto).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copiado';
+      setTimeout(() => btn.textContent = orig, 2000);
+    });
   }
 
   // ── Cambiar método ────────────────────────────────────────
   function setMetodo(metodo, btn) {
     document.querySelectorAll('.metodo-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    document.getElementById('seccion-transferencia').style.display = metodo === 'transferencia' ? 'block' : 'none';
     document.getElementById('seccion-tarjeta').style.display = metodo === 'tarjeta' ? 'block' : 'none';
-    document.getElementById('seccion-mp').style.display = metodo === 'mp' ? 'block' : 'none';
+    if (metodo === 'tarjeta') initBricksIfNeeded();
   }
 
   // ── Guardar pedido en Firebase ────────────────────────────
-  function guardarPedidoFirebase(estado, mpId) {
+  function guardarPedidoFirebase(estado, mpId, metodoPago = 'tarjeta') {
     const nombre = document.getElementById('ch-nombre').value.trim();
     const celular = document.getElementById('ch-celular').value.trim();
     const pedido = {
@@ -462,7 +523,7 @@
       total: pedidoData.items.reduce((s, i) => s + i.precio * i.qty, 0) + (pedidoData.envio?.costo || 0),
       estado,
       mp_id: mpId || '',
-      metodo_pago: 'tarjeta'
+      metodo_pago: metodoPago
     };
     db.ref('pedidos').push(pedido);
     sessionStorage.removeItem('sendera_checkout');
@@ -474,7 +535,11 @@
     const res = document.getElementById('resultado');
     res.classList.add('visible');
 
-    if (tipo === 'aprobado') {
+    if (tipo === 'transferencia') {
+      document.getElementById('res-icon').textContent = '🏦';
+      document.getElementById('res-titulo').textContent = '¡Pedido registrado!';
+      document.getElementById('res-msg').textContent = 'Recibimos tu pedido. En cuanto confirmemos la transferencia, te contactamos para coordinar el envío.';
+    } else if (tipo === 'aprobado') {
       document.getElementById('res-icon').textContent = '✅';
       document.getElementById('res-titulo').textContent = '¡Pago aprobado!';
       document.getElementById('res-msg').textContent = 'Tu pedido fue recibido. Te contactamos a la brevedad para coordinar el envío.';
