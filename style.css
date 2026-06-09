@@ -223,8 +223,8 @@ nav a:hover {
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 40px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 32px;
   margin-top: 20px;
 }
 
@@ -233,23 +233,33 @@ nav a:hover {
 }
 
 .feature span {
-  font-size: 2rem;
+  font-size: 1.6rem;
   display: block;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .feature h4 {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: var(--gold-light);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   letter-spacing: 0.04em;
 }
 
 .feature p {
   color: var(--text-muted);
-  font-size: 0.88rem;
-  line-height: 1.7;
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  .feature span { font-size: 1.4rem; margin-bottom: 6px; }
+  .feature h4 { font-size: 0.9rem; margin-bottom: 4px; }
+  .feature p { font-size: 0.75rem; }
 }
 
 /* CONTACTO */
