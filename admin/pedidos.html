@@ -243,10 +243,12 @@
 
   function abrirWA(celular, cliente, productos, total, envio) {
     const esInterior = envio && envio.toLowerCase().includes('interior');
+    const esMontevideo = envio && envio.toLowerCase().includes('montevideo');
     const msg = encodeURIComponent(
       `Hola ${cliente}! 👋 Te escribimos de *Sendera*.\n\n` +
       `Tu pedido está en preparación:\n${productos}\n*Total: $${total}*\n\n` +
       (esInterior ? `Te avisaremos cuando sea despachado. ` : '') +
+      (esMontevideo ? `Nos pondremos en contacto para coordinar la entrega. ` : '') +
       `¡Muchas gracias por tu compra! 🏔️`
     );
     window.open(`https://wa.me/598${celular.replace(/\D/g,'')}?text=${msg}`, '_blank');
