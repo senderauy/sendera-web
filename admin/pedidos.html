@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -245,13 +245,15 @@
     const esInterior = envio && envio.toLowerCase().includes('interior');
     const esMontevideo = envio && envio.toLowerCase().includes('montevideo');
     const esPickup = envio && envio.toLowerCase().includes('pick up');
+    const wave = String.fromCodePoint(0x1F44B);
+    const mountain = String.fromCodePoint(0x1F3D4) + String.fromCodePoint(0xFE0F);
     const msg = encodeURIComponent(
-      `Hola ${cliente}! 👋 Te escribimos de *Sendera*.\n\n` +
+      `Hola ${cliente}! ${wave} Te escribimos de *Sendera*.\n\n` +
       `Tu pedido está en preparación:\n${productos}\n*Total: $${total}*\n\n` +
       (esInterior ? `Te avisaremos cuando sea despachado. ` : '') +
       (esMontevideo ? `Nos pondremos en contacto para coordinar la entrega. ` : '') +
       (esPickup ? `Nos pondremos en contacto para coordinar el retiro. ` : '') +
-      `¡Muchas gracias por tu compra! 🏔️`
+      `¡Muchas gracias por tu compra! ${mountain}`
     );
     window.open(`https://wa.me/598${celular.replace(/\D/g,'')}?text=${msg}`, '_blank');
   }
