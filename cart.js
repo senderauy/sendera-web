@@ -339,12 +339,32 @@ async function pagarMP() {
   const envio = getEnvio();
   if (!envio.tipo) { alert('Por favor seleccioná un método de envío.'); return; }
 
+  // Validar datos de envío completos
+  let envioLabel = envio.label;
+  if (envio.tipo === 'montevideo') {
+    const dir = document.getElementById('envio-direccion').value.trim();
+    if (!dir) { alert('Por favor ingresá tu dirección de entrega.'); return; }
+    envioLabel = `Montevideo · $200 · ${dir}`;
+  } else if (envio.tipo === 'interior') {
+    const ciudad = document.getElementById('envio-ciudad').value.trim();
+    if (!ciudad) { alert('Por favor ingresá tu ciudad o localidad.'); return; }
+    const interiorTipo = document.querySelector('input[name="interior-tipo"]:checked');
+    if (!interiorTipo) { alert('Por favor indicá si retirás en agencia o necesitás entrega a domicilio.'); return; }
+    if (interiorTipo.value === 'agencia') {
+      envioLabel = `Interior · ${ciudad} · Retiro en agencia`;
+    } else {
+      const domicilio = document.getElementById('envio-domicilio-interior').value.trim();
+      if (!domicilio) { alert('Por favor ingresá tu dirección de entrega.'); return; }
+      envioLabel = `Interior · ${ciudad} · Domicilio: ${domicilio}`;
+    }
+  }
+
   // Guardar datos en sessionStorage y redirigir a checkout.html
   const checkoutData = {
     cliente: name,
     celular: phone,
     items: cart.map(i => ({ name: i.name, variant: i.variant, qty: i.qty, precio: i.price })),
-    envio: { label: envio.label, costo: envio.costo, tipo: envio.tipo }
+    envio: { label: envioLabel, costo: envio.costo, tipo: envio.tipo }
   };
   sessionStorage.setItem('sendera_checkout', JSON.stringify(checkoutData));
   window.location.href = '/checkout.html';
