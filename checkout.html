@@ -571,7 +571,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cliente: nombre, celular,
-          items: pedidoData.items.map(i => ({ nombre: i.name, variante: i.variant, qty: i.qty, precio: i.precio })),
+          items: pedidoData.items.map(i => ({ nombre: i.name, variante: i.variant, qty: parseInt(i.qty), precio: parseFloat(i.precio) })),
           envio: pedidoData.envio
         })
       });

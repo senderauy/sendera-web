@@ -8,8 +8,8 @@ export default async function handler(req, res) {
 
   const items = body.items.map(item => ({
     title: `${item.nombre} - ${item.variante}`,
-    quantity: item.qty,
-    unit_price: item.precio,
+    quantity: parseInt(item.qty) || 1,
+    unit_price: parseFloat(item.precio) || 0,
     currency_id: 'UYU'
   }));
 
@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     items.push({
       title: `Envío - ${body.envio.label}`,
       quantity: 1,
-      unit_price: body.envio.costo,
+      unit_price: parseFloat(body.envio.costo),
       currency_id: 'UYU'
     });
   }
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     items,
     payer: {
       name: body.cliente,
-      phone: { number: body.celular }
+      phone: { number: String(body.celular) }
     },
     back_urls: {
       success: 'https://www.senderauy.com?pago=ok',
@@ -35,7 +35,8 @@ export default async function handler(req, res) {
       pending: 'https://www.senderauy.com?pago=pendiente'
     },
     auto_return: 'approved',
-    statement_descriptor: 'SENDERA'
+    statement_descriptor: 'SENDERA',
+    binary_mode: false
   };
 
   const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
