@@ -257,9 +257,9 @@
 
     <!-- Resultado pago -->
     <div class="resultado" id="resultado">
-      <div class="resultado-icon" id="res-icon">✅</div>
-      <div class="resultado-titulo" id="res-titulo">¡Pago aprobado!</div>
-      <div class="resultado-msg" id="res-msg">Tu pedido fue recibido. Te contactamos a la brevedad.</div>
+      <div class="resultado-icon" id="res-icon">🏔️</div>
+      <div class="resultado-titulo" id="res-titulo">¡Gracias por tu compra!</div>
+      <div class="resultado-msg" id="res-msg">Te avisaremos el estado de tu pedido.<br>¡Nos vemos en la aventura!</div>
       <a href="index.html" class="btn-volver">Volver a la tienda</a>
     </div>
 
@@ -609,27 +609,18 @@
     const res = document.getElementById('resultado');
     res.classList.add('visible');
 
-    if (tipo === 'transferencia') {
-      document.getElementById('res-icon').textContent = '🏦';
-      document.getElementById('res-titulo').textContent = '¡Pedido registrado!';
-      document.getElementById('res-msg').textContent = 'Recibimos tu pedido. En cuanto confirmemos la transferencia, te contactamos para coordinar el envío.';
-    } else if (tipo === 'aprobado') {
-      document.getElementById('res-icon').textContent = '✅';
-      document.getElementById('res-titulo').textContent = '¡Pago aprobado!';
-      document.getElementById('res-msg').textContent = 'Tu pedido fue recibido. Te contactamos a la brevedad para coordinar el envío.';
-    } else if (tipo === 'pendiente') {
-      document.getElementById('res-icon').textContent = '⏳';
-      document.getElementById('res-titulo').textContent = 'Pago en proceso';
-      document.getElementById('res-msg').textContent = 'Tu pago está siendo procesado. Te avisamos cuando se confirme.';
-    } else {
+    if (tipo === 'error') {
       document.getElementById('res-icon').textContent = '❌';
       document.getElementById('res-titulo').textContent = 'Hubo un problema';
-      document.getElementById('res-msg').textContent = 'No se pudo procesar el pago. Revisá los datos o intentá con otro método.';
-      // Volver a mostrar el formulario después de 3s
+      document.getElementById('res-msg').innerHTML = 'No se pudo procesar el pago.<br>Revisá los datos o intentá con otro método.';
       setTimeout(() => {
         document.getElementById('pago-contenido').style.display = 'block';
         res.classList.remove('visible');
       }, 3000);
+    } else {
+      document.getElementById('res-icon').textContent = '🏔️';
+      document.getElementById('res-titulo').textContent = '¡Gracias por tu compra!';
+      document.getElementById('res-msg').innerHTML = 'Te avisaremos el estado de tu pedido.<br>¡Nos vemos en la aventura!';
     }
   }
 
