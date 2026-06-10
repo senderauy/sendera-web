@@ -337,7 +337,7 @@
         <div class="comprobante-wrap">
           <div class="comprobante-lbl">📎 Comprobante de transferencia</div>
           ${p.comprobante.startsWith('data:application/pdf')
-            ? `<a href="${p.comprobante}" target="_blank" style="font-size:0.8rem;color:#2d6a4f;font-weight:600;text-decoration:none;background:#f0faf4;border:1.5px solid #b8dba8;border-radius:8px;padding:6px 14px;display:inline-block">📄 Ver PDF</a>`
+            ? `<button onclick="abrirPDF('${p.id}')" style="font-size:0.8rem;color:#2d6a4f;font-weight:600;cursor:pointer;background:#f0faf4;border:1.5px solid #b8dba8;border-radius:8px;padding:6px 14px;font-family:inherit">📄 Ver PDF</button>`
             : `<img class="comprobante-thumb" src="${p.comprobante}" alt="Comprobante" onclick="abrirLightbox('${p.id}')" />`
           }
         </div>` : (p.metodo_pago === 'transferencia' ? `
@@ -358,6 +358,18 @@
   function eliminarPedido(id) {
     if (!confirm('¿Eliminar este pedido?')) return;
     db.ref('pedidos/' + id).remove();
+  }
+
+  function abrirPDF(pedidoId) {
+    const pedido = todosPedidos.find(p => p.id === pedidoId);
+    if (!pedido || !pedido.comprobante) return;
+    const base64 = pedido.comprobante.split(',')[1];
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
   }
 
   function abrirLightbox(pedidoId) {
