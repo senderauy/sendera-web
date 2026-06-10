@@ -330,7 +330,10 @@
         ${p.comprobante ? `
         <div class="comprobante-wrap">
           <div class="comprobante-lbl">📎 Comprobante de transferencia</div>
-          <img class="comprobante-thumb" src="${p.comprobante}" alt="Comprobante" onclick="abrirLightbox('${p.id}')" />
+          ${p.comprobante.startsWith('data:application/pdf')
+            ? `<a href="${p.comprobante}" download="comprobante.pdf" style="font-size:0.8rem;color:#2d6a4f;font-weight:600;text-decoration:none;background:#f0faf4;border:1.5px solid #b8dba8;border-radius:8px;padding:6px 14px;display:inline-block">📄 Ver PDF</a>`
+            : `<img class="comprobante-thumb" src="${p.comprobante}" alt="Comprobante" onclick="abrirLightbox('${p.id}')" />`
+          }
         </div>` : (p.metodo_pago === 'transferencia' ? `
         <div class="comprobante-wrap">
           <div class="comprobante-lbl" style="color:#e67e22">⚠️ Sin comprobante adjunto</div>
