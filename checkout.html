@@ -658,8 +658,7 @@
         })
       });
       const data = await res.json();
-      // Guardar pedido en Firebase como pendiente
-      guardarPedidoFirebase('pendiente', null, 'mercadopago');
+      // No borrar sessionStorage — se necesita al volver del redirect
       window.location.href = data.init_point;
     } catch(e) {
       alert('Error al conectar. Intentá de nuevo.');
@@ -711,6 +710,7 @@
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('pago') === 'ok') {
     renderResumen();
+    guardarPedidoFirebase('confirmado', urlParams.get('payment_id') || '', 'mercadopago');
     mostrarResultado('aprobado');
   } else if (urlParams.get('pago') === 'error') {
     renderResumen();
