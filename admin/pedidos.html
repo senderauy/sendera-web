@@ -217,10 +217,13 @@
     renderPedidos();
   }
 
-  function abrirWA(celular, cliente, productos, total) {
+  function abrirWA(celular, cliente, productos, total, envio) {
+    const esInterior = envio && envio.toLowerCase().includes('interior');
     const msg = encodeURIComponent(
-      `Hola ${cliente}! 👋 Te escribimos de *Sendera*.\n` +
-      `Tu pedido está listo:\n${productos}\n*Total: $${total}*\n¿Cómo te va quedando?`
+      `Hola ${cliente}! 👋 Te escribimos de *Sendera*.\n\n` +
+      `Tu pedido está en preparación:\n${productos}\n*Total: $${total}*\n\n` +
+      (esInterior ? `Te avisaremos cuando sea despachado. ` : '') +
+      `¡Muchas gracias por tu compra! 🏔️`
     );
     window.open(`https://wa.me/598${celular.replace(/\D/g,'')}?text=${msg}`, '_blank');
   }
@@ -274,7 +277,7 @@
       ).join('\n');
 
       const waBtn = p.celular
-        ? `<button class="badge-wa" onclick="abrirWA('${p.celular}', '${p.cliente}', \`${prods}\`, '${(p.total||0).toLocaleString()}')">💬 WhatsApp</button>`
+        ? `<button class="badge-wa" onclick="abrirWA('${p.celular}', '${p.cliente}', \`${prods}\`, '${(p.total||0).toLocaleString()}', '${p.envio||''}')">💬 WhatsApp</button>`
         : '';
 
       return `
