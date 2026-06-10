@@ -157,6 +157,33 @@
     .btn-transferi:hover { background: #245a40; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(45,106,79,0.25); }
     .btn-transferi:disabled { background: #a0c4b2; cursor: not-allowed; transform: none; }
 
+    /* COMPROBANTE UPLOAD */
+    .comprobante-section {
+      margin-bottom: 16px;
+    }
+    .comprobante-label {
+      font-size: 0.7rem; color: #6b5f54; letter-spacing: 0.1em;
+      text-transform: uppercase; margin-bottom: 8px; font-weight: 600; display: block;
+    }
+    .comprobante-upload-area {
+      border: 2px dashed #d0c8bc; border-radius: 12px; padding: 20px 16px;
+      text-align: center; cursor: pointer; transition: all 0.2s; background: #faf8f4;
+      position: relative;
+    }
+    .comprobante-upload-area:hover { border-color: #2d6a4f; background: #f0faf4; }
+    .comprobante-upload-area.has-file { border-color: #2d6a4f; border-style: solid; background: #f0faf4; }
+    .comprobante-upload-area input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .comprobante-upload-icon { font-size: 1.8rem; margin-bottom: 6px; }
+    .comprobante-upload-text { font-size: 0.78rem; color: #9a8f82; }
+    .comprobante-upload-text strong { color: #2d6a4f; }
+    .comprobante-preview {
+      display: none; margin-top: 10px; border-radius: 10px; overflow: hidden;
+      border: 1.5px solid #d0c8bc; max-height: 180px;
+    }
+    .comprobante-preview img { width: 100%; height: 180px; object-fit: cover; display: block; }
+
     /* FORMULARIO DATOS */
     .datos-form { padding: 20px 24px; border-bottom: 1.5px solid #f0ebe3; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -318,8 +345,22 @@
           </div>
           <div class="transferencia-aviso">
             <span>⚠️</span>
-            <span>Una vez realizada la transferencia, hacé clic en <strong>"Ya transferí"</strong>. Tu pedido queda registrado y te contactamos para confirmar el pago.</span>
+            <span>Realizá la transferencia y luego adjuntá el comprobante para confirmar tu pedido.</span>
           </div>
+
+          <!-- Comprobante upload -->
+          <div class="comprobante-section">
+            <span class="comprobante-label">📎 Comprobante de transferencia</span>
+            <div class="comprobante-upload-area" id="comprobante-area">
+              <input type="file" id="comprobante-input" accept="image/*" onchange="onComprobanteChange(event)" />
+              <div class="comprobante-upload-icon">📷</div>
+              <div class="comprobante-upload-text">Tocá para subir una foto del comprobante<br><strong>Requerido para confirmar el pedido</strong></div>
+            </div>
+            <div class="comprobante-preview" id="comprobante-preview">
+              <img id="comprobante-img" src="" alt="Comprobante" />
+            </div>
+          </div>
+
           <button class="btn-transferi" id="btn-transferi" onclick="confirmarTransferencia()">
             ✅ Ya transferí
           </button>
@@ -490,11 +531,52 @@
     }
   }
 
+  // ── Comprobante upload ────────────────────────────────────
+  let comprobanteBase64 = null;
+
+  function onComprobanteChange(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const MAX = 800;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        comprobanteBase64 = canvas.toDataURL('image/jpeg', 0.75);
+
+        // Mostrar preview
+        document.getElementById('comprobante-img').src = comprobanteBase64;
+        document.getElementById('comprobante-preview').style.display = 'block';
+        const area = document.getElementById('comprobante-area');
+        area.classList.add('has-file');
+        area.querySelector('.comprobante-upload-icon').textContent = '✅';
+        area.querySelector('.comprobante-upload-text').innerHTML = '<strong>Comprobante adjunto</strong> · Tocá para cambiar';
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
   // ── Confirmar transferencia ───────────────────────────────
   async function confirmarTransferencia() {
     const nombre = document.getElementById('ch-nombre').value.trim();
     const celular = document.getElementById('ch-celular').value.trim();
     if (!nombre || !celular) { alert('Por favor completá tu nombre y celular.'); return; }
+
+    if (!comprobanteBase64) {
+      alert('Por favor adjuntá el comprobante de la transferencia.');
+      document.getElementById('comprobante-area').style.borderColor = '#e74c3c';
+      return;
+    }
 
     const btn = document.getElementById('btn-transferi');
     btn.disabled = true; btn.textContent = 'Registrando pedido...';
@@ -599,6 +681,7 @@
       mp_id: mpId || '',
       metodo_pago: metodoPago
     };
+    if (comprobanteBase64) pedido.comprobante = comprobanteBase64;
     db.ref('pedidos').push(pedido);
     sessionStorage.removeItem('sendera_checkout');
   }

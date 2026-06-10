@@ -114,6 +114,21 @@
     .empty-state { text-align: center; padding: 60px 20px; color: #9a8f82; font-size: 0.85rem; background: #fff; border-radius: 14px; border: 1.5px solid #e8dfd2; }
     .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
 
+    /* COMPROBANTE */
+    .comprobante-wrap { margin-top: 12px; }
+    .comprobante-thumb {
+      width: 80px; height: 80px; object-fit: cover; border-radius: 8px;
+      border: 1.5px solid #e8dfd2; cursor: pointer; transition: transform 0.2s;
+    }
+    .comprobante-thumb:hover { transform: scale(1.05); }
+    .comprobante-lbl { font-size: 0.65rem; color: #9a8f82; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+
+    /* LIGHTBOX */
+    .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; }
+    .lightbox.open { display: flex; }
+    .lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 12px; box-shadow: 0 8px 40px rgba(0,0,0,0.5); }
+    .lightbox-close { position: absolute; top: 20px; right: 24px; color: #fff; font-size: 2rem; cursor: pointer; line-height: 1; }
+
     @media (max-width: 700px) {
       .resumen { grid-template-columns: repeat(2, 1fr); }
       .nav-links, .btn-logout { display: none; }
@@ -169,6 +184,12 @@
   </div>
 
   <div id="pedidos-lista"></div>
+</div>
+
+<!-- Lightbox comprobante -->
+<div class="lightbox" id="lightbox" onclick="cerrarLightbox()">
+  <span class="lightbox-close">✕</span>
+  <img id="lightbox-img" src="" alt="Comprobante" />
 </div>
 
 <div class="mobile-nav">
@@ -303,12 +324,31 @@
         <div class="pedido-productos">
           ${(p.productos || []).map(pr => `<div class="pedido-producto">• ${pr.nombre} ${pr.variante} x${pr.qty} — $${(pr.precio * pr.qty).toLocaleString()}</div>`).join('')}
         </div>
+        ${p.comprobante ? `
+        <div class="comprobante-wrap">
+          <div class="comprobante-lbl">📎 Comprobante de transferencia</div>
+          <img class="comprobante-thumb" src="${p.comprobante}" alt="Comprobante" onclick="abrirLightbox('${p.id}')" />
+        </div>` : (p.metodo_pago === 'transferencia' ? `
+        <div class="comprobante-wrap">
+          <div class="comprobante-lbl" style="color:#e67e22">⚠️ Sin comprobante adjunto</div>
+        </div>` : '')}
         <div class="pedido-footer">
           <div class="pedido-envio">📦 ${p.envio || '—'}</div>
           <div class="pedido-total">$${(p.total || 0).toLocaleString()}</div>
         </div>
       </div>`;
     }).join('');
+  }
+
+  function abrirLightbox(pedidoId) {
+    const pedido = todosPedidos.find(p => p.id === pedidoId);
+    if (!pedido || !pedido.comprobante) return;
+    document.getElementById('lightbox-img').src = pedido.comprobante;
+    document.getElementById('lightbox').classList.add('open');
+  }
+
+  function cerrarLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
   }
 
   db.ref('pedidos').on('value', snapshot => {
