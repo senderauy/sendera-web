@@ -274,7 +274,7 @@
         <button class="metodo-btn active" onclick="setMetodo('transferencia', this)" id="btn-transferencia">
           <span class="icon">🏦</span>Transferencia
         </button>
-        <button class="metodo-btn" onclick="setMetodo('tarjeta', this)" id="btn-tarjeta">
+        <button class="metodo-btn" onclick="setMetodo('mp', this)" id="btn-mp">
           <span class="icon">💳</span>MercadoPago
         </button>
       </div>
@@ -326,10 +326,13 @@
         </div>
       </div>
 
-      <!-- MercadoPago Bricks (tarjeta) -->
-      <div id="seccion-tarjeta" style="display:none">
-        <div class="bricks-wrap">
-          <div id="cardPaymentBrick_container"></div>
+      <!-- MercadoPago redirect -->
+      <div id="seccion-mp" style="display:none">
+        <div class="mp-wrap">
+          <button class="btn-mp-checkout" id="btn-pagar-mp" onclick="pagarConMP()">
+            <span>💳</span> Continuar con MercadoPago
+          </button>
+          <p style="font-size:0.72rem;color:#9a8f82;text-align:center;margin-top:12px;">Crédito, débito y saldo MP · Te redirige a MercadoPago</p>
         </div>
       </div>
 
@@ -550,8 +553,36 @@
     document.querySelectorAll('.metodo-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('seccion-transferencia').style.display = metodo === 'transferencia' ? 'block' : 'none';
-    document.getElementById('seccion-tarjeta').style.display = metodo === 'tarjeta' ? 'block' : 'none';
-    if (metodo === 'tarjeta') initBricksIfNeeded();
+    document.getElementById('seccion-mp').style.display = metodo === 'mp' ? 'block' : 'none';
+  }
+
+  // ── Pagar con MercadoPago (redirect) ─────────────────────
+  async function pagarConMP() {
+    const nombre = document.getElementById('ch-nombre').value.trim();
+    const celular = document.getElementById('ch-celular').value.trim();
+    if (!nombre || !celular) { alert('Por favor completá tu nombre y celular.'); return; }
+
+    const btn = document.getElementById('btn-pagar-mp');
+    btn.disabled = true; btn.innerHTML = '⏳ Procesando...';
+
+    try {
+      const res = await fetch('/api/create-preference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cliente: nombre, celular,
+          items: pedidoData.items.map(i => ({ nombre: i.name, variante: i.variant, qty: i.qty, precio: i.precio })),
+          envio: pedidoData.envio
+        })
+      });
+      const data = await res.json();
+      // Guardar pedido en Firebase como pendiente
+      guardarPedidoFirebase('pendiente', null, 'mercadopago');
+      window.location.href = data.init_point;
+    } catch(e) {
+      alert('Error al conectar. Intentá de nuevo.');
+      btn.disabled = false; btn.innerHTML = '<span>💳</span> Continuar con MercadoPago';
+    }
   }
 
   // ── Guardar pedido en Firebase ────────────────────────────
