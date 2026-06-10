@@ -165,16 +165,21 @@
       font-size: 0.7rem; color: #6b5f54; letter-spacing: 0.1em;
       text-transform: uppercase; margin-bottom: 8px; font-weight: 600; display: block;
     }
-    .comprobante-upload-area {
-      border: 2px dashed #d0c8bc; border-radius: 12px; padding: 20px 16px;
+    .comprobante-opciones { display: flex; gap: 10px; margin-bottom: 0; }
+    .comprobante-opcion {
+      flex: 1; border: 2px dashed #d0c8bc; border-radius: 12px; padding: 16px 8px;
       text-align: center; cursor: pointer; transition: all 0.2s; background: #faf8f4;
       position: relative;
     }
-    .comprobante-upload-area:hover { border-color: #2d6a4f; background: #f0faf4; }
-    .comprobante-upload-area.has-file { border-color: #2d6a4f; border-style: solid; background: #f0faf4; }
-    .comprobante-upload-area input[type="file"] {
+    .comprobante-opcion:hover { border-color: #2d6a4f; background: #f0faf4; }
+    .comprobante-opcion.has-file { border-color: #2d6a4f; border-style: solid; background: #f0faf4; }
+    .comprobante-opcion input[type="file"] {
       position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
     }
+    .comprobante-opcion-icon { font-size: 1.8rem; margin-bottom: 4px; }
+    .comprobante-opcion-text { font-size: 0.72rem; color: #9a8f82; font-weight: 600; }
+    /* legacy — keep for has-file state */
+    .comprobante-upload-area { display: none; }
     .comprobante-upload-icon { font-size: 1.8rem; margin-bottom: 6px; }
     .comprobante-upload-text { font-size: 0.78rem; color: #9a8f82; }
     .comprobante-upload-text strong { color: #2d6a4f; }
@@ -351,10 +356,17 @@
           <!-- Comprobante upload -->
           <div class="comprobante-section">
             <span class="comprobante-label">📎 Comprobante de transferencia</span>
-            <div class="comprobante-upload-area" id="comprobante-area">
-              <input type="file" id="comprobante-input" accept="image/*,application/pdf" onchange="onComprobanteChange(event)" />
-              <div class="comprobante-upload-icon">📷</div>
-              <div class="comprobante-upload-text">Tocá para subir una foto del comprobante<br><strong>Requerido para confirmar el pedido</strong></div>
+            <div class="comprobante-opciones">
+              <div class="comprobante-opcion" id="comprobante-foto-area">
+                <input type="file" id="comprobante-input-foto" accept="image/*" onchange="onComprobanteChange(event, 'foto')" />
+                <div class="comprobante-opcion-icon">📷</div>
+                <div class="comprobante-opcion-text">Foto</div>
+              </div>
+              <div class="comprobante-opcion" id="comprobante-pdf-area">
+                <input type="file" id="comprobante-input-pdf" accept="application/pdf" onchange="onComprobanteChange(event, 'pdf')" />
+                <div class="comprobante-opcion-icon">📄</div>
+                <div class="comprobante-opcion-text">PDF</div>
+              </div>
             </div>
             <div class="comprobante-preview" id="comprobante-preview">
               <img id="comprobante-img" src="" alt="Comprobante" />
@@ -534,17 +546,23 @@
   // ── Comprobante upload ────────────────────────────────────
   let comprobanteBase64 = null;
 
-  function onComprobanteChange(event) {
+  function onComprobanteChange(event, tipo) {
     const file = event.target.files[0];
     if (!file) return;
 
-    const esPDF = file.type === 'application/pdf';
     const reader = new FileReader();
-
     reader.onload = function(e) {
-      if (esPDF) {
+      if (tipo === 'pdf') {
         comprobanteBase64 = e.target.result;
         document.getElementById('comprobante-preview').style.display = 'none';
+        const area = document.getElementById('comprobante-pdf-area');
+        area.classList.add('has-file');
+        area.querySelector('.comprobante-opcion-icon').textContent = '✅';
+        area.querySelector('.comprobante-opcion-text').textContent = 'PDF adjunto';
+        // reset foto
+        document.getElementById('comprobante-foto-area').classList.remove('has-file');
+        document.getElementById('comprobante-foto-area').querySelector('.comprobante-opcion-icon').textContent = '📷';
+        document.getElementById('comprobante-foto-area').querySelector('.comprobante-opcion-text').textContent = 'Foto';
       } else {
         const img = new Image();
         img.onload = function() {
@@ -562,15 +580,16 @@
           document.getElementById('comprobante-preview').style.display = 'block';
         };
         img.src = e.target.result;
+        const area = document.getElementById('comprobante-foto-area');
+        area.classList.add('has-file');
+        area.querySelector('.comprobante-opcion-icon').textContent = '✅';
+        area.querySelector('.comprobante-opcion-text').textContent = 'Foto adjunta';
+        // reset pdf
+        document.getElementById('comprobante-pdf-area').classList.remove('has-file');
+        document.getElementById('comprobante-pdf-area').querySelector('.comprobante-opcion-icon').textContent = '📄';
+        document.getElementById('comprobante-pdf-area').querySelector('.comprobante-opcion-text').textContent = 'PDF';
       }
-
-      const area = document.getElementById('comprobante-area');
-      area.classList.add('has-file');
-      area.querySelector('.comprobante-upload-icon').textContent = esPDF ? '📄' : '✅';
-      area.querySelector('.comprobante-upload-text').innerHTML = `<strong>${esPDF ? 'PDF adjunto' : 'Comprobante adjunto'}</strong> · Tocá para cambiar`;
-      area.style.borderColor = '';
     };
-
     reader.readAsDataURL(file);
   }
 
