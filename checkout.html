@@ -710,6 +710,21 @@
     if (comprobanteBase64) pedido.comprobante = comprobanteBase64;
     db.ref('pedidos').push(pedido);
     sessionStorage.removeItem('sendera_checkout');
+    // Enviar notificación push
+    db.ref('fcm_tokens').once('value', snap => {
+      const tokens = Object.values(snap.val() || {});
+      if (tokens.length === 0) return;
+      fetch('/api/notify-pedido', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cliente: pedido.cliente,
+          total: pedido.total.toLocaleString(),
+          envio: pedido.envio,
+          tokens
+        })
+      }).catch(() => {});
+    });
   }
 
   // ── Mostrar resultado ─────────────────────────────────────

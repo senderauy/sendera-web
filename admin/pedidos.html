@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
   <script src="../firebase-config.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -208,6 +209,32 @@
 <script>
   if (!localStorage.getItem('sendera_admin')) window.location.href = 'login.html';
   function logout() { localStorage.removeItem('sendera_admin'); window.location.href = 'login.html'; }
+
+  // ── Notificaciones push ───────────────────────────────────
+  const VAPID_KEY = 'BEpbAI9BlhpQv8s8dwQbiLr8eFwSHOL9eqBcvnHS2Yq3d7tWMrEDnclpqLP3G50uzSJSxA-74YsTjo5wODQvqg4';
+
+  async function activarNotificaciones() {
+    try {
+      const reg = await navigator.serviceWorker.register('/admin/firebase-messaging-sw.js');
+      const messaging = firebase.messaging();
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') return;
+      const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+      if (token) {
+        await db.ref('fcm_tokens/' + btoa(token).slice(0, 20)).set(token);
+      }
+    } catch(e) {
+      console.log('Push no disponible:', e);
+    }
+  }
+
+  if ('Notification' in window && 'serviceWorker' in navigator) {
+    if (Notification.permission === 'default') {
+      setTimeout(activarNotificaciones, 2000);
+    } else if (Notification.permission === 'granted') {
+      activarNotificaciones();
+    }
+  }
 
   let todosPedidos = [];
   let filtroActual = 'todos';
