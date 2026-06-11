@@ -112,6 +112,17 @@
     .estado-camino { border-color: #7c3aed; color: #7c3aed; }
     .estado-entregado { border-color: #507a3a; color: #507a3a; }
 
+    .banner-notif {
+      display: none; background: #f0faf4; border: 1.5px solid #b8dba8; border-radius: 12px;
+      padding: 14px 18px; margin-bottom: 20px; align-items: center; gap: 12px;
+      font-size: 0.82rem; color: #2d6a4f;
+    }
+    .banner-notif button {
+      margin-left: auto; background: #2d6a4f; color: #fff; border: none;
+      border-radius: 8px; padding: 8px 16px; font-family: 'Montserrat', sans-serif;
+      font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+    }
+
     .empty-state { text-align: center; padding: 60px 20px; color: #9a8f82; font-size: 0.85rem; background: #fff; border-radius: 14px; border: 1.5px solid #e8dfd2; }
     .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
 
@@ -171,6 +182,12 @@
     <div class="res-card verde"><div class="num" id="r-hoy">$0</div><div class="lbl">Ingreso hoy</div></div>
   </div>
 
+  <!-- Banner notificaciones -->
+  <div class="banner-notif" id="banner-notif">
+    <span>🔔 Activá las notificaciones para enterarte cuando cae un pedido</span>
+    <button onclick="pedirPermiso()">Activar</button>
+  </div>
+
   <!-- Alerta transferencias pendientes -->
   <div class="alerta-transferencias" id="alerta-transf" style="display:none">
     <span>🏦</span>
@@ -213,6 +230,11 @@
   // ── Notificaciones push ───────────────────────────────────
   const VAPID_KEY = 'BEpbAI9BlhpQv8s8dwQbiLr8eFwSHOL9eqBcvnHS2Yq3d7tWMrEDnclpqLP3G50uzSJSxA-74YsTjo5wODQvqg4';
 
+  async function pedirPermiso() {
+    document.getElementById('banner-notif').style.display = 'none';
+    await activarNotificaciones();
+  }
+
   async function activarNotificaciones() {
     try {
       const reg = await navigator.serviceWorker.register('/admin/firebase-messaging-sw.js');
@@ -229,10 +251,10 @@
   }
 
   if ('Notification' in window && 'serviceWorker' in navigator) {
-    if (Notification.permission === 'default') {
-      setTimeout(activarNotificaciones, 2000);
-    } else if (Notification.permission === 'granted') {
+    if (Notification.permission === 'granted') {
       activarNotificaciones();
+    } else if (Notification.permission === 'default') {
+      document.getElementById('banner-notif').style.display = 'flex';
     }
   }
 
