@@ -253,9 +253,13 @@
   if ('Notification' in window && 'serviceWorker' in navigator) {
     if (Notification.permission === 'granted') {
       activarNotificaciones();
-    } else if (Notification.permission === 'default') {
+    } else {
       document.getElementById('banner-notif').style.display = 'flex';
     }
+  } else if (!('Notification' in window)) {
+    // iOS < 16.4 o navegador sin soporte
+    document.getElementById('banner-notif').innerHTML = '<span>⚠️ Tu navegador no soporta notificaciones. Abrí el admin desde el ícono en pantalla de inicio (iOS 16.4+).</span>';
+    document.getElementById('banner-notif').style.display = 'flex';
   }
 
   let todosPedidos = [];
