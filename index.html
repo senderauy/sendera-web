@@ -239,6 +239,7 @@
       }
 
       // Agrupar por categoría
+      const ORDEN_CATS = ['Gorros Visera', 'Gorros Invierno', 'Buff', 'BUFF', 'Riñoneras', 'Accesorios'];
       const cats = {};
       productos.forEach(p => {
         const cat = p.categoria || 'Otros';
@@ -246,8 +247,17 @@
         cats[cat].push(p);
       });
 
+      const catsOrdenadas = Object.entries(cats).sort(([a], [b]) => {
+        const ia = ORDEN_CATS.indexOf(a);
+        const ib = ORDEN_CATS.indexOf(b);
+        if (ia === -1 && ib === -1) return 0;
+        if (ia === -1) return 1;
+        if (ib === -1) return -1;
+        return ia - ib;
+      });
+
       const cont = document.getElementById('categorias-firebase');
-      cont.innerHTML = Object.entries(cats).map(([cat, prods]) => {
+      cont.innerHTML = catsOrdenadas.map(([cat, prods]) => {
         // Agrupar por nombre de producto para mostrar subgrupo-titulo
         const porNombre = {};
         prods.forEach(p => {
