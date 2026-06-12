@@ -343,28 +343,26 @@
     const cat = document.getElementById('catalogo');
     cat.innerHTML = '';
 
-    // Hardcodeados por categoría
-    CATALOGO.forEach(c => {
-      cat.innerHTML += `<div class="cat-titulo">${c.cat}</div><div class="productos-grid">` +
-        c.productos.map(p => cardHTML(p)).join('') + `</div>`;
+    // Solo productos de Firebase
+    const prodsFB = Object.values(productosFirebase);
+    if (prodsFB.length === 0) {
+      cat.innerHTML = '<p style="color:#9a8f82;padding:20px;">Cargando productos...</p>';
+      return;
+    }
+
+    const cats = {};
+    prodsFB.forEach(prod => {
+      const c = prod.categoria || 'Otros';
+      if (!cats[c]) cats[c] = [];
+      (prod.variantes || []).forEach((v, i) => {
+        cats[c].push({ id: prod.id + '-' + i, nombre: prod.nombre, variante: v.nombre, precio: v.precio || 0 });
+      });
     });
 
-    // Firebase: agrupar por categoría
-    const prodsFB = Object.values(productosFirebase);
-    if (prodsFB.length > 0) {
-      const cats = {};
-      prodsFB.forEach(prod => {
-        const c = prod.categoria || 'Otros';
-        if (!cats[c]) cats[c] = [];
-        (prod.variantes || []).forEach((v, i) => {
-          cats[c].push({ id: prod.id + '-' + i, nombre: prod.nombre, variante: v.nombre, precio: v.precio || 0 });
-        });
-      });
-      Object.entries(cats).forEach(([c, items]) => {
-        cat.innerHTML += `<div class="cat-titulo">🆕 ${c}</div><div class="productos-grid">` +
-          items.map(p => cardHTML(p)).join('') + `</div>`;
-      });
-    }
+    Object.entries(cats).forEach(([c, items]) => {
+      cat.innerHTML += `<div class="cat-titulo">${c}</div><div class="productos-grid">` +
+        items.map(p => cardHTML(p)).join('') + `</div>`;
+    });
 
     updateResumen();
   }
