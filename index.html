@@ -258,15 +258,16 @@
 
       const cont = document.getElementById('categorias-firebase');
       cont.innerHTML = catsOrdenadas.map(([cat, prods]) => {
-        // Agrupar por nombre de producto para mostrar subgrupo-titulo
-        const porNombre = {};
+        // Agrupar por subgrupo — productos sin subgrupo van todos en una misma grilla
+        const porSubgrupo = {};
         prods.forEach(p => {
-          if (!porNombre[p.nombre]) porNombre[p.nombre] = { desc: p.descripcion, variantes: [], obj: p };
-          (p.variantes || []).forEach((v, i) => porNombre[p.nombre].variantes.push({ v, i, p }));
+          const sg = p.subgrupo || '';
+          if (!porSubgrupo[sg]) porSubgrupo[sg] = { desc: p.descripcion, variantes: [] };
+          (p.variantes || []).forEach((v, i) => porSubgrupo[sg].variantes.push({ v, i, p }));
         });
 
-        const html = Object.entries(porNombre).map(([nombre, data]) => `
-          ${data.obj.subgrupo ? `<div class="subgrupo-titulo">${data.obj.subgrupo}</div>` : ''}
+        const html = Object.entries(porSubgrupo).map(([sg, data]) => `
+          ${sg ? `<div class="subgrupo-titulo">${sg}</div>` : ''}
           ${data.desc ? `<div class="subgrupo-desc">${data.desc}</div>` : ''}
           <div class="productos-grid">
             ${data.variantes.map(({ v, i, p }) => `
