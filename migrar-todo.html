@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Migrar todos los productos</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <style>
+    body { font-family: sans-serif; max-width: 640px; margin: 60px auto; padding: 20px; }
+    button { padding: 14px 28px; background: #2d6a4f; color: #fff; border: none; border-radius: 10px; font-size: 1rem; cursor: pointer; margin: 6px; }
+    button.danger { background: #c0392b; }
+    #log { margin-top: 20px; font-size: 0.85rem; color: #333; white-space: pre-line; background: #f5f5f5; padding: 16px; border-radius: 8px; max-height: 400px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+<h2>Migrar productos hardcodeados a Firebase</h2>
+<p>Este script sube todos los productos del HTML a Firebase y mueve el stock existente. Solo hacelo una vez.</p>
+<button onclick="migrar()">🚀 Migrar productos</button>
+<div id="log">Esperando...</div>
+
+<script>
+const PRODUCTOS = [
+  {
+    nombre: 'Go One More',
+    categoria: 'Gorros Visera',
+    subgrupo: 'Go One More',
+    descripcion: 'Liviana · Transpirable · Impermeable · Protección UV',
+    variantes: [
+      { nombre: 'Blanco',  precio: 750, foto: 'img/gom-blanco.png',   viejoStockId: 'gom-blanco' },
+      { nombre: 'Rosa',    precio: 750, foto: 'img/gom-rosa.png',     viejoStockId: 'gom-rosa' },
+      { nombre: 'Verde',   precio: 750, foto: 'img/gom-verde.png',    viejoStockId: 'gom-verde' },
+      { nombre: 'Violeta', precio: 750, foto: 'img/gom-violeta.png',  viejoStockId: 'gom-violeta' },
+    ]
+  },
+  {
+    nombre: 'Trail Cap',
+    categoria: 'Gorros Visera',
+    subgrupo: 'Trail Cap',
+    descripcion: 'Visera rígida · Nylon liviano · Impermeable',
+    variantes: [
+      { nombre: 'Azul',  precio: 750, foto: 'img/trail-azul.png',  viejoStockId: 'trail-azul' },
+      { nombre: 'Negro', precio: 750, foto: 'img/trail-negro.png', viejoStockId: 'trail-negro' },
+    ]
+  },
+  {
+    nombre: 'Sunset Flower',
+    categoria: 'Gorros Visera',
+    subgrupo: 'Sunset Flower',
+    descripcion: 'Visera rígida · Nylon liviano · Impermeable',
+    variantes: [
+      { nombre: 'Rojo / Amarillo', precio: 850, foto: 'img/sunset-amarillo.png', viejoStockId: 'sunset-amarillo' },
+      { nombre: 'Gris / Verde',    precio: 850, foto: 'img/sunset-verde.png',    viejoStockId: 'sunset-verde' },
+    ]
+  },
+  {
+    nombre: 'Gorro Lana Montaña',
+    categoria: 'Gorros Invierno',
+    subgrupo: 'Gorros Lana Montaña',
+    descripcion: '',
+    variantes: [
+      { nombre: 'Negro', precio: 390, foto: 'img/lana-negro.png', viejoStockId: 'lana-negro' },
+      { nombre: 'Azul',  precio: 390, foto: 'img/lana-azul.png',  viejoStockId: 'lana-azul' },
+      { nombre: 'Rosa',  precio: 390, foto: 'img/lana-rosa.png',  viejoStockId: 'lana-rosa' },
+    ]
+  },
+  {
+    nombre: 'Riñonera Sendera',
+    categoria: 'Riñoneras',
+    subgrupo: '',
+    descripcion: '',
+    variantes: [
+      { nombre: 'Senderismo · Trekking', precio: 990, foto: 'img/rinonera-sendera.png', viejoStockId: 'rinonera-sendera' },
+    ]
+  },
+  {
+    nombre: 'Riñonera Running',
+    categoria: 'Riñoneras',
+    subgrupo: '',
+    descripcion: '',
+    variantes: [
+      { nombre: 'Trail · Running · Celeste', precio: 690, foto: 'img/rinonera-celeste.jpg', viejoStockId: 'rinonera-celeste' },
+      { nombre: 'Trail · Running · Negra',   precio: 450, foto: 'img/rinonera-negra.jpg',   viejoStockId: 'rinonera-negra' },
+    ]
+  },
+  {
+    nombre: 'Medallero RUN',
+    categoria: 'Accesorios',
+    subgrupo: '',
+    descripcion: '',
+    variantes: [
+      { nombre: '30cm · Acero · Negro', precio: 450, foto: 'img/medallero.png', viejoStockId: 'medallero' },
+    ]
+  },
+  {
+    nombre: 'Porta Celular',
+    categoria: 'Accesorios',
+    subgrupo: '',
+    descripcion: '',
+    variantes: [
+      { nombre: 'Running · Trail', precio: 490, foto: 'img/porta-celular.png', viejoStockId: 'porta-celular' },
+    ]
+  },
+];
+
+function log(msg) {
+  const el = document.getElementById('log');
+  el.textContent += msg + '\n';
+  el.scrollTop = el.scrollHeight;
+}
+
+async function migrar() {
+  document.getElementById('log').textContent = '';
+  log('Iniciando migración...\n');
+
+  // Leer stock actual
+  const stockSnap = await db.ref('stock').once('value');
+  const stockActual = stockSnap.val() || {};
+  log('Stock actual leído.\n');
+
+  for (const prod of PRODUCTOS) {
+    try {
+      const ref = db.ref('productos').push();
+      const prodId = ref.key;
+
+      // Preparar variantes sin viejoStockId
+      const variantes = prod.variantes.map(v => ({
+        nombre: v.nombre,
+        precio: v.precio,
+        foto: v.foto,
+      }));
+
+      await ref.set({
+        nombre: prod.nombre,
+        categoria: prod.categoria,
+        subgrupo: prod.subgrupo,
+        descripcion: prod.descripcion,
+        variantes,
+        actualizado: new Date().toISOString(),
+      });
+
+      log(`✅ ${prod.nombre} subido (ID: ${prodId})`);
+
+      // Mover stock de claves viejas a nuevas
+      for (let i = 0; i < prod.variantes.length; i++) {
+        const v = prod.variantes[i];
+        const nuevoId = prodId + '-' + i;
+        const stockVal = stockActual[v.viejoStockId] ?? 0;
+        await db.ref('stock/' + nuevoId).set(stockVal);
+        log(`   📦 Stock ${v.nombre}: ${stockVal} → clave "${nuevoId}"`);
+      }
+
+    } catch(e) {
+      log(`❌ Error en ${prod.nombre}: ${e.message}`);
+    }
+  }
+
+  log('\n🎉 Migración completada! Ahora podés cerrar esta página.');
+  log('⚠️  Recordá sacar los productos hardcodeados del index.html antes de publicar.');
+}
+</script>
+</body>
+</html>
