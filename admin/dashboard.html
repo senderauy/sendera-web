@@ -389,7 +389,7 @@
 
   db.ref('pedidos').on('value', snapshot => {
     const pedidos = [];
-    snapshot.forEach(c => pedidos.push({ id: c.key, ...c.val() }));
+    snapshot.forEach(c => { pedidos.push({ id: c.key, ...c.val() }); });
 
     const hoyStr = new Date().toDateString();
     const mesActual = new Date().getMonth();

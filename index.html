@@ -555,7 +555,7 @@
     // Cargar productos dinámicos desde Firebase
     db.ref('productos').on('value', snapshot => {
       const productos = [];
-      snapshot.forEach(c => productos.push({ id: c.key, ...c.val() }));
+      snapshot.forEach(c => { productos.push({ id: c.key, ...c.val() }); });
 
       // Actualizar STOCK_MAP con los productos de Firebase
       productos.forEach(p => {

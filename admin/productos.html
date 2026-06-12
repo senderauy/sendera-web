@@ -352,7 +352,7 @@
   // ── Firebase ──────────────────────────────────────────
   db.ref('productos').on('value', snapshot => {
     todosProd = [];
-    snapshot.forEach(c => todosProd.push({ id: c.key, ...c.val() }));
+    snapshot.forEach(c => { todosProd.push({ id: c.key, ...c.val() }); });
     renderResumen();
     renderFiltros();
     renderProductos();
