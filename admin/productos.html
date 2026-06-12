@@ -447,12 +447,24 @@
     const vars = prod?.variantes || [];
     if (vars.length === 0) {
       agregarVariante();
+      document.getElementById('modal-overlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    } else if (!prod) {
+      agregarVariante();
+      document.getElementById('modal-overlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
     } else {
-      vars.forEach(v => agregarVariante(v));
+      // Al editar: cargar stock actual de Firebase para cada variante
+      db.ref('stock').once('value', snapStock => {
+        const stockData = snapStock.val() || {};
+        vars.forEach((v, i) => {
+          const stockId = prod.id + '-' + i;
+          agregarVariante({ ...v, stockInicial: stockData[stockId] ?? 0 });
+        });
+        document.getElementById('modal-overlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+      });
     }
-
-    document.getElementById('modal-overlay').classList.add('open');
-    document.body.style.overflow = 'hidden';
   }
 
   function cerrarModal() {
@@ -581,16 +593,8 @@
       // Crear stock inicial solo para productos nuevos o variantes nuevas
       variantes.forEach((v, i) => {
         const stockId = prodId + '-' + i;
-        if (isNuevo) {
-          db.ref('stock/' + stockId).set(v.stockInicial || 0);
-        } else {
-          // Editando: si el usuario puso un valor > 0, pisarlo; si dejó 0, solo crear si no existe
-          if (v.stockInicial > 0) {
-            db.ref('stock/' + stockId).set(v.stockInicial);
-          } else {
-            db.ref('stock/' + stockId).transaction(current => current === null ? 0 : current);
-          }
-        }
+        // Siempre guardar el stock (nuevo o editando)
+        db.ref('stock/' + stockId).set(v.stockInicial || 0);
       });
 
       cerrarModal();
