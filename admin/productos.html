@@ -582,13 +582,14 @@
       variantes.forEach((v, i) => {
         const stockId = prodId + '-' + i;
         if (isNuevo) {
-          // Producto nuevo: siempre setear stock inicial
           db.ref('stock/' + stockId).set(v.stockInicial || 0);
         } else {
-          // Editando: solo crear si no existe (no pisar stock actual)
-          db.ref('stock/' + stockId).transaction(current => {
-            return current === null ? (v.stockInicial || 0) : current;
-          });
+          // Editando: si el usuario puso un valor > 0, pisarlo; si dejó 0, solo crear si no existe
+          if (v.stockInicial > 0) {
+            db.ref('stock/' + stockId).set(v.stockInicial);
+          } else {
+            db.ref('stock/' + stockId).transaction(current => current === null ? 0 : current);
+          }
         }
       });
 
