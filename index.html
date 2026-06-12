@@ -560,7 +560,7 @@
       // Actualizar STOCK_MAP con los productos de Firebase
       productos.forEach(p => {
         (p.variantes || []).forEach((v, i) => {
-          STOCK_MAP[p.nombre + '-' + v.nombre] = p.id + '-' + i;
+          STOCK_MAP[p.nombre + '-' + v.nombre] = v.stockId || (p.id + '-' + i);
         });
       });
 
