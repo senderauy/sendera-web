@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="apple-touch-icon" href="../img/logo.png" />
+  <link rel="icon" type="image/png" href="../img/logo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Sendera Admin" />
+  <meta name="theme-color" content="#f2ede6" />
+  <title>Sendera - Stock</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="../firebase-config.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Montserrat', sans-serif; background: #f2ede6; color: #3a3026; min-height: 100vh; }
+
+    .navbar {
+      background: #fff;
+      border-bottom: 2px solid #e8dfd2;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      height: 60px;
+      box-shadow: 0 2px 8px rgba(80,60,30,0.06);
+    }
+
+    .navbar .logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      color: #3a3026;
+      letter-spacing: 0.12em;
+    }
+
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-links a {
+      color: #7a6e62;
+      text-decoration: none;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 8px 14px;
+      border-radius: 8px;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+    .nav-links a:hover { background: #f2ede6; color: #3a3026; }
+    .nav-links a.active { background: #507a3a; color: #fff; }
+
+    .btn-logout {
+      font-size: 0.72rem; color: #9a8f82; cursor: pointer;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      background: none; border: 1px solid #ddd5c8; border-radius: 8px;
+      padding: 7px 14px; margin-left: 8px; transition: all 0.2s;
+    }
+    .btn-logout:hover { background: #f2ede6; color: #3a3026; }
+    .btn-logout-top { background: none; border: none; cursor: pointer; font-size: 1rem; color: #9a8f82; padding: 2px 6px; margin-left: 6px; vertical-align: middle; transition: color 0.2s; }
+    .btn-logout-top:hover { color: #3a3026; }
+
+    .mobile-nav {
+      display: none;
+      background: #fff;
+      border-top: 2px solid #e8dfd2;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 10;
+      padding: 8px 0 12px;
+    }
+    .mobile-nav-links { display: flex; justify-content: space-around; }
+    .mobile-nav-links a {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      text-decoration: none; color: #9a8f82; font-size: 0.6rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 6px 12px; border-radius: 10px; transition: all 0.2s;
+    }
+    .mobile-nav-links a .icon { font-size: 1.3rem; }
+    .mobile-nav-links a.active { color: #507a3a; }
+
+    .container { max-width: 860px; margin: 0 auto; padding: 28px 20px 80px; }
+
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+    .page-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: #3a3026; }
+    .page-header p { color: #9a8f82; font-size: 0.78rem; margin-top: 3px; }
+
+    /* RESUMEN */
+    .resumen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
+    .res-card {
+      background: #fff; border-radius: 14px; border: 1.5px solid #e8dfd2;
+      padding: 20px 16px; text-align: center;
+      box-shadow: 0 2px 8px rgba(80,60,30,0.05);
+    }
+    .res-card .num { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; color: #3a3026; }
+    .res-card .lbl { font-size: 0.68rem; color: #9a8f82; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+
+    /* CATEGORÍA */
+    .cat-titulo {
+      font-size: 0.7rem; color: #9a8f82; letter-spacing: 0.18em;
+      text-transform: uppercase; font-weight: 600;
+      padding-bottom: 10px; border-bottom: 2px solid #e8dfd2;
+      margin: 32px 0 16px; display: flex; align-items: center; gap: 8px;
+    }
+
+    /* GRID */
+    .productos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+
+    .prod-card {
+      background: #fff;
+      border-radius: 12px;
+      border: 1.5px solid #e8dfd2;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 2px 6px rgba(80,60,30,0.04);
+      transition: all 0.2s;
+    }
+    .prod-card:hover { border-color: #b8dba8; box-shadow: 0 4px 12px rgba(80,60,30,0.08); }
+
+    .prod-nombre { font-size: 0.88rem; font-weight: 600; color: #3a3026; }
+    .prod-variante { font-size: 0.76rem; color: #9a8f82; margin-top: 2px; }
+    .prod-precio { font-size: 0.76rem; color: #507a3a; font-weight: 600; margin-top: 4px; }
+
+    .prod-footer { display: flex; align-items: center; justify-content: space-between; }
+
+    .stock-ctrl {
+      display: flex; align-items: center;
+      border: 1.5px solid #e8dfd2; border-radius: 10px; overflow: hidden;
+    }
+    .stock-ctrl button {
+      width: 34px; height: 34px; background: #f2ede6; border: none;
+      color: #507a3a; font-size: 1.1rem; cursor: pointer; transition: background 0.2s;
+      font-weight: 700;
+    }
+    .stock-ctrl button:hover { background: #507a3a; color: #fff; }
+    .stock-val {
+      min-width: 38px; text-align: center; font-size: 1rem; font-weight: 700;
+      color: #3a3026; cursor: pointer; padding: 0 4px;
+    }
+    .stock-val:focus { outline: none; color: #507a3a; }
+
+    .badge {
+      font-size: 0.65rem; padding: 4px 10px; text-transform: uppercase;
+      letter-spacing: 0.08em; border-radius: 20px; font-weight: 600;
+    }
+    .ok { background: #edf7e8; color: #507a3a; }
+    .medio { background: #fef3c7; color: #92400e; }
+    .bajo { background: #fee2e2; color: #b91c1c; }
+
+    .saved-toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: #507a3a; color: #fff; padding: 10px 24px;
+      border-radius: 20px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em;
+      opacity: 0; transition: opacity 0.3s; pointer-events: none;
+      box-shadow: 0 4px 12px rgba(80,122,58,0.3);
+    }
+
+    @media (max-width: 600px) {
+      .resumen { grid-template-columns: repeat(2, 1fr); }
+      .nav-links, .btn-logout { display: none; }
+      .mobile-nav { display: block; }
+      .container { padding-bottom: 90px; }
+      .page-header h1 { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <div class="logo">SENDERA <button class="btn-logout-top" onclick="logout()" title="Salir">↩</button></div>
+  <div class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="pedidos.html">Pedidos</a>
+    <a href="productos.html">Productos</a>
+    <a href="stock.html" class="active">Stock</a>
+    <a href="https://analytics.google.com" target="_blank">Analytics</a>
+    <button class="btn-logout" onclick="logout()">↩ Salir</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-header">
+    <div>
+      <h1>Stock 🏷️</h1>
+      <p>Tocá el número para editar o usá + y −</p>
+    </div>
+  </div>
+
+  <div class="resumen">
+    <div class="res-card"><div class="num" id="r-total">0</div><div class="lbl">Productos</div></div>
+    <div class="res-card"><div class="num" id="r-unidades">0</div><div class="lbl">Unidades</div></div>
+    <div class="res-card"><div class="num" style="color:#b91c1c" id="r-sinstk">0</div><div class="lbl">Sin stock</div></div>
+  </div>
+
+  <div id="catalogo"></div>
+</div>
+
+<div class="mobile-nav">
+  <div class="mobile-nav-links">
+    <a href="dashboard.html"><span class="icon">📊</span>Dashboard</a>
+    <a href="pedidos.html"><span class="icon">📦</span>Pedidos</a>
+    <a href="productos.html"><span class="icon">🛍️</span>Productos</a>
+    <a href="stock.html" class="active"><span class="icon">🏷️</span>Stock</a>
+    <a href="https://analytics.google.com" target="_blank"><span class="icon">📈</span>Analytics</a>
+  </div>
+</div>
+
+<div class="saved-toast" id="toast">✅ Guardado</div>
+
+<script>
+  if (!localStorage.getItem('sendera_admin')) window.location.href = 'login.html';
+  function logout() { localStorage.removeItem('sendera_admin'); window.location.href = 'login.html'; }
+
+  const stockCache = {};
+
+  const CATALOGO = [
+    { cat: '🧢 Gorros Visera', productos: [
+      { id: 'gom-blanco',      nombre: 'Go One More',   variante: 'Blanco',        precio: 750 },
+      { id: 'gom-rosa',        nombre: 'Go One More',   variante: 'Rosa',          precio: 750 },
+      { id: 'gom-verde',       nombre: 'Go One More',   variante: 'Verde',         precio: 750 },
+      { id: 'gom-violeta',     nombre: 'Go One More',   variante: 'Violeta',       precio: 750 },
+      { id: 'trail-azul',      nombre: 'Trail Cap',     variante: 'Azul',          precio: 750 },
+      { id: 'trail-negro',     nombre: 'Trail Cap',     variante: 'Negro',         precio: 750 },
+      { id: 'sunset-amarillo', nombre: 'Sunset Flower', variante: 'Rojo/Amarillo', precio: 850 },
+      { id: 'sunset-verde',    nombre: 'Sunset Flower', variante: 'Gris/Verde',    precio: 850 },
+    ]},
+    { cat: '🧶 Gorros Invierno', productos: [
+      { id: 'lana-negro', nombre: 'Gorro Lana Montaña', variante: 'Negro', precio: 390 },
+      { id: 'lana-azul',  nombre: 'Gorro Lana Montaña', variante: 'Azul',  precio: 390 },
+      { id: 'lana-rosa',  nombre: 'Gorro Lana Montaña', variante: 'Rosa',  precio: 390 },
+    ]},
+    { cat: '🎒 Riñoneras', productos: [
+      { id: 'rinonera-sendera', nombre: 'Riñonera Sendera', variante: 'Verde',   precio: 990 },
+      { id: 'rinonera-celeste', nombre: 'Riñonera Running', variante: 'Celeste', precio: 690 },
+      { id: 'rinonera-negra',   nombre: 'Riñonera Running', variante: 'Negra',   precio: 450 },
+    ]},
+    { cat: '🏅 Accesorios', productos: [
+      { id: 'medallero',     nombre: 'Medallero RUN', variante: 'Negro', precio: 450 },
+      { id: 'porta-celular', nombre: 'Porta Celular', variante: 'Negro', precio: 490 },
+    ]}
+  ];
+
+  function getStock(id) { return stockCache[id] !== undefined ? stockCache[id] : 5; }
+
+  function setStock(id, val) {
+    val = Math.max(0, parseInt(val) || 0);
+    stockCache[id] = val;
+    db.ref('stock/' + id).set(val);
+    updateResumen();
+    showToast();
+    return val;
+  }
+
+  function badgeClass(n) { return n === 0 ? 'bajo' : n <= 3 ? 'medio' : 'ok'; }
+  function badgeLabel(n) { return n === 0 ? 'Sin stock' : n <= 3 ? 'Poco stock' : 'Disponible'; }
+
+  function cambiar(id, delta) {
+    const nuevo = setStock(id, getStock(id) + delta);
+    document.getElementById('sv-' + id).textContent = nuevo;
+    const badge = document.getElementById('bd-' + id);
+    badge.textContent = badgeLabel(nuevo);
+    badge.className = 'badge ' + badgeClass(nuevo);
+  }
+
+  function editarDirecto(id, el) {
+    el.contentEditable = true;
+    el.focus();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    el.onblur = () => {
+      el.contentEditable = false;
+      const nuevo = setStock(id, el.textContent);
+      el.textContent = nuevo;
+      const badge = document.getElementById('bd-' + id);
+      badge.textContent = badgeLabel(nuevo);
+      badge.className = 'badge ' + badgeClass(nuevo);
+    };
+    el.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } };
+  }
+
+  // Productos cargados desde Firebase
+  let productosFirebase = {};
+  let stockData = {};
+
+  function getAllProductos() {
+    // Hardcodeados
+    const todos = [];
+    CATALOGO.forEach(c => c.productos.forEach(p => todos.push({ ...p, origen: 'fijo' })));
+    // Firebase
+    Object.values(productosFirebase).forEach(prod => {
+      (prod.variantes || []).forEach((v, i) => {
+        todos.push({
+          id: prod.id + '-' + i,
+          nombre: prod.nombre,
+          variante: v.nombre,
+          precio: v.precio || 0,
+          categoria: prod.categoria,
+          origen: 'firebase'
+        });
+      });
+    });
+    return todos;
+  }
+
+  function updateResumen() {
+    const todos = getAllProductos();
+    document.getElementById('r-total').textContent = todos.length;
+    document.getElementById('r-unidades').textContent = todos.reduce((s, p) => s + getStock(p.id), 0);
+    document.getElementById('r-sinstk').textContent = todos.filter(p => getStock(p.id) === 0).length;
+  }
+
+  function showToast() {
+    const t = document.getElementById('toast');
+    t.style.opacity = 1;
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => t.style.opacity = 0, 1500);
+  }
+
+  function cardHTML(p) {
+    const s = getStock(p.id);
+    return `<div class="prod-card">
+      <div>
+        <div class="prod-nombre">${p.nombre}</div>
+        <div class="prod-variante">${p.variante}</div>
+        <div class="prod-precio">$${(p.precio || 0).toLocaleString()}</div>
+      </div>
+      <div class="prod-footer">
+        <div class="stock-ctrl">
+          <button onclick="cambiar('${p.id}',-1)">−</button>
+          <span class="stock-val" id="sv-${p.id}" onclick="editarDirecto('${p.id}',this)">${s}</span>
+          <button onclick="cambiar('${p.id}',1)">+</button>
+        </div>
+        <span class="badge ${badgeClass(s)}" id="bd-${p.id}">${badgeLabel(s)}</span>
+      </div>
+    </div>`;
+  }
+
+  function renderCatalogo() {
+    const cat = document.getElementById('catalogo');
+    cat.innerHTML = '';
+
+    // Solo productos de Firebase
+    const prodsFB = Object.values(productosFirebase);
+    if (prodsFB.length === 0) {
+      cat.innerHTML = '<p style="color:#9a8f82;padding:20px;">Cargando productos...</p>';
+      return;
+    }
+
+    const cats = {};
+    prodsFB.forEach(prod => {
+      const c = prod.categoria || 'Otros';
+      if (!cats[c]) cats[c] = [];
+      (prod.variantes || []).forEach((v, i) => {
+        cats[c].push({ id: prod.id + '-' + i, nombre: prod.nombre, variante: v.nombre, precio: v.precio || 0 });
+      });
+    });
+
+    Object.entries(cats).forEach(([c, items]) => {
+      cat.innerHTML += `<div class="cat-titulo">${c}</div><div class="productos-grid">` +
+        items.map(p => cardHTML(p)).join('') + `</div>`;
+    });
+
+    updateResumen();
+  }
+
+  function actualizarUI() {
+    getAllProductos().forEach(p => {
+      const s = getStock(p.id);
+      const svEl = document.getElementById('sv-' + p.id);
+      const bdEl = document.getElementById('bd-' + p.id);
+      if (svEl) svEl.textContent = s;
+      if (bdEl) { bdEl.textContent = badgeLabel(s); bdEl.className = 'badge ' + badgeClass(s); }
+    });
+    updateResumen();
+  }
+
+  // Cargar productos Firebase primero, luego stock
+  db.ref('productos').on('value', snapProds => {
+    productosFirebase = {};
+    snapProds.forEach(c => { productosFirebase[c.key] = { id: c.key, ...c.val() }; });
+
+    db.ref('stock').on('value', snapStock => {
+      stockData = snapStock.val() || {};
+      // Llenar stockCache
+      getAllProductos().forEach(p => {
+        stockCache[p.id] = stockData[p.id] !== undefined ? stockData[p.id] : (p.origen === 'fijo' ? 5 : 0);
+      });
+      renderCatalogo();
+    });
+  });
+</script>
+</body>
+</html>

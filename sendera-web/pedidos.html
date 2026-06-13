@@ -1,0 +1,457 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="apple-touch-icon" href="../img/logo.png" />
+  <link rel="icon" type="image/png" href="../img/logo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Sendera Admin" />
+  <meta name="theme-color" content="#f2ede6" />
+  <title>Sendera - Pedidos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
+  <script src="../firebase-config.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Montserrat', sans-serif; background: #f2ede6; color: #3a3026; min-height: 100vh; }
+
+    .navbar {
+      background: #fff; border-bottom: 2px solid #e8dfd2; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 10; height: 60px;
+      box-shadow: 0 2px 8px rgba(80,60,30,0.06);
+    }
+    .navbar .logo { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: #3a3026; letter-spacing: 0.12em; }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-links a { color: #7a6e62; text-decoration: none; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 500; }
+    .nav-links a:hover { background: #f2ede6; color: #3a3026; }
+    .nav-links a.active { background: #507a3a; color: #fff; }
+    .btn-logout { font-size: 0.72rem; color: #9a8f82; cursor: pointer; text-transform: uppercase; letter-spacing: 0.08em; background: none; border: 1px solid #ddd5c8; border-radius: 8px; padding: 7px 14px; margin-left: 8px; transition: all 0.2s; }
+    .btn-logout:hover { background: #f2ede6; color: #3a3026; }
+    .btn-logout-top { background: none; border: none; cursor: pointer; font-size: 1rem; color: #9a8f82; padding: 2px 6px; margin-left: 6px; vertical-align: middle; transition: color 0.2s; }
+    .btn-logout-top:hover { color: #3a3026; }
+
+    .mobile-nav { display: none; background: #fff; border-top: 2px solid #e8dfd2; position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; padding: 8px 0 12px; }
+    .mobile-nav-links { display: flex; justify-content: space-around; }
+    .mobile-nav-links a { display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: #9a8f82; font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 12px; border-radius: 10px; transition: all 0.2s; }
+    .mobile-nav-links a .icon { font-size: 1.3rem; }
+    .mobile-nav-links a.active { color: #507a3a; }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 28px 20px 80px; }
+
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .page-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: #3a3026; }
+    .page-header p { color: #9a8f82; font-size: 0.78rem; margin-top: 3px; }
+
+    /* RESUMEN */
+    .resumen { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .res-card { background: #fff; border-radius: 14px; border: 1.5px solid #e8dfd2; padding: 18px 14px; text-align: center; box-shadow: 0 2px 8px rgba(80,60,30,0.05); }
+    .res-card .num { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: #3a3026; }
+    .res-card .lbl { font-size: 0.65rem; color: #9a8f82; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+    .res-card.alerta .num { color: #e67e22; }
+    .res-card.verde .num { color: #507a3a; }
+
+    /* ALERTA TRANSFERENCIAS */
+    .alerta-transferencias {
+      background: #fff8e6; border: 1.5px solid #f0d060; border-radius: 12px;
+      padding: 14px 18px; margin-bottom: 20px;
+      display: flex; align-items: center; gap: 12px;
+      font-size: 0.82rem; color: #7a5f00;
+    }
+    .alerta-transferencias .alerta-num {
+      background: #f0c040; color: #5a4000; border-radius: 20px;
+      padding: 3px 12px; font-weight: 700; font-size: 0.85rem; white-space: nowrap;
+    }
+
+    /* FILTROS */
+    .filtros { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filtro-btn { padding: 7px 16px; border: 1.5px solid #e8dfd2; background: #fff; color: #7a6e62; font-family: 'Montserrat', sans-serif; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; border-radius: 20px; transition: all 0.2s; font-weight: 500; }
+    .filtro-btn.active, .filtro-btn:hover { background: #507a3a; color: #fff; border-color: #507a3a; }
+    .filtro-btn.naranja.active, .filtro-btn.naranja:hover { background: #e67e22; border-color: #e67e22; }
+
+    /* PEDIDO CARD */
+    .pedido-card {
+      background: #fff; border-radius: 14px; border: 1.5px solid #e8dfd2;
+      padding: 20px; margin-bottom: 12px;
+      box-shadow: 0 2px 6px rgba(80,60,30,0.04); transition: all 0.2s;
+    }
+    .pedido-card:hover { border-color: #b8dba8; box-shadow: 0 4px 12px rgba(80,60,30,0.08); }
+    .pedido-card.transferencia-pendiente { border-left: 4px solid #e67e22; }
+
+    .pedido-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+    .pedido-cliente { font-size: 1rem; font-weight: 600; color: #3a3026; }
+    .pedido-fecha { font-size: 0.72rem; color: #9a8f82; margin-top: 2px; }
+
+    .pedido-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+
+    /* BADGES */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+    .badge-transferencia { background: #fff3e0; color: #c2692b; border: 1px solid #f0c090; }
+    .badge-tarjeta { background: #e8f4fd; color: #1a6fa0; border: 1px solid #90c8f0; }
+    .badge-wa { background: none; border: none; cursor: pointer; padding: 4px 10px; border-radius: 20px; background: #e8f8ef; color: #25a244; font-size: 0.72rem; font-weight: 600; transition: background 0.2s; }
+    .badge-wa:hover { background: #25a244; color: #fff; }
+
+    .pedido-productos { margin-bottom: 14px; background: #faf8f4; border-radius: 8px; padding: 10px 14px; }
+    .pedido-producto { font-size: 0.8rem; color: #6b5f54; padding: 4px 0; border-bottom: 1px solid #f0ebe3; }
+    .pedido-producto:last-child { border-bottom: none; }
+
+    .pedido-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .pedido-envio { font-size: 0.75rem; color: #9a8f82; }
+    .pedido-total { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: #507a3a; font-weight: 600; }
+
+    /* ESTADO SELECT */
+    .estado-select {
+      padding: 7px 12px; border: 1.5px solid #e8dfd2; background: #fff; color: #3a3026;
+      font-family: 'Montserrat', sans-serif; font-size: 0.72rem; text-transform: uppercase;
+      letter-spacing: 0.06em; cursor: pointer; outline: none; border-radius: 8px; transition: border-color 0.2s;
+    }
+    .estado-pendiente-transferencia { border-color: #e67e22; color: #e67e22; }
+    .estado-pendiente { border-color: #c2692b; color: #c2692b; }
+    .estado-confirmado { border-color: #2563eb; color: #2563eb; }
+    .estado-camino { border-color: #7c3aed; color: #7c3aed; }
+    .estado-entregado { border-color: #507a3a; color: #507a3a; }
+
+    .banner-notif {
+      display: none; background: #f0faf4; border: 1.5px solid #b8dba8; border-radius: 12px;
+      padding: 14px 18px; margin-bottom: 20px; align-items: center; gap: 12px;
+      font-size: 0.82rem; color: #2d6a4f;
+    }
+    .banner-notif button {
+      margin-left: auto; background: #2d6a4f; color: #fff; border: none;
+      border-radius: 8px; padding: 8px 16px; font-family: 'Montserrat', sans-serif;
+      font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+    }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: #9a8f82; font-size: 0.85rem; background: #fff; border-radius: 14px; border: 1.5px solid #e8dfd2; }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+
+    .btn-eliminar { background: none; border: 1.5px solid #e8dfd2; border-radius: 8px; padding: 5px 9px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+    .btn-eliminar:hover { background: #fde8e8; border-color: #e74c3c; }
+
+    /* COMPROBANTE */
+    .comprobante-wrap { margin-top: 12px; }
+    .comprobante-thumb {
+      width: 80px; height: 80px; object-fit: cover; border-radius: 8px;
+      border: 1.5px solid #e8dfd2; cursor: pointer; transition: transform 0.2s;
+    }
+    .comprobante-thumb:hover { transform: scale(1.05); }
+    .comprobante-lbl { font-size: 0.65rem; color: #9a8f82; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+
+    /* LIGHTBOX */
+    .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; }
+    .lightbox.open { display: flex; }
+    .lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 12px; box-shadow: 0 8px 40px rgba(0,0,0,0.5); }
+    .lightbox-close { position: absolute; top: 20px; right: 24px; color: #fff; font-size: 2rem; cursor: pointer; line-height: 1; }
+
+    @media (max-width: 700px) {
+      .resumen { grid-template-columns: repeat(2, 1fr); }
+      .nav-links, .btn-logout { display: none; }
+      .mobile-nav { display: block; }
+      .container { padding-bottom: 90px; }
+      .page-header h1 { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <div class="logo">SENDERA <button class="btn-logout-top" onclick="logout()" title="Salir">↩</button></div>
+  <div class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="pedidos.html" class="active">Pedidos</a>
+    <a href="productos.html">Productos</a>
+    <a href="stock.html">Stock</a>
+    <a href="https://analytics.google.com" target="_blank">Analytics</a>
+    <button class="btn-logout" onclick="logout()">↩ Salir</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-header">
+    <div>
+      <h1>Pedidos 📦</h1>
+      <p>Se actualizan en tiempo real</p>
+    </div>
+  </div>
+
+  <!-- Resumen -->
+  <div class="resumen">
+    <div class="res-card"><div class="num" id="r-total">0</div><div class="lbl">Total</div></div>
+    <div class="res-card alerta"><div class="num" id="r-pendientes">0</div><div class="lbl">Pendientes</div></div>
+    <div class="res-card alerta"><div class="num" id="r-transferencias">0</div><div class="lbl">⚠️ Transf.</div></div>
+    <div class="res-card verde"><div class="num" id="r-hoy">$0</div><div class="lbl">Ingreso hoy</div></div>
+  </div>
+
+  <!-- Banner notificaciones -->
+  <div class="banner-notif" id="banner-notif">
+    <span>🔔 Activá las notificaciones para enterarte cuando cae un pedido</span>
+    <button onclick="pedirPermiso()">Activar</button>
+  </div>
+
+  <!-- Alerta transferencias pendientes -->
+  <div class="alerta-transferencias" id="alerta-transf" style="display:none">
+    <span>🏦</span>
+    <span>Tenés <span class="alerta-num" id="alerta-transf-num">0</span> transferencia(s) por confirmar — verificá en Prex y actualizá el estado.</span>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros">
+    <button class="filtro-btn active" onclick="filtrar('todos', this)">Todos</button>
+    <button class="filtro-btn naranja" onclick="filtrar('pendiente-transferencia', this)">🏦 Transf. pendientes</button>
+    <button class="filtro-btn" onclick="filtrar('pendiente', this)">Pendientes</button>
+    <button class="filtro-btn" onclick="filtrar('confirmado', this)">Confirmados</button>
+    <button class="filtro-btn" onclick="filtrar('camino', this)">En camino</button>
+    <button class="filtro-btn" onclick="filtrar('entregado', this)">Entregados</button>
+  </div>
+
+  <div id="pedidos-lista"></div>
+</div>
+
+<!-- Lightbox comprobante -->
+<div class="lightbox" id="lightbox" onclick="cerrarLightbox()">
+  <span class="lightbox-close">✕</span>
+  <img id="lightbox-img" src="" alt="Comprobante" />
+</div>
+
+<div class="mobile-nav">
+  <div class="mobile-nav-links">
+    <a href="dashboard.html"><span class="icon">📊</span>Dashboard</a>
+    <a href="pedidos.html" class="active"><span class="icon">📦</span>Pedidos</a>
+    <a href="productos.html"><span class="icon">🛍️</span>Productos</a>
+    <a href="stock.html"><span class="icon">🏷️</span>Stock</a>
+    <a href="https://analytics.google.com" target="_blank"><span class="icon">📈</span>Analytics</a>
+  </div>
+</div>
+
+<script>
+  if (!localStorage.getItem('sendera_admin')) window.location.href = 'login.html';
+  function logout() { localStorage.removeItem('sendera_admin'); window.location.href = 'login.html'; }
+
+  // ── Notificaciones push ───────────────────────────────────
+  const VAPID_KEY = 'BEpbAI9BlhpQv8s8dwQbiLr8eFwSHOL9eqBcvnHS2Yq3d7tWMrEDnclpqLP3G50uzSJSxA-74YsTjo5wODQvqg4';
+
+  async function pedirPermiso() {
+    document.getElementById('banner-notif').style.display = 'none';
+    await activarNotificaciones();
+  }
+
+  async function activarNotificaciones() {
+    try {
+      const reg = await navigator.serviceWorker.register('/admin/firebase-messaging-sw.js');
+      const messaging = firebase.messaging();
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') return;
+      const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+      if (token) {
+        await db.ref('fcm_tokens/' + btoa(token).slice(0, 20)).set(token);
+      }
+    } catch(e) {
+      console.log('Push no disponible:', e);
+    }
+  }
+
+  if ('Notification' in window && 'serviceWorker' in navigator) {
+    if (Notification.permission === 'granted') {
+      activarNotificaciones();
+    } else {
+      document.getElementById('banner-notif').style.display = 'flex';
+    }
+  } else if (!('Notification' in window)) {
+    // iOS < 16.4 o navegador sin soporte
+    document.getElementById('banner-notif').innerHTML = '<span>⚠️ Tu navegador no soporta notificaciones. Abrí el admin desde el ícono en pantalla de inicio (iOS 16.4+).</span>';
+    document.getElementById('banner-notif').style.display = 'flex';
+  }
+
+  let todosPedidos = [];
+  let filtroActual = 'todos';
+
+  function formatFecha(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+           ' · ' + d.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function estadoClass(estado) {
+    const map = {
+      'pendiente-transferencia': 'estado-pendiente-transferencia',
+      'pendiente': 'estado-pendiente',
+      'confirmado': 'estado-confirmado',
+      'camino': 'estado-camino',
+      'entregado': 'estado-entregado'
+    };
+    return map[estado] || '';
+  }
+
+  function cambiarEstado(id, nuevoEstado, selectEl) {
+    db.ref('pedidos/' + id + '/estado').set(nuevoEstado);
+    selectEl.className = 'estado-select ' + estadoClass(nuevoEstado);
+  }
+
+  function filtrar(estado, btn) {
+    filtroActual = estado;
+    document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderPedidos();
+  }
+
+  function abrirWA(celular, cliente, productos, total, envio) {
+    const esInterior = envio && envio.toLowerCase().includes('interior');
+    const esMontevideo = envio && envio.toLowerCase().includes('montevideo');
+    const esPickup = envio && envio.toLowerCase().includes('pick up');
+    const wave = String.fromCodePoint(0x1F44B);
+    const mountain = String.fromCodePoint(0x1F3D4) + String.fromCodePoint(0xFE0F);
+    const msg = encodeURIComponent(
+      `Hola ${cliente}! ${wave} Te escribimos de *Sendera*.\n\n` +
+      `Tu pedido está en preparación:\n${productos}\n*Total: $${total}*\n\n` +
+      (esInterior ? `Te avisaremos cuando sea despachado. ` : '') +
+      (esMontevideo ? `Nos pondremos en contacto para coordinar la entrega. ` : '') +
+      (esPickup ? `Nos pondremos en contacto para coordinar el retiro. ` : '') +
+      `¡Muchas gracias por tu compra! ${mountain}`
+    );
+    window.open(`https://wa.me/598${celular.replace(/\D/g,'')}?text=${msg}`, '_blank');
+  }
+
+  function renderPedidos() {
+    const lista = document.getElementById('pedidos-lista');
+    const hoy = new Date().toDateString();
+
+    let pedidos = [...todosPedidos].reverse();
+
+    // Transferencias pendientes
+    const transferPendientes = todosPedidos.filter(p => p.estado === 'pendiente-transferencia');
+    document.getElementById('r-transferencias').textContent = transferPendientes.length;
+    const alertaEl = document.getElementById('alerta-transf');
+    if (transferPendientes.length > 0) {
+      alertaEl.style.display = 'flex';
+      document.getElementById('alerta-transf-num').textContent = transferPendientes.length;
+    } else {
+      alertaEl.style.display = 'none';
+    }
+
+    // Resumen
+    document.getElementById('r-total').textContent = todosPedidos.length;
+    document.getElementById('r-pendientes').textContent = todosPedidos.filter(p =>
+      p.estado === 'pendiente' || p.estado === 'pendiente-transferencia'
+    ).length;
+
+    const ingresoHoy = todosPedidos
+      .filter(p => new Date(p.fecha).toDateString() === hoy && p.estado !== 'pendiente-transferencia')
+      .reduce((s, p) => s + (p.total || 0), 0);
+    document.getElementById('r-hoy').textContent = '$' + ingresoHoy.toLocaleString();
+
+    // Filtrar
+    if (filtroActual !== 'todos') pedidos = pedidos.filter(p => p.estado === filtroActual);
+
+    if (pedidos.length === 0) {
+      lista.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No hay pedidos${filtroActual !== 'todos' ? ' en este estado' : ' todavía'}</p></div>`;
+      return;
+    }
+
+    lista.innerHTML = pedidos.map(p => {
+      const esTransfPend = p.estado === 'pendiente-transferencia';
+      const metodo = p.metodo_pago === 'transferencia'
+        ? `<span class="badge badge-transferencia">🏦 Transferencia</span>`
+        : p.metodo_pago === 'tarjeta'
+        ? `<span class="badge badge-tarjeta">💳 Tarjeta</span>`
+        : '';
+
+      const prods = (p.productos || []).map(pr =>
+        `• ${pr.nombre} ${pr.variante} x${pr.qty} — $${(pr.precio * pr.qty).toLocaleString()}`
+      ).join('\n');
+
+      const waBtn = p.celular
+        ? `<button class="badge-wa" onclick="abrirWA('${p.celular}', '${p.cliente}', \`${prods}\`, '${(p.total||0).toLocaleString()}', '${p.envio||''}')">💬 WhatsApp</button>`
+        : '';
+
+      return `
+      <div class="pedido-card ${esTransfPend ? 'transferencia-pendiente' : ''}">
+        <div class="pedido-header">
+          <div>
+            <div class="pedido-cliente">${p.cliente}</div>
+            <div class="pedido-meta">
+              ${metodo}
+              <span style="font-size:0.75rem;color:#507a3a;font-weight:500">📱 ${p.celular || '—'}</span>
+              ${waBtn}
+            </div>
+            <div class="pedido-fecha">${formatFecha(p.fecha)}</div>
+          </div>
+          <select class="estado-select ${estadoClass(p.estado)}" onchange="cambiarEstado('${p.id}', this.value, this)">
+            <option value="pendiente-transferencia" ${p.estado==='pendiente-transferencia'?'selected':''}>🏦 Transf. pendiente</option>
+            <option value="pendiente" ${p.estado==='pendiente'?'selected':''}>⏳ Pendiente</option>
+            <option value="confirmado" ${p.estado==='confirmado'?'selected':''}>✅ Confirmado</option>
+            <option value="camino" ${p.estado==='camino'?'selected':''}>🚛 En camino</option>
+            <option value="entregado" ${p.estado==='entregado'?'selected':''}>🏠 Entregado</option>
+          </select>
+        </div>
+        <div class="pedido-productos">
+          ${(p.productos || []).map(pr => `<div class="pedido-producto">• ${pr.nombre} ${pr.variante} x${pr.qty} — $${(pr.precio * pr.qty).toLocaleString()}</div>`).join('')}
+        </div>
+        ${p.comprobante ? `
+        <div class="comprobante-wrap">
+          <div class="comprobante-lbl">📎 Comprobante de transferencia</div>
+          ${p.comprobante.startsWith('data:application/pdf')
+            ? `<button onclick="abrirPDF('${p.id}')" style="font-size:0.8rem;color:#2d6a4f;font-weight:600;cursor:pointer;background:#f0faf4;border:1.5px solid #b8dba8;border-radius:8px;padding:6px 14px;font-family:inherit">📄 Ver PDF</button>`
+            : `<img class="comprobante-thumb" src="${p.comprobante}" alt="Comprobante" onclick="abrirLightbox('${p.id}')" />`
+          }
+        </div>` : (p.metodo_pago === 'transferencia' ? `
+        <div class="comprobante-wrap">
+          <div class="comprobante-lbl" style="color:#e67e22">⚠️ Sin comprobante adjunto</div>
+        </div>` : '')}
+        <div class="pedido-footer">
+          <div class="pedido-envio">📦 ${p.envio || '—'}</div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="pedido-total">$${(p.total || 0).toLocaleString()}</div>
+            <button class="btn-eliminar" onclick="eliminarPedido('${p.id}')">🗑️</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function eliminarPedido(id) {
+    if (!confirm('¿Eliminar este pedido?')) return;
+    db.ref('pedidos/' + id).remove();
+  }
+
+  function abrirPDF(pedidoId) {
+    const pedido = todosPedidos.find(p => p.id === pedidoId);
+    if (!pedido || !pedido.comprobante) return;
+    const base64 = pedido.comprobante.split(',')[1];
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'comprobante.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function abrirLightbox(pedidoId) {
+    const pedido = todosPedidos.find(p => p.id === pedidoId);
+    if (!pedido || !pedido.comprobante) return;
+    document.getElementById('lightbox-img').src = pedido.comprobante;
+    document.getElementById('lightbox').classList.add('open');
+  }
+
+  function cerrarLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
+  }
+
+  db.ref('pedidos').on('value', snapshot => {
+    todosPedidos = [];
+    snapshot.forEach(child => {
+      todosPedidos.push({ id: child.key, ...child.val() });
+    });
+    renderPedidos();
+  });
+</script>
+</body>
+</html>
