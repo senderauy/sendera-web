@@ -342,6 +342,27 @@ nav a:hover {
   font-weight: 300;
 }
 
+.filtro-cat-btn {
+  padding: 8px 20px;
+  border: 1.5px solid rgba(201,176,122,0.3);
+  background: transparent;
+  color: #c9b07a;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 30px;
+  transition: all 0.2s;
+}
+.filtro-cat-btn:hover,
+.filtro-cat-btn.active {
+  background: #c9b07a;
+  color: #1a1510;
+  border-color: #c9b07a;
+}
+
 .categoria-titulo {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.8rem;
