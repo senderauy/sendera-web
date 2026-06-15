@@ -402,12 +402,12 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
-  // ── Leer datos del carrito desde sessionStorage ───────────
+  // ── Leer datos del carrito desde localStorage ───────────
   const PUBLIC_KEY = 'APP_USR-c46e63e4-b1f6-49f1-8a57-b5f45b227516';
   let pedidoData = null;
 
   try {
-    pedidoData = JSON.parse(sessionStorage.getItem('sendera_checkout'));
+    pedidoData = JSON.parse(localStorage.getItem('sendera_checkout'));
   } catch(e) {}
 
   if (!pedidoData || !pedidoData.items || pedidoData.items.length === 0) {
@@ -709,7 +709,7 @@
     };
     if (comprobanteBase64) pedido.comprobante = comprobanteBase64;
     db.ref('pedidos').push(pedido);
-    sessionStorage.removeItem('sendera_checkout');
+    localStorage.removeItem('sendera_checkout');
     // Enviar notificación push
     db.ref('fcm_tokens').once('value', snap => {
       const tokens = Object.values(snap.val() || {});

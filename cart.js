@@ -366,7 +366,7 @@ async function pagarMP() {
     items: cart.map(i => ({ name: i.name, variant: i.variant, qty: i.qty, precio: i.price })),
     envio: { label: envioLabel, costo: envio.costo, tipo: envio.tipo }
   };
-  sessionStorage.setItem('sendera_checkout', JSON.stringify(checkoutData));
+  localStorage.setItem('sendera_checkout', JSON.stringify(checkoutData));
   window.location.href = '/checkout.html';
 }
 
