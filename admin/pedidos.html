@@ -209,6 +209,16 @@
   </div>
 
   <div id="pedidos-lista"></div>
+
+  <!-- Carritos abandonados -->
+  <div style="margin-top:40px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:#3a3026">🛒 Carritos abandonados</h2>
+      <span id="abandonados-count" style="background:#e67e22;color:#fff;border-radius:20px;padding:2px 10px;font-size:0.72rem;font-weight:700;display:none"></span>
+    </div>
+    <p style="font-size:0.75rem;color:#9a8f82;margin-bottom:16px">Clientes que llegaron al checkout pero no completaron la compra.</p>
+    <div id="abandonados-lista"></div>
+  </div>
 </div>
 
 <!-- Lightbox comprobante -->
@@ -454,6 +464,59 @@
     });
     renderPedidos();
   });
+
+  // ── Carritos abandonados ──────────────────────────────────
+  db.ref('carritos_abandonados').on('value', snapshot => {
+    const lista = document.getElementById('abandonados-lista');
+    const badge = document.getElementById('abandonados-count');
+    const items = [];
+    snapshot.forEach(child => items.push({ id: child.key, ...child.val() }));
+
+    if (items.length === 0) {
+      badge.style.display = 'none';
+      lista.innerHTML = '<p style="font-size:0.8rem;color:#9a8f82;padding:16px 0">No hay carritos abandonados.</p>';
+      return;
+    }
+
+    badge.style.display = 'inline';
+    badge.textContent = items.length;
+
+    lista.innerHTML = [...items].reverse().map(c => {
+      const prods = (c.productos || []).map(p => `• ${p.nombre} ${p.variante} x${p.qty}`).join('\n');
+      const waMsg = encodeURIComponent(
+        `Hola ${c.cliente}! 👋 Te escribimos de *Sendera*.\n\n` +
+        `Vimos que estabas por completar tu pedido pero no terminaste la compra.\n\n` +
+        `${prods}\n*Total: $${(c.total||0).toLocaleString()}*\n\n` +
+        `¿Te podemos ayudar con algo? Entrá a senderauy.com 🏔️`
+      );
+      const waUrl = `https://wa.me/598${(c.celular||'').replace(/\D/,'')}?text=${waMsg}`;
+      return `
+      <div class="pedido-card" style="border-color:#f0c040;background:#fffdf5">
+        <div class="pedido-header">
+          <div>
+            <div class="pedido-cliente">${c.cliente || 'Sin nombre'}</div>
+            <div class="pedido-meta">
+              <span style="font-size:0.75rem;color:#507a3a;font-weight:500">📱 ${c.celular || '—'}</span>
+              ${c.celular ? `<button class="badge-wa" onclick="window.open('${waUrl}','_blank')">💬 Recuperar cliente</button>` : ''}
+            </div>
+            <div class="pedido-fecha">${formatFecha(c.fecha)}</div>
+          </div>
+          <button onclick="eliminarAbandonado('${c.id}')" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:#ccc;padding:4px">🗑️</button>
+        </div>
+        <div class="pedido-productos">
+          ${(c.productos || []).map(p => `<div class="pedido-producto">• ${p.nombre} ${p.variante} x${p.qty} — $${(p.precio*p.qty).toLocaleString()}</div>`).join('')}
+        </div>
+        <div class="pedido-footer">
+          <div class="pedido-envio">📦 ${c.envio || '—'}</div>
+          <div class="pedido-total">$${(c.total||0).toLocaleString()}</div>
+        </div>
+      </div>`;
+    }).join('');
+  });
+
+  function eliminarAbandonado(id) {
+    db.ref('carritos_abandonados/' + id).remove();
+  }
 </script>
 </body>
 </html>
