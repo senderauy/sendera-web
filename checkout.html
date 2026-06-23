@@ -507,6 +507,9 @@
       return;
     }
 
+    localStorage.setItem('sendera_cliente_nombre', nombre);
+    localStorage.setItem('sendera_cliente_celular', celular);
+
     try {
       const res = await fetch('/api/process-payment', {
         method: 'POST',
@@ -695,8 +698,10 @@
 
   // ── Guardar pedido en Firebase ────────────────────────────
   function guardarPedidoFirebase(estado, mpId, metodoPago = 'tarjeta') {
-    const nombre = document.getElementById('ch-nombre').value.trim();
-    const celular = document.getElementById('ch-celular').value.trim();
+    const nombreEl = document.getElementById('ch-nombre');
+    const celularEl = document.getElementById('ch-celular');
+    const nombre = (nombreEl && nombreEl.value.trim()) || localStorage.getItem('sendera_cliente_nombre') || '';
+    const celular = (celularEl && celularEl.value.trim()) || localStorage.getItem('sendera_cliente_celular') || '';
     const pedido = {
       fecha: new Date().toISOString(),
       cliente: nombre, celular,
