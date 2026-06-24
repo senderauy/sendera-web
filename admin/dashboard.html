@@ -478,9 +478,21 @@
     document.getElementById('r-estrellas').value = '';
   }
 
-  function aprobarResena(id, data) {
-    db.ref('resenas').push({ ...data, orden: Date.now(), aprobada: true });
-    db.ref('resenas_pendientes/' + id).remove();
+  function aprobarResena(id) {
+    db.ref('resenas_pendientes/' + id).once('value', snap => {
+      const data = snap.val();
+      if (!data) return;
+      db.ref('resenas').push({
+        nombre: data.nombre,
+        ciudad: data.ciudad || '',
+        texto: data.texto,
+        estrellas: data.estrellas || 5,
+        fecha: data.fecha,
+        orden: Date.now(),
+        aprobada: true
+      });
+      db.ref('resenas_pendientes/' + id).remove();
+    });
   }
 
   function rechazarResena(id) {
@@ -503,7 +515,7 @@
         <div style="font-size:0.8rem;font-weight:600;color:#3a3026">${r.nombre}${r.ciudad ? ' · ' + r.ciudad : ''} — ${'★'.repeat(r.estrellas||5)}</div>
         <div style="font-size:0.8rem;color:#5a4f44;margin:6px 0;font-style:italic">"${r.texto}"</div>
         <div style="display:flex;gap:8px">
-          <button onclick='aprobarResena("${r.id}", ${JSON.stringify({nombre:r.nombre,ciudad:r.ciudad||'',texto:r.texto,estrellas:r.estrellas})})' style="background:#507a3a;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:0.72rem;cursor:pointer">✅ Aprobar</button>
+          <button onclick='aprobarResena("${r.id}")' style="background:#507a3a;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:0.72rem;cursor:pointer">✅ Aprobar</button>
           <button onclick='rechazarResena("${r.id}")' style="background:#e74c3c;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:0.72rem;cursor:pointer">🗑️ Rechazar</button>
         </div>
       </div>`).join('');
