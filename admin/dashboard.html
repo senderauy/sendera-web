@@ -514,7 +514,8 @@
     snap.forEach(c => items.push({ id: c.key, ...c.val() }));
     const lista = document.getElementById('resenas-publicadas-lista');
     if (items.length === 0) { lista.innerHTML = '<div class="empty">No hay reseñas publicadas.</div>'; return; }
-    lista.innerHTML = items.reverse().map(r => `
+    const itemsRev = items.slice().reverse();
+    lista.innerHTML = itemsRev.map(r => `
       <div style="background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;border:1.5px solid #e8dfd2;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
         <div>
           <div style="font-size:0.8rem;font-weight:600;color:#3a3026">${r.nombre}${r.ciudad ? ' · ' + r.ciudad : ''} — <span style="color:#c9b07a">${'★'.repeat(r.estrellas||5)}</span></div>
