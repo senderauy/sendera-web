@@ -132,6 +132,34 @@
     </div>
   </section>
 
+  <!-- RESEÑAS -->
+  <section class="section resenas" id="resenas">
+    <div class="container">
+      <h2>Lo que dicen nuestros clientes</h2>
+      <p class="subtitle">Experiencias reales de quienes ya eligieron Sendera.</p>
+      <div class="resenas-grid" id="resenas-grid">
+        <!-- Se cargan desde Firebase -->
+      </div>
+      <div class="resena-form-wrap">
+        <h3 class="resena-form-titulo">¿Ya compraste? Dejá tu reseña</h3>
+        <div class="resena-form">
+          <div class="resena-stars-select" id="stars-select">
+            <span class="star-opt" data-val="1">★</span>
+            <span class="star-opt" data-val="2">★</span>
+            <span class="star-opt" data-val="3">★</span>
+            <span class="star-opt" data-val="4">★</span>
+            <span class="star-opt" data-val="5">★</span>
+          </div>
+          <input type="text" id="resena-nombre" placeholder="Tu nombre" maxlength="40" />
+          <input type="text" id="resena-ciudad" placeholder="Tu ciudad (opcional)" maxlength="40" />
+          <textarea id="resena-texto" placeholder="Contanos tu experiencia..." maxlength="300" rows="3"></textarea>
+          <button class="btn-primary" onclick="enviarResena()">Enviar reseña</button>
+          <p class="resena-aviso" id="resena-aviso"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- CONTACTO -->
   <section class="section contacto" id="contacto">
     <div class="container">
@@ -348,6 +376,72 @@
 
       // Revisar stock de los nuevos productos
       checkStockOnLoad();
+    });
+
+    // ── RESEÑAS ───────────────────────────────────────────────
+    let resenaStars = 0;
+
+    document.querySelectorAll('.star-opt').forEach(star => {
+      star.addEventListener('mouseenter', () => {
+        const val = parseInt(star.dataset.val);
+        document.querySelectorAll('.star-opt').forEach((s, i) => {
+          s.classList.toggle('active', i < val);
+        });
+      });
+      star.addEventListener('mouseleave', () => {
+        document.querySelectorAll('.star-opt').forEach((s, i) => {
+          s.classList.toggle('active', i < resenaStars);
+        });
+      });
+      star.addEventListener('click', () => {
+        resenaStars = parseInt(star.dataset.val);
+        document.querySelectorAll('.star-opt').forEach((s, i) => {
+          s.classList.toggle('active', i < resenaStars);
+        });
+      });
+    });
+
+    function enviarResena() {
+      const nombre = document.getElementById('resena-nombre').value.trim();
+      const ciudad = document.getElementById('resena-ciudad').value.trim();
+      const texto = document.getElementById('resena-texto').value.trim();
+      const aviso = document.getElementById('resena-aviso');
+
+      if (!resenaStars) { aviso.style.color = '#e74c3c'; aviso.textContent = 'Por favor seleccioná una puntuación.'; return; }
+      if (!nombre) { aviso.style.color = '#e74c3c'; aviso.textContent = 'Por favor ingresá tu nombre.'; return; }
+      if (!texto) { aviso.style.color = '#e74c3c'; aviso.textContent = 'Por favor escribí tu reseña.'; return; }
+
+      db.ref('resenas_pendientes').push({
+        nombre, ciudad, texto,
+        estrellas: resenaStars,
+        fecha: new Date().toISOString(),
+        aprobada: false
+      });
+
+      aviso.style.color = '#507a3a';
+      aviso.textContent = '¡Gracias! Tu reseña será publicada pronto.';
+      document.getElementById('resena-nombre').value = '';
+      document.getElementById('resena-ciudad').value = '';
+      document.getElementById('resena-texto').value = '';
+      resenaStars = 0;
+      document.querySelectorAll('.star-opt').forEach(s => s.classList.remove('active'));
+      setTimeout(() => { aviso.textContent = ''; }, 4000);
+    }
+
+    // Cargar reseñas aprobadas
+    db.ref('resenas').orderByChild('orden').on('value', snapshot => {
+      const grid = document.getElementById('resenas-grid');
+      const items = [];
+      snapshot.forEach(c => items.push({ id: c.key, ...c.val() }));
+      if (items.length === 0) { grid.innerHTML = ''; return; }
+      grid.innerHTML = items.map(r => `
+        <div class="resena-card">
+          <div class="resena-estrellas">${'★'.repeat(r.estrellas || 5)}${'☆'.repeat(5 - (r.estrellas || 5))}</div>
+          <div class="resena-texto">"${r.texto}"</div>
+          <div class="resena-autor">${r.nombre}</div>
+          ${r.ciudad ? `<div class="resena-ciudad">${r.ciudad}</div>` : ''}
+        </div>
+      `).join('');
     });
   </script>
 </body>

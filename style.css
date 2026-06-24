@@ -1003,3 +1003,84 @@ nav a:hover {
     padding: 70px 20px;
   }
 }
+
+/* ── RESEÑAS ─────────────────────────────────────────────── */
+.resenas { background: #f7f3ee; }
+
+.resenas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 48px;
+}
+
+.resena-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 22px 20px;
+  border: 1.5px solid #e8dfd2;
+  box-shadow: 0 2px 10px rgba(80,60,30,0.06);
+  transition: transform 0.2s;
+}
+.resena-card:hover { transform: translateY(-3px); }
+
+.resena-estrellas { color: #c9b07a; font-size: 1.1rem; letter-spacing: 2px; margin-bottom: 10px; }
+
+.resena-texto {
+  font-size: 0.85rem;
+  color: #5a4f44;
+  line-height: 1.6;
+  font-style: italic;
+  margin-bottom: 14px;
+}
+
+.resena-autor {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #3a3026;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.resena-ciudad { font-size: 0.7rem; color: #9a8f82; margin-top: 2px; }
+
+.resena-form-wrap {
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: center;
+}
+.resena-form-titulo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  color: #3a3026;
+  margin-bottom: 20px;
+}
+.resena-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.resena-form input, .resena-form textarea {
+  padding: 12px 16px;
+  border: 1.5px solid #e8dfd2;
+  border-radius: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.82rem;
+  color: #3a3026;
+  background: #fff;
+  resize: none;
+}
+.resena-form input:focus, .resena-form textarea:focus {
+  outline: none;
+  border-color: #c9b07a;
+}
+
+.resena-stars-select { display: flex; justify-content: center; gap: 8px; margin-bottom: 4px; }
+.star-opt { font-size: 2rem; color: #ddd5c8; cursor: pointer; transition: color 0.15s; }
+.star-opt.active { color: #c9b07a; }
+
+.resena-aviso { font-size: 0.78rem; color: #507a3a; min-height: 18px; }
+
+@media (max-width: 640px) {
+  .resenas-grid { grid-template-columns: 1fr; }
+}
+

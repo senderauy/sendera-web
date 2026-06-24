@@ -352,6 +352,36 @@
 
   <div class="seccion-titulo">⚠️ Alertas de stock</div>
   <div id="alertas-lista"><div class="empty">✅ Todo el stock en orden</div></div>
+
+  <!-- RESEÑAS -->
+  <div class="seccion-titulo">⭐ Reseñas</div>
+
+  <!-- Pendientes de aprobación -->
+  <div id="resenas-pendientes-wrap" style="display:none;background:#fffdf5;border:1.5px solid #f0c040;border-radius:12px;padding:16px 18px;margin-bottom:16px">
+    <div style="font-size:0.78rem;font-weight:600;color:#7a5f00;margin-bottom:12px">⏳ Pendientes de aprobación</div>
+    <div id="resenas-pendientes-lista"></div>
+  </div>
+
+  <!-- Reseñas publicadas -->
+  <div id="resenas-publicadas-lista"></div>
+
+  <!-- Agregar reseña manual -->
+  <div style="background:#fff;border:1.5px solid #e8dfd2;border-radius:12px;padding:18px;margin-top:16px">
+    <div style="font-size:0.78rem;font-weight:600;color:#3a3026;margin-bottom:12px">➕ Agregar reseña manualmente</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:6px" id="admin-stars">
+        <span class="admin-star" data-val="1" style="font-size:1.5rem;cursor:pointer;color:#ddd5c8">★</span>
+        <span class="admin-star" data-val="2" style="font-size:1.5rem;cursor:pointer;color:#ddd5c8">★</span>
+        <span class="admin-star" data-val="3" style="font-size:1.5rem;cursor:pointer;color:#ddd5c8">★</span>
+        <span class="admin-star" data-val="4" style="font-size:1.5rem;cursor:pointer;color:#ddd5c8">★</span>
+        <span class="admin-star" data-val="5" style="font-size:1.5rem;cursor:pointer;color:#ddd5c8">★</span>
+      </div>
+      <input id="r-nombre" placeholder="Nombre" style="padding:10px;border:1.5px solid #e8dfd2;border-radius:8px;font-family:inherit;font-size:0.82rem" />
+      <input id="r-ciudad" placeholder="Ciudad (opcional)" style="padding:10px;border:1.5px solid #e8dfd2;border-radius:8px;font-family:inherit;font-size:0.82rem" />
+      <textarea id="r-texto" placeholder="Texto de la reseña..." rows="3" style="padding:10px;border:1.5px solid #e8dfd2;border-radius:8px;font-family:inherit;font-size:0.82rem;resize:none"></textarea>
+      <button onclick="agregarResena()" style="background:#507a3a;color:#fff;border:none;border-radius:8px;padding:10px;font-family:inherit;font-size:0.78rem;cursor:pointer;letter-spacing:0.08em;text-transform:uppercase">Publicar reseña</button>
+    </div>
+  </div>
 </div>
 
 <!-- Mobile nav -->
@@ -431,6 +461,77 @@
             <div class="ranking-nombre">${nombre}</div>
             <div class="ranking-qty">${qty} uds</div>
           </div>`).join('')}</div>`;
+  });
+
+  // ── RESEÑAS ───────────────────────────────────────────────
+  let adminStars = 0;
+  document.querySelectorAll('.admin-star').forEach(s => {
+    s.addEventListener('click', () => {
+      adminStars = parseInt(s.dataset.val);
+      document.querySelectorAll('.admin-star').forEach((st, i) => {
+        st.style.color = i < adminStars ? '#c9b07a' : '#ddd5c8';
+      });
+    });
+  });
+
+  function agregarResena() {
+    const nombre = document.getElementById('r-nombre').value.trim();
+    const ciudad = document.getElementById('r-ciudad').value.trim();
+    const texto = document.getElementById('r-texto').value.trim();
+    if (!nombre || !texto || !adminStars) { alert('Completá nombre, texto y estrellas.'); return; }
+    const orden = Date.now();
+    db.ref('resenas').push({ nombre, ciudad, texto, estrellas: adminStars, fecha: new Date().toISOString(), orden });
+    document.getElementById('r-nombre').value = '';
+    document.getElementById('r-ciudad').value = '';
+    document.getElementById('r-texto').value = '';
+    adminStars = 0;
+    document.querySelectorAll('.admin-star').forEach(s => s.style.color = '#ddd5c8');
+  }
+
+  function aprobarResena(id, data) {
+    db.ref('resenas').push({ ...data, orden: Date.now(), aprobada: true });
+    db.ref('resenas_pendientes/' + id).remove();
+  }
+
+  function rechazarResena(id) {
+    if (confirm('¿Eliminar esta reseña?')) db.ref('resenas_pendientes/' + id).remove();
+  }
+
+  function eliminarResena(id) {
+    if (confirm('¿Eliminar esta reseña publicada?')) db.ref('resenas/' + id).remove();
+  }
+
+  db.ref('resenas_pendientes').on('value', snap => {
+    const items = [];
+    snap.forEach(c => items.push({ id: c.key, ...c.val() }));
+    const wrap = document.getElementById('resenas-pendientes-wrap');
+    const lista = document.getElementById('resenas-pendientes-lista');
+    if (items.length === 0) { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    lista.innerHTML = items.map(r => `
+      <div style="background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:10px;border:1px solid #e8dfd2">
+        <div style="font-size:0.8rem;font-weight:600;color:#3a3026">${r.nombre}${r.ciudad ? ' · ' + r.ciudad : ''} — ${'★'.repeat(r.estrellas||5)}</div>
+        <div style="font-size:0.8rem;color:#5a4f44;margin:6px 0;font-style:italic">"${r.texto}"</div>
+        <div style="display:flex;gap:8px">
+          <button onclick='aprobarResena("${r.id}", ${JSON.stringify({nombre:r.nombre,ciudad:r.ciudad||'',texto:r.texto,estrellas:r.estrellas})})' style="background:#507a3a;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:0.72rem;cursor:pointer">✅ Aprobar</button>
+          <button onclick='rechazarResena("${r.id}")' style="background:#e74c3c;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:0.72rem;cursor:pointer">🗑️ Rechazar</button>
+        </div>
+      </div>`).join('');
+  });
+
+  db.ref('resenas').on('value', snap => {
+    const items = [];
+    snap.forEach(c => items.push({ id: c.key, ...c.val() }));
+    const lista = document.getElementById('resenas-publicadas-lista');
+    if (items.length === 0) { lista.innerHTML = '<div class="empty">No hay reseñas publicadas.</div>'; return; }
+    lista.innerHTML = items.reverse().map(r => `
+      <div style="background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;border:1.5px solid #e8dfd2;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div>
+          <div style="font-size:0.8rem;font-weight:600;color:#3a3026">${r.nombre}${r.ciudad ? ' · ' + r.ciudad : ''} — <span style="color:#c9b07a">${'★'.repeat(r.estrellas||5)}</span></div>
+          <div style="font-size:0.78rem;color:#5a4f44;margin-top:4px;font-style:italic">"${r.texto}"</div>
+        </div>
+        <button onclick='eliminarResena("${r.id}")' style="background:none;border:none;cursor:pointer;color:#ccc;font-size:1rem;flex-shrink:0">🗑️</button>
+      </div>`).join('');
   });
 
   db.ref('stock').on('value', snapshot => {
