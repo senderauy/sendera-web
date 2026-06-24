@@ -429,7 +429,7 @@
     }
 
     // Cargar reseñas aprobadas
-    db.ref('resenas').orderByChild('orden').on('value', snapshot => {
+    db.ref('resenas').on('value', snapshot => {
       const grid = document.getElementById('resenas-grid');
       const items = [];
       snapshot.forEach(c => items.push({ id: c.key, ...c.val() }));
