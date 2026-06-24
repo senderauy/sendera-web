@@ -369,13 +369,14 @@
   <div style="background:#fff;border:1.5px solid #e8dfd2;border-radius:12px;padding:18px;margin-top:16px">
     <div style="font-size:0.78rem;font-weight:600;color:#3a3026;margin-bottom:12px">➕ Agregar reseña manualmente</div>
     <div style="display:flex;flex-direction:column;gap:10px">
-      <div style="display:flex;gap:6px" id="admin-stars">
-        <span class="admin-star" data-val="1" style="font-size:1.5rem;cursor:pointer;color:#ddd5c8">★</span>
-        <span class="admin-star" data-val="2" style="font-size:1.5rem;cursor:pointer;color:#ddd5c8">★</span>
-        <span class="admin-star" data-val="3" style="font-size:1.5rem;cursor:pointer;color:#ddd5c8">★</span>
-        <span class="admin-star" data-val="4" style="font-size:1.5rem;cursor:pointer;color:#ddd5c8">★</span>
-        <span class="admin-star" data-val="5" style="font-size:1.5rem;cursor:pointer;color:#ddd5c8">★</span>
-      </div>
+      <select id="r-estrellas" style="padding:10px;border:1.5px solid #e8dfd2;border-radius:8px;font-family:inherit;font-size:0.82rem;color:#3a3026">
+        <option value="">Puntuación...</option>
+        <option value="5">★★★★★ (5 estrellas)</option>
+        <option value="4">★★★★☆ (4 estrellas)</option>
+        <option value="3">★★★☆☆ (3 estrellas)</option>
+        <option value="2">★★☆☆☆ (2 estrellas)</option>
+        <option value="1">★☆☆☆☆ (1 estrella)</option>
+      </select>
       <input id="r-nombre" placeholder="Nombre" style="padding:10px;border:1.5px solid #e8dfd2;border-radius:8px;font-family:inherit;font-size:0.82rem" />
       <input id="r-ciudad" placeholder="Ciudad (opcional)" style="padding:10px;border:1.5px solid #e8dfd2;border-radius:8px;font-family:inherit;font-size:0.82rem" />
       <textarea id="r-texto" placeholder="Texto de la reseña..." rows="3" style="padding:10px;border:1.5px solid #e8dfd2;border-radius:8px;font-family:inherit;font-size:0.82rem;resize:none"></textarea>
@@ -464,28 +465,17 @@
   });
 
   // ── RESEÑAS ───────────────────────────────────────────────
-  let adminStars = 0;
-  document.querySelectorAll('.admin-star').forEach(s => {
-    s.addEventListener('click', () => {
-      adminStars = parseInt(s.dataset.val);
-      document.querySelectorAll('.admin-star').forEach((st, i) => {
-        st.style.color = i < adminStars ? '#c9b07a' : '#ddd5c8';
-      });
-    });
-  });
-
   function agregarResena() {
     const nombre = document.getElementById('r-nombre').value.trim();
     const ciudad = document.getElementById('r-ciudad').value.trim();
     const texto = document.getElementById('r-texto').value.trim();
-    if (!nombre || !texto || !adminStars) { alert('Completá nombre, texto y estrellas.'); return; }
-    const orden = Date.now();
-    db.ref('resenas').push({ nombre, ciudad, texto, estrellas: adminStars, fecha: new Date().toISOString(), orden });
+    const estrellas = parseInt(document.getElementById('r-estrellas').value);
+    if (!nombre || !texto || !estrellas) { alert('Completá nombre, texto y puntuación.'); return; }
+    db.ref('resenas').push({ nombre, ciudad, texto, estrellas, fecha: new Date().toISOString(), orden: Date.now() });
     document.getElementById('r-nombre').value = '';
     document.getElementById('r-ciudad').value = '';
     document.getElementById('r-texto').value = '';
-    adminStars = 0;
-    document.querySelectorAll('.admin-star').forEach(s => s.style.color = '#ddd5c8');
+    document.getElementById('r-estrellas').value = '';
   }
 
   function aprobarResena(id, data) {
