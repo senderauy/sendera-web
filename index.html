@@ -432,18 +432,33 @@
     function cargarResenas() {
       db.ref('resenas').once('value', snapshot => {
         const grid = document.getElementById('resenas-grid');
+        grid.innerHTML = '';
         const items = [];
         snapshot.forEach(c => items.push({ id: c.key, ...c.val() }));
-        if (items.length === 0) { grid.innerHTML = ''; return; }
-        grid.innerHTML = items.map(r => {
+        items.forEach(r => {
           const stars = Math.min(5, Math.max(0, parseInt(r.estrellas) || 5));
-          return `<div class="resena-card">
-            <div class="resena-estrellas">${'★'.repeat(stars)}${'☆'.repeat(5 - stars)}</div>
-            <div class="resena-texto">"${(r.texto || '').replace(/"/g, '&quot;')}"</div>
-            <div class="resena-autor">${r.nombre || ''}</div>
-            ${r.ciudad ? `<div class="resena-ciudad">${r.ciudad}</div>` : ''}
-          </div>`;
-        }).join('');
+          const card = document.createElement('div');
+          card.className = 'resena-card';
+          const starsEl = document.createElement('div');
+          starsEl.className = 'resena-estrellas';
+          starsEl.textContent = '★'.repeat(stars) + '☆'.repeat(5 - stars);
+          const textoEl = document.createElement('div');
+          textoEl.className = 'resena-texto';
+          textoEl.textContent = '“' + (r.texto || '') + '”';
+          const autorEl = document.createElement('div');
+          autorEl.className = 'resena-autor';
+          autorEl.textContent = r.nombre || '';
+          card.appendChild(starsEl);
+          card.appendChild(textoEl);
+          card.appendChild(autorEl);
+          if (r.ciudad) {
+            const ciudadEl = document.createElement('div');
+            ciudadEl.className = 'resena-ciudad';
+            ciudadEl.textContent = r.ciudad;
+            card.appendChild(ciudadEl);
+          }
+          grid.appendChild(card);
+        });
       });
     }
     cargarResenas();
