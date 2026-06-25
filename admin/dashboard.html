@@ -526,19 +526,24 @@
     snap.forEach(c => items.push({ id: c.key, ...c.val() }));
     const lista = document.getElementById('resenas-publicadas-lista');
     if (items.length === 0) { lista.innerHTML = '<div class="empty">No hay reseñas publicadas.</div>'; return; }
-    const itemsRev = items.slice().reverse();
-    lista.innerHTML = itemsRev.map(r => {
-      const estrellas = '★'.repeat(r.estrellas||5);
-      const ciudad = r.ciudad ? ' · ' + r.ciudad : '';
-      const texto = r.texto ? r.texto.replace(/"/g, '&quot;') : '';
-      return `<div style="background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;border:1.5px solid #e8dfd2;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-        <div>
-          <div style="font-size:0.8rem;font-weight:600;color:#3a3026">${r.nombre}${ciudad} — <span style="color:#c9b07a">${estrellas}</span></div>
-          <div style="font-size:0.78rem;color:#5a4f44;margin-top:4px;font-style:italic">"${texto}"</div>
-        </div>
-        <button onclick="eliminarResena('${r.id}')" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:1rem;flex-shrink:0">🗑️</button>
-      </div>`;
-    }).join('');
+    let html = '';
+    items.slice().reverse().forEach(r => {
+      try {
+        const stars = Math.min(5, Math.max(0, parseInt(r.estrellas) || 5));
+        const estrellas = '★'.repeat(stars);
+        const ciudad = r.ciudad ? ' · ' + r.ciudad : '';
+        const texto = (r.texto || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        const nombre = (r.nombre || '').replace(/</g, '&lt;');
+        html += `<div style="background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;border:1.5px solid #e8dfd2;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+          <div>
+            <div style="font-size:0.8rem;font-weight:600;color:#3a3026">${nombre}${ciudad} — <span style="color:#c9b07a">${estrellas}</span></div>
+            <div style="font-size:0.78rem;color:#5a4f44;margin-top:4px;font-style:italic">"${texto}"</div>
+          </div>
+          <button onclick="eliminarResena('${r.id}')" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:1rem;flex-shrink:0">🗑️</button>
+        </div>`;
+      } catch(e) { console.error('Error renderizando reseña', r.id, e); }
+    });
+    lista.innerHTML = html || '<div class="empty">No hay reseñas publicadas.</div>';
   });
 
   db.ref('stock').on('value', snapshot => {
