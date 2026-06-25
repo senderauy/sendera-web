@@ -429,30 +429,24 @@
     }
 
     // Cargar reseñas aprobadas
-    db.ref('resenas').on('value', snapshot => {
-      const grid = document.getElementById('resenas-grid');
-      const items = [];
-      snapshot.forEach(c => items.push({ id: c.key, ...c.val() }));
-      if (items.length === 0) { grid.innerHTML = ''; return; }
-      let html = '';
-      items.forEach(r => {
-        try {
+    function cargarResenas() {
+      db.ref('resenas').once('value', snapshot => {
+        const grid = document.getElementById('resenas-grid');
+        const items = [];
+        snapshot.forEach(c => items.push({ id: c.key, ...c.val() }));
+        if (items.length === 0) { grid.innerHTML = ''; return; }
+        grid.innerHTML = items.map(r => {
           const stars = Math.min(5, Math.max(0, parseInt(r.estrellas) || 5));
-          const llenas = '★'.repeat(stars);
-          const vacías = '☆'.repeat(5 - stars);
-          const texto = (r.texto || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-          const nombre = (r.nombre || '').replace(/</g, '&lt;');
-          const ciudad = (r.ciudad || '').replace(/</g, '&lt;');
-          html += `<div class="resena-card">
-            <div class="resena-estrellas">${llenas}${vacías}</div>
-            <div class="resena-texto">"${texto}"</div>
-            <div class="resena-autor">${nombre}</div>
-            ${ciudad ? `<div class="resena-ciudad">${ciudad}</div>` : ''}
+          return `<div class="resena-card">
+            <div class="resena-estrellas">${'★'.repeat(stars)}${'☆'.repeat(5 - stars)}</div>
+            <div class="resena-texto">"${(r.texto || '').replace(/"/g, '&quot;')}"</div>
+            <div class="resena-autor">${r.nombre || ''}</div>
+            ${r.ciudad ? `<div class="resena-ciudad">${r.ciudad}</div>` : ''}
           </div>`;
-        } catch(e) { console.error('Error renderizando reseña', r.id, e); }
+        }).join('');
       });
-      grid.innerHTML = html || '';
-    });
+    }
+    cargarResenas();
   </script>
 </body>
 </html>
