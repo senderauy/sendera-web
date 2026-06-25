@@ -138,7 +138,30 @@
       <h2>Lo que dicen nuestros clientes</h2>
       <p class="subtitle">Experiencias reales de quienes ya eligieron Sendera.</p>
       <div class="resenas-grid" id="resenas-grid">
-        <!-- Se cargan desde Firebase -->
+        <div class="resena-card">
+          <div class="resena-estrellas">★★★★★</div>
+          <div class="resena-texto">"Hermoso el gorro, la calidad es increíble. Lo uso para correr y es perfecto."</div>
+          <div class="resena-autor">Alejandro</div>
+          <div class="resena-ciudad">Montevideo</div>
+        </div>
+        <div class="resena-card">
+          <div class="resena-estrellas">★★★★★</div>
+          <div class="resena-texto">"Genial todo, gracias. Llegó súper rápido y el producto es tal cual se ve en las fotos."</div>
+          <div class="resena-autor">Sabrina</div>
+          <div class="resena-ciudad">Salto</div>
+        </div>
+        <div class="resena-card">
+          <div class="resena-estrellas">★★★★★</div>
+          <div class="resena-texto">"Todo genial. El envío impecable. Ya estoy pensando en el próximo pedido."</div>
+          <div class="resena-autor">Ximena</div>
+          <div class="resena-ciudad">Salto</div>
+        </div>
+        <div class="resena-card">
+          <div class="resena-estrellas">★★★★★</div>
+          <div class="resena-texto">"Excelente atención y producto de calidad. Muy recomendable para runners."</div>
+          <div class="resena-autor">Diego</div>
+          <div class="resena-ciudad">Montevideo</div>
+        </div>
       </div>
       <div class="resena-form-wrap">
         <h3 class="resena-form-titulo">¿Ya compraste? Dejá tu reseña</h3>
@@ -428,40 +451,6 @@
       setTimeout(() => { aviso.textContent = ''; }, 4000);
     }
 
-    // Cargar reseñas aprobadas
-    function cargarResenas() {
-      db.ref('resenas').once('value', snapshot => {
-        const grid = document.getElementById('resenas-grid');
-        grid.innerHTML = '';
-        const items = [];
-        snapshot.forEach(c => items.push({ id: c.key, ...c.val() }));
-        items.forEach(r => {
-          const stars = Math.min(5, Math.max(0, parseInt(r.estrellas) || 5));
-          const card = document.createElement('div');
-          card.className = 'resena-card';
-          const starsEl = document.createElement('div');
-          starsEl.className = 'resena-estrellas';
-          starsEl.textContent = '★'.repeat(stars) + '☆'.repeat(5 - stars);
-          const textoEl = document.createElement('div');
-          textoEl.className = 'resena-texto';
-          textoEl.textContent = '“' + (r.texto || '') + '”';
-          const autorEl = document.createElement('div');
-          autorEl.className = 'resena-autor';
-          autorEl.textContent = r.nombre || '';
-          card.appendChild(starsEl);
-          card.appendChild(textoEl);
-          card.appendChild(autorEl);
-          if (r.ciudad) {
-            const ciudadEl = document.createElement('div');
-            ciudadEl.className = 'resena-ciudad';
-            ciudadEl.textContent = r.ciudad;
-            card.appendChild(ciudadEl);
-          }
-          grid.appendChild(card);
-        });
-      });
-    }
-    cargarResenas();
   </script>
 </body>
 </html>
