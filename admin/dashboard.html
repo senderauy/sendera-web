@@ -465,35 +465,13 @@
   });
 
   // ── RESEÑAS ───────────────────────────────────────────────
-  function renderResenas() {
-    db.ref('resenas').once('value', snap => {
-      const lista = document.getElementById('resenas-publicadas-lista');
-      const items = [];
-      snap.forEach(c => items.push({ id: c.key, ...c.val() }));
-      if (items.length === 0) { lista.innerHTML = '<div class="empty">No hay reseñas publicadas.</div>'; return; }
-      lista.innerHTML = items.reverse().map(r => {
-        const stars = Math.min(5, Math.max(0, parseInt(r.estrellas) || 5));
-        const ciudad = r.ciudad ? ' · ' + r.ciudad : '';
-        const texto = (r.texto || '').replace(/"/g, '&quot;');
-        return `<div style="background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;border:1.5px solid #e8dfd2;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-          <div>
-            <div style="font-size:0.8rem;font-weight:600;color:#3a3026">${r.nombre || ''}${ciudad} — <span style="color:#c9b07a">${'★'.repeat(stars)}</span></div>
-            <div style="font-size:0.78rem;color:#5a4f44;margin-top:4px;font-style:italic">"${texto}"</div>
-          </div>
-          <button onclick="eliminarResena('${r.id}')" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:1rem;flex-shrink:0">🗑️</button>
-        </div>`;
-      }).join('');
-    });
-  }
-
   function agregarResena() {
     const nombre = document.getElementById('r-nombre').value.trim();
     const ciudad = document.getElementById('r-ciudad').value.trim();
     const texto = document.getElementById('r-texto').value.trim();
     const estrellas = parseInt(document.getElementById('r-estrellas').value);
     if (!nombre || !texto || !estrellas) { alert('Completá nombre, texto y puntuación.'); return; }
-    db.ref('resenas').push({ nombre, ciudad, texto, estrellas, fecha: new Date().toISOString(), orden: Date.now() })
-      .then(() => renderResenas());
+    db.ref('resenas').push({ nombre, ciudad, texto, estrellas, fecha: new Date().toISOString(), orden: Date.now() });
     document.getElementById('r-nombre').value = '';
     document.getElementById('r-ciudad').value = '';
     document.getElementById('r-texto').value = '';
@@ -512,10 +490,7 @@
         fecha: data.fecha,
         orden: Date.now(),
         aprobada: true
-      }).then(() => {
-        db.ref('resenas_pendientes/' + id).remove();
-        renderResenas();
-      });
+      }).then(() => db.ref('resenas_pendientes/' + id).remove());
     });
   }
 
@@ -547,7 +522,30 @@
       </div>`).join('');
   });
 
-  renderResenas();
+  // Cargar reseñas publicadas con child_added
+  const listaResenas = document.getElementById('resenas-publicadas-lista');
+  db.ref('resenas').on('child_added', snap => {
+    listaResenas.querySelector('.empty') && (listaResenas.innerHTML = '');
+    const r = { id: snap.key, ...snap.val() };
+    const stars = Math.min(5, Math.max(0, parseInt(r.estrellas) || 5));
+    const ciudad = r.ciudad ? ' · ' + r.ciudad : '';
+    const texto = (r.texto || '').replace(/"/g, '&quot;');
+    const div = document.createElement('div');
+    div.id = 'resena-' + r.id;
+    div.style.cssText = 'background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;border:1.5px solid #e8dfd2;display:flex;justify-content:space-between;align-items:flex-start;gap:10px';
+    div.innerHTML = `<div>
+      <div style="font-size:0.8rem;font-weight:600;color:#3a3026">${r.nombre || ''}${ciudad} — <span style="color:#c9b07a">${'★'.repeat(stars)}</span></div>
+      <div style="font-size:0.78rem;color:#5a4f44;margin-top:4px;font-style:italic">"${texto}"</div>
+    </div>
+    <button onclick="eliminarResena('${r.id}')" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:1rem;flex-shrink:0">🗑️</button>`;
+    listaResenas.appendChild(div);
+  });
+
+  db.ref('resenas').on('child_removed', snap => {
+    const el = document.getElementById('resena-' + snap.key);
+    if (el) el.remove();
+    if (!listaResenas.children.length) listaResenas.innerHTML = '<div class="empty">No hay reseñas publicadas.</div>';
+  });
 
   db.ref('stock').on('value', snapshot => {
     const stock = snapshot.val() || {};
