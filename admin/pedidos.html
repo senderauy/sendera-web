@@ -466,52 +466,60 @@
   });
 
   // ── Carritos abandonados ──────────────────────────────────
-  db.ref('carritos_abandonados').on('value', snapshot => {
-    const lista = document.getElementById('abandonados-lista');
-    const badge = document.getElementById('abandonados-count');
-    const items = [];
-    snapshot.forEach(child => items.push({ id: child.key, ...child.val() }));
+  const listaAbandonados = document.getElementById('abandonados-lista');
+  const badgeAbandonados = document.getElementById('abandonados-count');
+  let countAbandonados = 0;
 
-    if (items.length === 0) {
-      badge.style.display = 'none';
-      lista.innerHTML = '<p style="font-size:0.8rem;color:#9a8f82;padding:16px 0">No hay carritos abandonados.</p>';
-      return;
-    }
-
-    badge.style.display = 'inline';
-    badge.textContent = items.length;
-
-    lista.innerHTML = [...items].reverse().map(c => {
-      const prods = (c.productos || []).map(p => `• ${p.nombre} ${p.variante} x${p.qty}`).join('\n');
-      const waMsg = encodeURIComponent(
-        `Hola ${c.cliente}! 👋 Te escribimos de *Sendera*.\n\n` +
-        `Vimos que estabas por completar tu pedido pero no terminaste la compra.\n\n` +
-        `${prods}\n*Total: $${(c.total||0).toLocaleString()}*\n\n` +
-        `¿Te podemos ayudar con algo? Entrá a senderauy.com 🏔️`
-      );
-      const waUrl = `https://wa.me/598${(c.celular||'').replace(/\D/,'')}?text=${waMsg}`;
-      return `
-      <div class="pedido-card" style="border-color:#f0c040;background:#fffdf5">
-        <div class="pedido-header">
-          <div>
-            <div class="pedido-cliente">${c.cliente || 'Sin nombre'}</div>
-            <div class="pedido-meta">
-              <span style="font-size:0.75rem;color:#507a3a;font-weight:500">📱 ${c.celular || '—'}</span>
-              ${c.celular ? `<button class="badge-wa" onclick="window.open('${waUrl}','_blank')">💬 Recuperar cliente</button>` : ''}
-            </div>
-            <div class="pedido-fecha">${formatFecha(c.fecha)}</div>
+  db.ref('carritos_abandonados').on('child_added', snap => {
+    const c = { id: snap.key, ...snap.val() };
+    countAbandonados++;
+    badgeAbandonados.style.display = 'inline';
+    badgeAbandonados.textContent = countAbandonados;
+    listaAbandonados.querySelector('p') && (listaAbandonados.innerHTML = '');
+    const prods = (c.productos || []).map(p => `• ${p.nombre} ${p.variante} x${p.qty}`).join('\n');
+    const waMsg = encodeURIComponent(
+      `Hola ${c.cliente}! 👋 Te escribimos de *Sendera*.\n\n` +
+      `Vimos que estabas por completar tu pedido pero no terminaste la compra.\n\n` +
+      `${prods}\n*Total: $${(c.total||0).toLocaleString()}*\n\n` +
+      `¿Te podemos ayudar con algo? Entrá a senderauy.com 🏔️`
+    );
+    const waUrl = `https://wa.me/598${(c.celular||'').replace(/\D/g,'')}?text=${waMsg}`;
+    const div = document.createElement('div');
+    div.id = 'abandonado-' + c.id;
+    div.className = 'pedido-card';
+    div.style.cssText = 'border-color:#f0c040;background:#fffdf5';
+    div.innerHTML = `
+      <div class="pedido-header">
+        <div>
+          <div class="pedido-cliente">${c.cliente || 'Sin nombre'}</div>
+          <div class="pedido-meta">
+            <span style="font-size:0.75rem;color:#507a3a;font-weight:500">📱 ${c.celular || '—'}</span>
+            ${c.celular ? `<button class="badge-wa" onclick="window.open('${waUrl}','_blank')">💬 Recuperar cliente</button>` : ''}
           </div>
-          <button onclick="eliminarAbandonado('${c.id}')" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:#ccc;padding:4px">🗑️</button>
+          <div class="pedido-fecha">${formatFecha(c.fecha)}</div>
         </div>
-        <div class="pedido-productos">
-          ${(c.productos || []).map(p => `<div class="pedido-producto">• ${p.nombre} ${p.variante} x${p.qty} — $${(p.precio*p.qty).toLocaleString()}</div>`).join('')}
-        </div>
-        <div class="pedido-footer">
-          <div class="pedido-envio">📦 ${c.envio || '—'}</div>
-          <div class="pedido-total">$${(c.total||0).toLocaleString()}</div>
-        </div>
+        <button onclick="eliminarAbandonado('${c.id}')" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:#ccc;padding:4px">🗑️</button>
+      </div>
+      <div class="pedido-productos">
+        ${(c.productos || []).map(p => `<div class="pedido-producto">• ${p.nombre} ${p.variante} x${p.qty} — $${(p.precio*p.qty).toLocaleString()}</div>`).join('')}
+      </div>
+      <div class="pedido-footer">
+        <div class="pedido-envio">📦 ${c.envio || '—'}</div>
+        <div class="pedido-total">$${(c.total||0).toLocaleString()}</div>
       </div>`;
-    }).join('');
+    listaAbandonados.appendChild(div);
+  });
+
+  db.ref('carritos_abandonados').on('child_removed', snap => {
+    const el = document.getElementById('abandonado-' + snap.key);
+    if (el) el.remove();
+    countAbandonados = Math.max(0, countAbandonados - 1);
+    if (countAbandonados === 0) {
+      badgeAbandonados.style.display = 'none';
+      listaAbandonados.innerHTML = '<p style="font-size:0.8rem;color:#9a8f82;padding:16px 0">No hay carritos abandonados.</p>';
+    } else {
+      badgeAbandonados.textContent = countAbandonados;
+    }
   });
 
   function eliminarAbandonado(id) {
