@@ -31,7 +31,7 @@
     .nav-links a.active { background: #507a3a; color: #fff; }
     .btn-logout { font-size: 0.72rem; color: #9a8f82; cursor: pointer; text-transform: uppercase; letter-spacing: 0.08em; background: none; border: 1px solid #ddd5c8; border-radius: 8px; padding: 7px 14px; margin-left: 8px; transition: all 0.2s; }
     .btn-logout:hover { background: #f2ede6; color: #3a3026; }
-    .btn-logout-top { display: none; background: none; border: none; cursor: pointer; font-size: 1rem; color: #9a8f82; padding: 2px 6px; margin-left: 6px; vertical-align: middle; transition: color 0.2s; }
+    .btn-logout-top { background: none; border: none; cursor: pointer; font-size: 1rem; color: #9a8f82; padding: 2px 6px; margin-left: 6px; vertical-align: middle; transition: color 0.2s; }
     .btn-logout-top:hover { color: #3a3026; }
 
     .mobile-nav { display: none; background: #fff; border-top: 2px solid #e8dfd2; position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; padding: 8px 0 12px; }
@@ -149,7 +149,6 @@
     @media (max-width: 700px) {
       .resumen { grid-template-columns: repeat(2, 1fr); }
       .nav-links, .btn-logout { display: none; }
-      .btn-logout-top { display: inline-block; }
       .mobile-nav { display: block; }
       .container { padding-bottom: 90px; }
       .page-header h1 { font-size: 1.6rem; }
@@ -209,16 +208,6 @@
   </div>
 
   <div id="pedidos-lista"></div>
-
-  <!-- Carritos abandonados -->
-  <div style="margin-top:40px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-      <h2 style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:#3a3026">🛒 Carritos abandonados</h2>
-      <span id="abandonados-count" style="background:#e67e22;color:#fff;border-radius:20px;padding:2px 10px;font-size:0.72rem;font-weight:700;display:none"></span>
-    </div>
-    <p style="font-size:0.75rem;color:#9a8f82;margin-bottom:16px">Clientes que llegaron al checkout pero no completaron la compra.</p>
-    <div id="abandonados-lista"></div>
-  </div>
 </div>
 
 <!-- Lightbox comprobante -->
@@ -234,7 +223,6 @@
     <a href="productos.html"><span class="icon">🛍️</span>Productos</a>
     <a href="stock.html"><span class="icon">🏷️</span>Stock</a>
     <a href="https://analytics.google.com" target="_blank"><span class="icon">📈</span>Analytics</a>
-    <a href="#" onclick="logout()"><span class="icon">↩️</span>Salir</a>
   </div>
 </div>
 
@@ -464,67 +452,6 @@
     });
     renderPedidos();
   });
-
-  // ── Carritos abandonados ──────────────────────────────────
-  const listaAbandonados = document.getElementById('abandonados-lista');
-  const badgeAbandonados = document.getElementById('abandonados-count');
-  let countAbandonados = 0;
-
-  db.ref('carritos_abandonados').on('child_added', snap => {
-    const c = { id: snap.key, ...snap.val() };
-    countAbandonados++;
-    badgeAbandonados.style.display = 'inline';
-    badgeAbandonados.textContent = countAbandonados;
-    listaAbandonados.querySelector('p') && (listaAbandonados.innerHTML = '');
-    const prods = (c.productos || []).map(p => `• ${p.nombre} ${p.variante} x${p.qty}`).join('\n');
-    const waMsg = encodeURIComponent(
-      `Hola ${c.cliente}! 👋 Te escribimos de *Sendera*.\n\n` +
-      `Vimos que estabas por completar tu pedido pero no terminaste la compra.\n\n` +
-      `${prods}\n*Total: $${(c.total||0).toLocaleString()}*\n\n` +
-      `¿Te podemos ayudar con algo? Entrá a senderauy.com 🏔️`
-    );
-    const waUrl = `https://wa.me/598${(c.celular||'').replace(/\D/g,'')}?text=${waMsg}`;
-    const div = document.createElement('div');
-    div.id = 'abandonado-' + c.id;
-    div.className = 'pedido-card';
-    div.style.cssText = 'border-color:#f0c040;background:#fffdf5';
-    div.innerHTML = `
-      <div class="pedido-header">
-        <div>
-          <div class="pedido-cliente">${c.cliente || 'Sin nombre'}</div>
-          <div class="pedido-meta">
-            <span style="font-size:0.75rem;color:#507a3a;font-weight:500">📱 ${c.celular || '—'}</span>
-            ${c.celular ? `<button class="badge-wa" onclick="window.open('${waUrl}','_blank')">💬 Recuperar cliente</button>` : ''}
-          </div>
-          <div class="pedido-fecha">${formatFecha(c.fecha)}</div>
-        </div>
-        <button onclick="eliminarAbandonado('${c.id}')" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:#ccc;padding:4px">🗑️</button>
-      </div>
-      <div class="pedido-productos">
-        ${(c.productos || []).map(p => `<div class="pedido-producto">• ${p.nombre} ${p.variante} x${p.qty} — $${(p.precio*p.qty).toLocaleString()}</div>`).join('')}
-      </div>
-      <div class="pedido-footer">
-        <div class="pedido-envio">📦 ${c.envio || '—'}</div>
-        <div class="pedido-total">$${(c.total||0).toLocaleString()}</div>
-      </div>`;
-    listaAbandonados.appendChild(div);
-  });
-
-  db.ref('carritos_abandonados').on('child_removed', snap => {
-    const el = document.getElementById('abandonado-' + snap.key);
-    if (el) el.remove();
-    countAbandonados = Math.max(0, countAbandonados - 1);
-    if (countAbandonados === 0) {
-      badgeAbandonados.style.display = 'none';
-      listaAbandonados.innerHTML = '<p style="font-size:0.8rem;color:#9a8f82;padding:16px 0">No hay carritos abandonados.</p>';
-    } else {
-      badgeAbandonados.textContent = countAbandonados;
-    }
-  });
-
-  function eliminarAbandonado(id) {
-    db.ref('carritos_abandonados/' + id).remove();
-  }
 </script>
 </body>
 </html>
