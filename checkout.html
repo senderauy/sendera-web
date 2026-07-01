@@ -402,12 +402,12 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
-  // ── Leer datos del carrito desde sessionStorage ───────────
+  // ── Leer datos del carrito desde localStorage ───────────
   const PUBLIC_KEY = 'APP_USR-c46e63e4-b1f6-49f1-8a57-b5f45b227516';
   let pedidoData = null;
 
   try {
-    pedidoData = JSON.parse(sessionStorage.getItem('sendera_checkout'));
+    pedidoData = JSON.parse(localStorage.getItem('sendera_checkout'));
   } catch(e) {}
 
   if (!pedidoData || !pedidoData.items || pedidoData.items.length === 0) {
@@ -449,6 +449,29 @@
   }
 
   renderResumen();
+
+  // ── Registrar carrito abandonado en Firebase ──────────────
+  let carritoAbandonadoId = null;
+  if (typeof db !== 'undefined' && pedidoData) {
+    const { items, envio, cliente, celular } = pedidoData;
+    const total = items.reduce((s, i) => s + i.precio * i.qty, 0) + (envio?.costo || 0);
+    const ref = db.ref('carritos_abandonados').push({
+      fecha: new Date().toISOString(),
+      cliente: cliente || '',
+      celular: celular || '',
+      productos: items.map(i => ({ nombre: i.name, variante: i.variant, qty: i.qty, precio: i.precio })),
+      envio: envio?.label || '—',
+      total
+    });
+    carritoAbandonadoId = ref.key;
+  }
+
+  function eliminarCarritoAbandonado() {
+    if (carritoAbandonadoId && typeof db !== 'undefined') {
+      db.ref('carritos_abandonados/' + carritoAbandonadoId).remove();
+      carritoAbandonadoId = null;
+    }
+  }
 
   // ── MercadoPago Bricks ────────────────────────────────────
   const mp = new MercadoPago(PUBLIC_KEY, { locale: 'es-UY' });
@@ -506,6 +529,9 @@
       alert('Por favor completá nombre, celular y email.');
       return;
     }
+
+    localStorage.setItem('sendera_cliente_nombre', nombre);
+    localStorage.setItem('sendera_cliente_celular', celular);
 
     try {
       const res = await fetch('/api/process-payment', {
@@ -681,7 +707,10 @@
         body: JSON.stringify({
           cliente: nombre, celular,
           items: pedidoData.items.map(i => ({ nombre: i.name, variante: i.variant, qty: parseInt(i.qty), precio: parseFloat(i.precio) })),
-          envio: pedidoData.envio
+          envio: pedidoData.envio,
+          carritoId: carritoAbandonadoId || '',
+          total: pedidoData.items.reduce((s, i) => s + i.precio * i.qty, 0) + (pedidoData.envio?.costo || 0),
+          fecha: new Date().toISOString()
         })
       });
       const data = await res.json();
@@ -695,8 +724,10 @@
 
   // ── Guardar pedido en Firebase ────────────────────────────
   function guardarPedidoFirebase(estado, mpId, metodoPago = 'tarjeta') {
-    const nombre = document.getElementById('ch-nombre').value.trim();
-    const celular = document.getElementById('ch-celular').value.trim();
+    const nombreEl = document.getElementById('ch-nombre');
+    const celularEl = document.getElementById('ch-celular');
+    const nombre = (nombreEl && nombreEl.value.trim()) || localStorage.getItem('sendera_cliente_nombre') || '';
+    const celular = (celularEl && celularEl.value.trim()) || localStorage.getItem('sendera_cliente_celular') || '';
     const pedido = {
       fecha: new Date().toISOString(),
       cliente: nombre, celular,
@@ -709,7 +740,8 @@
     };
     if (comprobanteBase64) pedido.comprobante = comprobanteBase64;
     db.ref('pedidos').push(pedido);
-    sessionStorage.removeItem('sendera_checkout');
+    localStorage.removeItem('sendera_checkout');
+    eliminarCarritoAbandonado();
     // Enviar notificación push
     db.ref('fcm_tokens').once('value', snap => {
       const tokens = Object.values(snap.val() || {});
