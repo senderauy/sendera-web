@@ -707,7 +707,10 @@
         body: JSON.stringify({
           cliente: nombre, celular,
           items: pedidoData.items.map(i => ({ nombre: i.name, variante: i.variant, qty: parseInt(i.qty), precio: parseFloat(i.precio) })),
-          envio: pedidoData.envio
+          envio: pedidoData.envio,
+          carritoId: carritoAbandonadoId || '',
+          total: pedidoData.items.reduce((s, i) => s + i.precio * i.qty, 0) + (pedidoData.envio?.costo || 0),
+          fecha: new Date().toISOString()
         })
       });
       const data = await res.json();
