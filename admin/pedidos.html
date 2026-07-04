@@ -245,8 +245,13 @@
   // ── Notificaciones push ───────────────────────────────────
   const VAPID_KEY = 'BEpbAI9BlhpQv8s8dwQbiLr8eFwSHOL9eqBcvnHS2Yq3d7tWMrEDnclpqLP3G50uzSJSxA-74YsTjo5wODQvqg4';
 
+  function mostrarEstadoNotif(msg) {
+    const banner = document.getElementById('banner-notif');
+    banner.innerHTML = '<span>' + msg + '</span>';
+    banner.style.display = 'flex';
+  }
+
   async function pedirPermiso() {
-    document.getElementById('banner-notif').style.display = 'none';
     await activarNotificaciones();
   }
 
@@ -255,13 +260,21 @@
       const reg = await navigator.serviceWorker.register('/admin/firebase-messaging-sw.js');
       const messaging = firebase.messaging();
       const permission = await Notification.requestPermission();
-      if (permission !== 'granted') return;
+      if (permission !== 'granted') {
+        mostrarEstadoNotif('🔕 No diste permiso de notificaciones en el navegador.');
+        return;
+      }
       const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
       if (token) {
         await db.ref('fcm_tokens/' + btoa(token).slice(0, 20)).set(token);
+        mostrarEstadoNotif('✅ Notificaciones activadas correctamente.');
+        setTimeout(() => { document.getElementById('banner-notif').style.display = 'none'; }, 4000);
+      } else {
+        mostrarEstadoNotif('⚠️ No se pudo generar el token de notificaciones.');
       }
     } catch(e) {
       console.log('Push no disponible:', e);
+      mostrarEstadoNotif('⚠️ Error activando notificaciones: ' + (e.message || e.code || e));
     }
   }
 
