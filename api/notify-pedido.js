@@ -18,9 +18,10 @@ export default async function handler(req, res) {
   const url = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
 
   let sent = 0;
+  const errors = [];
   for (const fcmToken of tokens) {
     try {
-      await fetch(url, {
+      const fcmRes = await fetch(url, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -36,9 +37,18 @@ export default async function handler(req, res) {
           }
         })
       });
-      sent++;
-    } catch(e) {}
+      if (fcmRes.ok) {
+        sent++;
+      } else {
+        const errBody = await fcmRes.text();
+        console.error('FCM send error:', fcmRes.status, errBody);
+        errors.push({ status: fcmRes.status, body: errBody });
+      }
+    } catch(e) {
+      console.error('FCM send exception:', e.message);
+      errors.push({ error: e.message });
+    }
   }
 
-  return res.status(200).json({ ok: true, sent });
+  return res.status(200).json({ ok: true, sent, errors });
 }
