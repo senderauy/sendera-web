@@ -743,9 +743,9 @@
     localStorage.removeItem('sendera_checkout');
     eliminarCarritoAbandonado();
     // Enviar notificación push
-    db.ref('fcm_tokens').once('value', snap => {
-      const tokens = Object.values(snap.val() || {});
-      if (tokens.length === 0) return;
+    db.ref('push_subscriptions').once('value', snap => {
+      const subscriptions = Object.values(snap.val() || {});
+      if (subscriptions.length === 0) return;
       fetch('/api/notify-pedido', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -753,7 +753,7 @@
           cliente: pedido.cliente,
           total: pedido.total.toLocaleString(),
           envio: pedido.envio,
-          tokens
+          subscriptions
         })
       }).catch(() => {});
     });
