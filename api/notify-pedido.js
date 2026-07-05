@@ -24,7 +24,7 @@ export default async function handler(req, res) {
   const errors = [];
   for (const subscription of subscriptions) {
     try {
-      await webpush.sendNotification(subscription, payload);
+      await webpush.sendNotification(subscription, payload, { urgency: 'high', TTL: 3600 });
       sent++;
     } catch(e) {
       console.error('Web push error:', e.statusCode, e.body);
