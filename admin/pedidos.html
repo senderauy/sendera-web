@@ -259,6 +259,12 @@
   }
 
   async function pedirPermiso() {
+    // requestPermission debe llamarse en respuesta directa al gesto del usuario
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') {
+      mostrarEstadoNotif('🔕 No diste permiso de notificaciones en el navegador.');
+      return;
+    }
     await activarNotificaciones(false);
   }
 
@@ -266,8 +272,8 @@
     try {
       const reg = await navigator.serviceWorker.register('/admin/firebase-messaging-sw.js');
       await navigator.serviceWorker.ready;
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
+      // No volver a pedir permiso si ya está concedido
+      if (Notification.permission !== 'granted') {
         if (!silencioso) mostrarEstadoNotif('🔕 No diste permiso de notificaciones en el navegador.');
         return;
       }
