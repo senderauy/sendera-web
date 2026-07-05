@@ -256,7 +256,23 @@
     await activarNotificaciones();
   }
 
-  async function activarNotificaciones() {
+  async function limpiarEstadoFirebase() {
+    try {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (const r of regs) await r.unregister();
+    } catch(e) {}
+    try {
+      if (indexedDB.databases) {
+        const dbs = await indexedDB.databases();
+        await Promise.all(dbs.filter(d => d.name && d.name.toLowerCase().includes('firebase')).map(d => new Promise(res => {
+          const req = indexedDB.deleteDatabase(d.name);
+          req.onsuccess = req.onerror = req.onblocked = res;
+        })));
+      }
+    } catch(e) {}
+  }
+
+  async function activarNotificaciones(reintentando) {
     try {
       const reg = await navigator.serviceWorker.register('/admin/firebase-messaging-sw.js');
       const messaging = firebase.messaging();
@@ -275,6 +291,11 @@
       }
     } catch(e) {
       console.log('Push no disponible:', e);
+      if (!reintentando) {
+        mostrarEstadoNotif('🔄 Reintentando activar notificaciones...');
+        await limpiarEstadoFirebase();
+        return activarNotificaciones(true);
+      }
       mostrarEstadoNotif('⚠️ Error activando notificaciones: ' + (e.message || e.code || e));
     }
   }
