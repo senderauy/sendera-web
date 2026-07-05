@@ -497,26 +497,6 @@
     renderPedidos();
   });
 
-  // Notificación directa del browser cuando llega un nuevo pedido (sin necesitar FCM)
-  let pedidosInicialesCargados = false;
-  let pageActiveAt = Date.now();
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') pageActiveAt = Date.now();
-  });
-  db.ref('pedidos').once('value', () => { pedidosInicialesCargados = true; });
-  db.ref('pedidos').on('child_added', snap => {
-    if (!pedidosInicialesCargados) return;
-    if (Notification.permission !== 'granted') return;
-    const p = snap.val();
-    // Solo notificar si el pedido llegó DESPUÉS de que la app se abrió (evita duplicar el push)
-    const ordenMs = p.fecha ? new Date(p.fecha).getTime() : 0;
-    if (ordenMs < pageActiveAt) return;
-    new Notification('🛍️ Nuevo pedido — Sendera', {
-      body: (p.cliente || 'Cliente') + ' — $' + (p.total || 0).toLocaleString(),
-      icon: '/img/logo.png'
-    });
-  });
-
   // ── Carritos abandonados ──────────────────────────────────
   const listaAbandonados = document.getElementById('abandonados-lista');
   const badgeAbandonados = document.getElementById('abandonados-count');
