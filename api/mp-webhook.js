@@ -119,9 +119,9 @@ export default async function handler(req, res) {
 
     // Enviar notificación push
     try {
-      const tokens = await fbGet('fcm_tokens', fbToken);
-      const tokenList = tokens ? Object.values(tokens) : [];
-      if (tokenList.length > 0) {
+      const subs = await fbGet('push_subscriptions', fbToken);
+      const subList = subs ? Object.values(subs) : [];
+      if (subList.length > 0) {
         await fetch('https://www.senderauy.com/api/notify-pedido', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -129,7 +129,7 @@ export default async function handler(req, res) {
             cliente: pedido.cliente,
             total: pedido.total.toLocaleString(),
             envio: pedido.envio,
-            tokens: tokenList
+            subscriptions: subList
           })
         });
       }

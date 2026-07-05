@@ -1,52 +1,34 @@
-import { GoogleAuth } from 'google-auth-library';
+import webpush from 'web-push';
+
+const VAPID_PUBLIC_KEY = 'BA4NqXXi5tqqH2ZT6Yg8mx35MAAC_EJRgo-7-JpynTGImlQua3mAcryr4hNPlh0kIFjeMWxUJtmQXoOrmbxmMOQ';
+
+webpush.setVapidDetails(
+  'mailto:edgardott1990@gmail.com',
+  VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { cliente, total, envio, tokens } = req.body;
-  if (!tokens || tokens.length === 0) return res.status(200).json({ ok: true, sent: 0 });
+  const { cliente, total, envio, subscriptions } = req.body;
+  if (!subscriptions || subscriptions.length === 0) return res.status(200).json({ ok: true, sent: 0 });
 
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  const auth = new GoogleAuth({
-    credentials: serviceAccount,
-    scopes: ['https://www.googleapis.com/auth/firebase.messaging']
+  const payload = JSON.stringify({
+    title: '🛍️ Nuevo pedido Sendera',
+    body: `${cliente} · $${total} · ${envio}`,
+    icon: '/img/logo.png'
   });
-  const client = await auth.getClient();
-  const { token: accessToken } = await client.getAccessToken();
-
-  const projectId = serviceAccount.project_id;
-  const url = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
 
   let sent = 0;
   const errors = [];
-  for (const fcmToken of tokens) {
+  for (const subscription of subscriptions) {
     try {
-      const fcmRes = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: {
-            token: fcmToken,
-            notification: {
-              title: String.fromCodePoint(0x1F6CD) + ' Nuevo pedido Sendera',
-              body: `${cliente} · $${total} · ${envio}`
-            }
-          }
-        })
-      });
-      if (fcmRes.ok) {
-        sent++;
-      } else {
-        const errBody = await fcmRes.text();
-        console.error('FCM send error:', fcmRes.status, errBody);
-        errors.push({ status: fcmRes.status, body: errBody });
-      }
+      await webpush.sendNotification(subscription, payload);
+      sent++;
     } catch(e) {
-      console.error('FCM send exception:', e.message);
-      errors.push({ error: e.message });
+      console.error('Web push error:', e.statusCode, e.body);
+      errors.push({ statusCode: e.statusCode, body: e.body });
     }
   }
 

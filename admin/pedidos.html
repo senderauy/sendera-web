@@ -12,8 +12,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-installations-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
   <script src="../firebase-config.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -244,7 +242,15 @@
   function logout() { localStorage.removeItem('sendera_admin'); window.location.href = 'login.html'; }
 
   // ── Notificaciones push ───────────────────────────────────
-  const VAPID_KEY = 'BEpbAI9BlhpQv8s8dwQbiLr8eFwSHOL9eqBcvnHS2Yq3d7tWMrEDnclpqLP3G50uzSJSxA-74YsTjo5wODQvqg4';
+  const VAPID_PUBLIC_KEY = 'BA4NqXXi5tqqH2ZT6Yg8mx35MAAC_EJRgo-7-JpynTGImlQua3mAcryr4hNPlh0kIFjeMWxUJtmQXoOrmbxmMOQ';
+
+  function urlBase64ToUint8Array(b64) {
+    const pad = '='.repeat((4 - b64.length % 4) % 4);
+    const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+    const out = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+  }
 
   function mostrarEstadoNotif(msg) {
     const banner = document.getElementById('banner-notif');
@@ -253,55 +259,42 @@
   }
 
   async function pedirPermiso() {
-    await activarNotificaciones();
+    await activarNotificaciones(false);
   }
 
-  async function limpiarEstadoFirebase() {
-    try {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      for (const r of regs) await r.unregister();
-    } catch(e) {}
-    try {
-      if (indexedDB.databases) {
-        const dbs = await indexedDB.databases();
-        await Promise.all(dbs.filter(d => d.name && d.name.toLowerCase().includes('firebase')).map(d => new Promise(res => {
-          const req = indexedDB.deleteDatabase(d.name);
-          req.onsuccess = req.onerror = req.onblocked = res;
-        })));
-      }
-    } catch(e) {}
-  }
-
-  async function activarNotificaciones(reintentando, silencioso) {
+  async function activarNotificaciones(silencioso) {
     try {
       const reg = await navigator.serviceWorker.register('/admin/firebase-messaging-sw.js');
-      const messaging = firebase.messaging();
+      await navigator.serviceWorker.ready;
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
         if (!silencioso) mostrarEstadoNotif('🔕 No diste permiso de notificaciones en el navegador.');
         return;
       }
-      const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
-      if (token) {
-        await db.ref('fcm_tokens/' + btoa(token).slice(0, 20)).set(token);
-        mostrarEstadoNotif('✅ Notificaciones activadas (incluso con el browser cerrado).');
-        setTimeout(() => { document.getElementById('banner-notif').style.display = 'none'; }, 4000);
-      } else {
-        if (!silencioso) mostrarEstadoNotif('⚠️ No se pudo generar el token de notificaciones.');
+      let subscription = await reg.pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+        });
       }
+      const saveRes = await fetch('/api/save-push-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subscription)
+      });
+      if (!saveRes.ok) throw new Error('Error guardando suscripción');
+      mostrarEstadoNotif('✅ Notificaciones activadas (incluso con el celular bloqueado).');
+      setTimeout(() => { document.getElementById('banner-notif').style.display = 'none'; }, 4000);
     } catch(e) {
-      console.log('Push no disponible:', e);
-      if (!reintentando) {
-        await limpiarEstadoFirebase();
-        return activarNotificaciones(true, silencioso);
-      }
-      if (!silencioso) mostrarEstadoNotif('⚠️ Error activando notificaciones: ' + (e.message || e.code || e));
+      console.error('Push error:', e);
+      if (!silencioso) mostrarEstadoNotif('⚠️ Error activando notificaciones: ' + (e.message || e));
     }
   }
 
   if ('Notification' in window && 'serviceWorker' in navigator) {
     if (Notification.permission === 'granted') {
-      activarNotificaciones(false, true);
+      activarNotificaciones(true);
     } else {
       document.getElementById('banner-notif').style.display = 'flex';
     }
