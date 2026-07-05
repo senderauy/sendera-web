@@ -28,28 +28,34 @@ export default async function handler(req, res) {
       headers: { 'Authorization': `Bearer ${fbToken}` }
     });
     const subs = await subsRes.json();
+    const subEntries = subs ? Object.entries(subs) : [];
 
-    const subList = subs ? Object.values(subs) : [];
-
-    if (subList.length === 0) {
-      return res.json({ error: 'No hay suscripciones guardadas en Firebase', subs });
+    if (subEntries.length === 0) {
+      return res.json({ msg: 'No hay suscripciones. Abrí el panel en el cel y recargá para registrarte.', subs });
     }
 
     const results = [];
-    for (const sub of subList) {
+    for (const [key, sub] of subEntries) {
       try {
         await webpush.sendNotification(sub, JSON.stringify({
           title: '🧪 Prueba Sendera',
           body: 'Si ves esto, las notificaciones funcionan!',
           icon: '/img/logo.png'
         }));
-        results.push({ ok: true, endpoint: sub.endpoint?.slice(0, 50) });
+        results.push({ ok: true, endpoint: sub.endpoint?.slice(0, 60) });
       } catch (e) {
-        results.push({ ok: false, endpoint: sub.endpoint?.slice(0, 50), status: e.statusCode, body: e.body });
+        results.push({ ok: false, endpoint: sub.endpoint?.slice(0, 60), status: e.statusCode, body: e.body });
+        // Limpiar suscripciones inválidas (expiradas o con VAPID incorrecto)
+        if (e.statusCode === 410 || e.statusCode === 404 || e.statusCode === 403) {
+          await fetch(`${DB_URL}/push_subscriptions/${key}.json`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${fbToken}` }
+          });
+        }
       }
     }
 
-    res.json({ totalSubs: subList.length, results });
+    res.json({ totalSubs: subEntries.length, results });
   } catch (e) {
     res.status(500).json({ error: e.message, stack: e.stack?.slice(0, 500) });
   }
