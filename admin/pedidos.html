@@ -294,7 +294,7 @@
 
   if ('Notification' in window && 'serviceWorker' in navigator) {
     if (Notification.permission === 'granted') {
-      activarNotificaciones(true);
+      activarNotificaciones(false);
     } else {
       document.getElementById('banner-notif').style.display = 'flex';
     }
