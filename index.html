@@ -341,7 +341,13 @@
           (p.variantes || []).forEach((v, i) => porSubgrupo[sg].variantes.push({ v, i, p }));
         });
 
-        const html = Object.entries(porSubgrupo).map(([sg, data]) => `
+        const subgruposOrdenados = Object.entries(porSubgrupo).sort(([, a], [, b]) => {
+          const oa = Math.min(...a.variantes.map(({ p }) => p.orden || 999));
+          const ob = Math.min(...b.variantes.map(({ p }) => p.orden || 999));
+          return oa - ob;
+        });
+
+        const html = subgruposOrdenados.map(([sg, data]) => `
           ${sg ? `<div class="subgrupo-titulo">${sg}</div>` : ''}
           ${data.desc ? `<div class="subgrupo-desc">${data.desc}</div>` : ''}
           <div class="productos-grid">
