@@ -304,11 +304,8 @@
     } else {
       document.getElementById('banner-notif').style.display = 'flex';
     }
-  } else {
-    const notif = 'Notification' in window;
-    const sw = 'serviceWorker' in navigator;
-    const pm = notif && 'PushManager' in window;
-    document.getElementById('banner-notif').innerHTML = '<span>⚠️ Notif:' + notif + ' SW:' + sw + ' Push:' + pm + ' — Standalone:' + (window.navigator.standalone === true) + '</span>';
+  } else if (!('Notification' in window)) {
+    document.getElementById('banner-notif').innerHTML = '<span>⚠️ Tu navegador no soporta notificaciones. Abrí el admin desde el ícono en pantalla de inicio (iOS 16.4+).</span>';
     document.getElementById('banner-notif').style.display = 'flex';
   }
 
