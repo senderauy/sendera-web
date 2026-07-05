@@ -272,37 +272,36 @@
     } catch(e) {}
   }
 
-  async function activarNotificaciones(reintentando) {
+  async function activarNotificaciones(reintentando, silencioso) {
     try {
       const reg = await navigator.serviceWorker.register('/admin/firebase-messaging-sw.js');
       const messaging = firebase.messaging();
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
-        mostrarEstadoNotif('🔕 No diste permiso de notificaciones en el navegador.');
+        if (!silencioso) mostrarEstadoNotif('🔕 No diste permiso de notificaciones en el navegador.');
         return;
       }
       const token = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
       if (token) {
         await db.ref('fcm_tokens/' + btoa(token).slice(0, 20)).set(token);
-        mostrarEstadoNotif('✅ Notificaciones activadas correctamente.');
+        mostrarEstadoNotif('✅ Notificaciones activadas (incluso con el browser cerrado).');
         setTimeout(() => { document.getElementById('banner-notif').style.display = 'none'; }, 4000);
       } else {
-        mostrarEstadoNotif('⚠️ No se pudo generar el token de notificaciones.');
+        if (!silencioso) mostrarEstadoNotif('⚠️ No se pudo generar el token de notificaciones.');
       }
     } catch(e) {
       console.log('Push no disponible:', e);
       if (!reintentando) {
-        mostrarEstadoNotif('🔄 Reintentando activar notificaciones...');
         await limpiarEstadoFirebase();
-        return activarNotificaciones(true);
+        return activarNotificaciones(true, silencioso);
       }
-      mostrarEstadoNotif('⚠️ Error activando notificaciones: ' + (e.message || e.code || e));
+      if (!silencioso) mostrarEstadoNotif('⚠️ Error activando notificaciones: ' + (e.message || e.code || e));
     }
   }
 
   if ('Notification' in window && 'serviceWorker' in navigator) {
     if (Notification.permission === 'granted') {
-      activarNotificaciones();
+      activarNotificaciones(false, true);
     } else {
       document.getElementById('banner-notif').style.display = 'flex';
     }
@@ -498,6 +497,20 @@
       todosPedidos.push({ id: child.key, ...child.val() });
     });
     renderPedidos();
+  });
+
+  // Notificación directa del browser cuando llega un nuevo pedido (sin necesitar FCM)
+  let pedidosInicialesCargados = false;
+  db.ref('pedidos').once('value', () => { pedidosInicialesCargados = true; });
+  db.ref('pedidos').on('child_added', snap => {
+    if (!pedidosInicialesCargados) return;
+    if (Notification.permission === 'granted') {
+      const p = snap.val();
+      new Notification('🛍️ Nuevo pedido — Sendera', {
+        body: (p.cliente || 'Cliente') + ' — $' + (p.total || 0).toLocaleString(),
+        icon: '/img/logo.png'
+      });
+    }
   });
 
   // ── Carritos abandonados ──────────────────────────────────
