@@ -271,13 +271,13 @@
         if (!silencioso) mostrarEstadoNotif('🔕 No diste permiso de notificaciones en el navegador.');
         return;
       }
-      let subscription = await reg.pushManager.getSubscription();
-      if (!subscription) {
-        subscription = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-        });
-      }
+      // Siempre recrear suscripción para asegurar que usa la clave VAPID correcta
+      const existing = await reg.pushManager.getSubscription();
+      if (existing) await existing.unsubscribe();
+      const subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
       const saveRes = await fetch('/api/save-push-subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
