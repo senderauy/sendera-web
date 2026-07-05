@@ -404,25 +404,6 @@
   const hoy = new Date();
   document.getElementById('fecha-hoy').textContent = hoy.toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-  const CATALOGO = [
-    { id: 'gom-blanco', nombre: 'Go One More', variante: 'Blanco' },
-    { id: 'gom-rosa', nombre: 'Go One More', variante: 'Rosa' },
-    { id: 'gom-verde', nombre: 'Go One More', variante: 'Verde' },
-    { id: 'gom-violeta', nombre: 'Go One More', variante: 'Violeta' },
-    { id: 'trail-azul', nombre: 'Trail Cap', variante: 'Azul' },
-    { id: 'trail-negro', nombre: 'Trail Cap', variante: 'Negro' },
-    { id: 'sunset-amarillo', nombre: 'Sunset Flower', variante: 'Rojo/Amarillo' },
-    { id: 'sunset-verde', nombre: 'Sunset Flower', variante: 'Gris/Verde' },
-    { id: 'lana-negro', nombre: 'Gorro Lana Montaña', variante: 'Negro' },
-    { id: 'lana-azul', nombre: 'Gorro Lana Montaña', variante: 'Azul' },
-    { id: 'lana-rosa', nombre: 'Gorro Lana Montaña', variante: 'Rosa' },
-    { id: 'rinonera-sendera', nombre: 'Riñonera Sendera', variante: 'Verde' },
-    { id: 'rinonera-celeste', nombre: 'Riñonera Running', variante: 'Celeste' },
-    { id: 'rinonera-negra', nombre: 'Riñonera Running', variante: 'Negra' },
-    { id: 'medallero', nombre: 'Medallero RUN', variante: 'Negro' },
-    { id: 'porta-celular', nombre: 'Porta Celular', variante: 'Negro' },
-  ];
-
   db.ref('pedidos').on('value', snapshot => {
     const pedidos = [];
     snapshot.forEach(c => { pedidos.push({ id: c.key, ...c.val() }); });
@@ -547,22 +528,35 @@
     if (!listaResenas.children.length) listaResenas.innerHTML = '<div class="empty">No hay reseñas publicadas.</div>';
   });
 
-  db.ref('stock').on('value', snapshot => {
-    const stock = snapshot.val() || {};
-    const alertas = CATALOGO.filter(p => (stock[p.id] !== undefined ? stock[p.id] : 5) <= 3);
-    const alertasEl = document.getElementById('alertas-lista');
-    alertasEl.innerHTML = alertas.length === 0
-      ? '<div class="empty">✅ Todo el stock en orden</div>'
-      : alertas.map(p => {
-          const s = stock[p.id] !== undefined ? stock[p.id] : 0;
-          return `<div class="alerta ${s === 0 ? 'bajo' : 'medio'}">
-            <div>
-              <div class="alerta-nombre">${p.nombre}</div>
-              <div class="alerta-variante">${p.variante}</div>
-            </div>
-            <div class="alerta-stock">${s === 0 ? '❌ Sin stock' : '⚠️ ' + s + ' uds'}</div>
-          </div>`;
-        }).join('');
+  db.ref('productos').on('value', snapProds => {
+    const variantes = [];
+    snapProds.forEach(c => {
+      const prod = { id: c.key, ...c.val() };
+      (prod.variantes || []).forEach((v, i) => {
+        variantes.push({ id: prod.id + '-' + i, nombre: prod.nombre, variante: v.nombre });
+      });
+    });
+
+    db.ref('stock').on('value', snapshot => {
+      const stock = snapshot.val() || {};
+      const alertasEl = document.getElementById('alertas-lista');
+      const alertas = variantes.filter(p => {
+        const s = stock[p.id] !== undefined ? stock[p.id] : 0;
+        return s <= 3;
+      });
+      alertasEl.innerHTML = alertas.length === 0
+        ? '<div class="empty">✅ Todo el stock en orden</div>'
+        : alertas.map(p => {
+            const s = stock[p.id] !== undefined ? stock[p.id] : 0;
+            return `<div class="alerta ${s === 0 ? 'bajo' : 'medio'}">
+              <div>
+                <div class="alerta-nombre">${p.nombre}</div>
+                <div class="alerta-variante">${p.variante}</div>
+              </div>
+              <div class="alerta-stock">${s === 0 ? '❌ Sin stock' : '⚠️ ' + s + ' uds'}</div>
+            </div>`;
+          }).join('');
+    });
   });
 </script>
 </body>
