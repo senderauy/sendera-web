@@ -78,6 +78,23 @@
     .resumen-totales { padding: 16px 24px; border-top: 1.5px solid #f0ebe3; }
     .total-row { display: flex; justify-content: space-between; font-size: 0.82rem; color: #7a6e62; margin-bottom: 8px; }
     .total-row.final { font-size: 1.1rem; font-weight: 700; color: #2a2218; margin-top: 12px; padding-top: 12px; border-top: 1.5px solid #e8dfd2; }
+    .total-row.descuento { color: #507a3a; font-weight: 600; }
+
+    .cupon-wrap { padding: 12px 24px; border-top: 1.5px solid #f0ebe3; display: flex; gap: 8px; }
+    .cupon-input {
+      flex: 1; border: 1.5px solid #e8dfd2; border-radius: 8px;
+      padding: 9px 14px; font-size: 0.82rem; font-family: inherit;
+      background: #faf7f3; color: #3a3026; text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .cupon-input:focus { outline: none; border-color: #507a3a; }
+    .cupon-btn {
+      background: #507a3a; color: #fff; border: none; border-radius: 8px;
+      padding: 9px 18px; font-size: 0.8rem; font-family: inherit;
+      font-weight: 600; cursor: pointer; white-space: nowrap;
+    }
+    .cupon-btn:hover { background: #3d5e2c; }
+    .cupon-msg { padding: 0 24px 10px; font-size: 0.78rem; min-height: 18px; }
 
     .envio-info {
       padding: 14px 24px;
@@ -277,9 +294,15 @@
       <span>📦</span>
       <span id="envio-detalle">—</span>
     </div>
+    <div class="cupon-wrap">
+      <input class="cupon-input" id="cupon-input" type="text" placeholder="Código de descuento" />
+      <button class="cupon-btn" onclick="aplicarCupon()">Aplicar</button>
+    </div>
+    <div class="cupon-msg" id="cupon-msg"></div>
     <div class="resumen-totales">
       <div class="total-row"><span>Subtotal</span><span id="subtotal-val">$0</span></div>
       <div class="total-row" id="envio-row" style="display:none"><span>Envío</span><span id="envio-val">$0</span></div>
+      <div class="total-row descuento" id="descuento-row" style="display:none"><span id="descuento-label">Descuento</span><span id="descuento-val"></span></div>
       <div class="total-row final"><span>Total a pagar</span><span id="total-val">$0</span></div>
     </div>
   </div>
@@ -448,6 +471,58 @@
     if (celular) document.getElementById('ch-celular').value = celular;
   }
 
+  // ── Descuento ─────────────────────────────────────────────
+  let descuentoAplicado = 0;
+
+  function calcularTotal() {
+    const { items, envio } = pedidoData;
+    const subtotal = items.reduce((s, i) => s + i.precio * i.qty, 0);
+    return Math.max(0, subtotal + (envio?.costo || 0) - descuentoAplicado);
+  }
+
+  function actualizarTotal() {
+    const total = calcularTotal();
+    document.getElementById('total-val').textContent = '$' + total.toLocaleString();
+  }
+
+  async function aplicarCupon() {
+    const codigo = document.getElementById('cupon-input').value.trim().toUpperCase();
+    const msg = document.getElementById('cupon-msg');
+    if (!codigo) return;
+
+    msg.style.color = '#9a8f82';
+    msg.textContent = 'Verificando...';
+
+    const snap = await db.ref('codigos_descuento/' + codigo).once('value');
+    const data = snap.val();
+
+    if (!data || !data.activo) {
+      msg.style.color = '#b91c1c';
+      msg.textContent = '❌ Código inválido o no disponible.';
+      descuentoAplicado = 0;
+      document.getElementById('descuento-row').style.display = 'none';
+      actualizarTotal();
+      return;
+    }
+
+    const { items, envio } = pedidoData;
+    const subtotal = items.reduce((s, i) => s + i.precio * i.qty, 0) + (envio?.costo || 0);
+
+    if (data.tipo === 'porcentaje') {
+      descuentoAplicado = Math.round(subtotal * data.descuento / 100);
+      document.getElementById('descuento-label').textContent = `Descuento (${data.descuento}%)`;
+    } else {
+      descuentoAplicado = data.descuento;
+      document.getElementById('descuento-label').textContent = 'Descuento';
+    }
+
+    document.getElementById('descuento-val').textContent = '-$' + descuentoAplicado.toLocaleString();
+    document.getElementById('descuento-row').style.display = 'flex';
+    msg.style.color = '#507a3a';
+    msg.textContent = '✅ Código aplicado.';
+    actualizarTotal();
+  }
+
   renderResumen();
 
   // ── Registrar carrito abandonado en Firebase ──────────────
@@ -479,8 +554,7 @@
 
   async function initBricks() {
     const bricksBuilder = mp.bricks();
-    const total = pedidoData.items.reduce((s, i) => s + i.precio * i.qty, 0)
-      + (pedidoData.envio?.costo || 0);
+    const total = calcularTotal();
 
     bricksController = await bricksBuilder.create('cardPayment', 'cardPaymentBrick_container', {
       initialization: {
@@ -646,7 +720,7 @@
     const celular = document.getElementById('ch-celular').value.trim();
     const { items, envio } = pedidoData;
     const subtotal = items.reduce((s, i) => s + i.precio * i.qty, 0);
-    const total = subtotal + (envio?.costo || 0);
+    const total = calcularTotal();
 
     const lineas = items.map(i => `• ${i.name} - ${i.variant} x${i.qty} → $${(i.precio * i.qty).toLocaleString()}`).join('\n');
 
@@ -655,11 +729,14 @@
     else if (tipo === 'tarjeta-aprobada') metodoTexto = '💳 Tarjeta · Pago aprobado ✅';
     else if (tipo === 'tarjeta-pendiente') metodoTexto = '💳 Tarjeta · Pago en proceso ⏳';
 
+    const descuentoLinea = descuentoAplicado > 0 ? `🏷️ Descuento: -$${descuentoAplicado.toLocaleString()}\n` : '';
+
     const mensaje = encodeURIComponent(
       `🛍️ *Nuevo pedido Sendera*\n\n` +
       `${lineas}\n\n` +
       `Subtotal: $${subtotal.toLocaleString()}\n` +
       `📦 Envío: ${envio?.label || '—'}\n` +
+      `${descuentoLinea}` +
       `*Total: $${total.toLocaleString()}*\n\n` +
       `👤 Cliente: ${nombre}\n` +
       `📱 Celular: ${celular}\n` +
@@ -709,7 +786,7 @@
           items: pedidoData.items.map(i => ({ nombre: i.name, variante: i.variant, qty: parseInt(i.qty), precio: parseFloat(i.precio) })),
           envio: pedidoData.envio,
           carritoId: carritoAbandonadoId || '',
-          total: pedidoData.items.reduce((s, i) => s + i.precio * i.qty, 0) + (pedidoData.envio?.costo || 0),
+          total: calcularTotal(),
           fecha: new Date().toISOString()
         })
       });
@@ -733,7 +810,7 @@
       cliente: nombre, celular,
       productos: pedidoData.items.map(i => ({ nombre: i.name, variante: i.variant, qty: i.qty, precio: i.precio })),
       envio: pedidoData.envio?.label || '—',
-      total: pedidoData.items.reduce((s, i) => s + i.precio * i.qty, 0) + (pedidoData.envio?.costo || 0),
+      total: calcularTotal(),
       estado,
       mp_id: mpId || '',
       metodo_pago: metodoPago
