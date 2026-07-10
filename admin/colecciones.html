@@ -86,6 +86,50 @@
       margin-bottom: 12px;
     }
 
+    /* ENCUADRE */
+    .cat-img-wrap {
+      position: relative;
+      width: 100%;
+      height: 180px;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+    .cat-img-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+    .focal-hint {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0);
+      color: transparent;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: background 0.2s, color 0.2s;
+    }
+    .cat-img-wrap:hover .focal-hint {
+      background: rgba(0,0,0,0.35);
+      color: #fff;
+    }
+    .focal-dot {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2.5px solid #fff;
+      background: rgba(200,134,26,0.85);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.25);
+    }
+
     .cat-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
 
     .btn-file-cat {
@@ -230,6 +274,7 @@
 
   const ORDEN_CATS = ['Gorros Visera', 'Gorros Invierno', 'Buff', 'Riñoneras', 'Accesorios'];
   let fotosActuales = {};
+  let posicionesActuales = {};
   let catsConProductos = new Set();
   let todasLasCats = [];
 
@@ -247,12 +292,18 @@
     if (!cats.length) { grid.innerHTML = '<div style="color:#9a8f82;font-size:0.82rem;">No hay categorías todavía.</div>'; return; }
     grid.innerHTML = cats.map(cat => {
       const foto = fotosActuales[cat];
+      const pos = posicionesActuales[cat] || '50% 50%';
+      const [px, py] = pos.replace(/%/g,'').split(' ');
       const catId = cat.replace(/\s+/g, '_');
       const sinProd = !catsConProductos.has(cat);
       return `
         <div class="cat-card" id="card-${catId}">
           ${foto
-            ? `<img class="cat-card-foto" id="img-${catId}" src="${foto}" alt="${cat}" />`
+            ? `<div class="cat-img-wrap" onclick="setFocalPoint(event,this,'${cat}','${catId}')">
+                 <img id="img-${catId}" src="${foto}" alt="${cat}" style="object-position:${pos}" />
+                 <div class="focal-dot" id="dot-${catId}" style="left:${px}%;top:${py}%"></div>
+                 <div class="focal-hint">Clic para ajustar encuadre</div>
+               </div>`
             : `<div class="cat-card-placeholder" id="img-${catId}">🏔️</div>`
           }
           <div class="cat-card-body">
@@ -345,6 +396,19 @@
     db.ref('colecciones/' + cat + '/foto').remove();
   }
 
+  function setFocalPoint(event, wrap, cat, catId) {
+    const rect = wrap.getBoundingClientRect();
+    const x = Math.round((event.clientX - rect.left) / rect.width * 100);
+    const y = Math.round((event.clientY - rect.top) / rect.height * 100);
+    const pos = x + '% ' + y + '%';
+    // Actualizar visualmente al instante
+    const img = wrap.querySelector('img');
+    const dot = document.getElementById('dot-' + catId);
+    if (img) img.style.objectPosition = pos;
+    if (dot) { dot.style.left = x + '%'; dot.style.top = y + '%'; }
+    db.ref('colecciones/' + cat + '/posicion').set(pos);
+  }
+
   // Cargar todo y escuchar cambios en tiempo real
   db.ref('productos').once('value').then(prodSnap => {
     prodSnap.forEach(c => { const cat = c.val().categoria; if (cat) catsConProductos.add(cat); });
@@ -352,7 +416,11 @@
     db.ref('colecciones').on('value', snap => {
       const colVal = snap.val() || {};
       fotosActuales = {};
-      Object.entries(colVal).forEach(([cat, data]) => { if (data && data.foto) fotosActuales[cat] = data.foto; });
+      posicionesActuales = {};
+      Object.entries(colVal).forEach(([cat, data]) => {
+        if (data && data.foto) fotosActuales[cat] = data.foto;
+        if (data && data.posicion) posicionesActuales[cat] = data.posicion;
+      });
 
       // Unión: categorías de productos + categorías creadas en Firebase
       const catsFirebase = Object.keys(colVal);
