@@ -35,7 +35,7 @@
   <meta name="apple-mobile-web-app-title" content="Sendera" />
   <meta name="theme-color" content="#1a1510" />
   <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
 </head>
 <body>
 
@@ -65,31 +65,26 @@
   </section>
 
   <!-- NOSOTROS -->
-  <section class="nosotros" id="nosotros">
-    <div class="nosotros-inner">
-      <div class="nosotros-left">
-        <h2 class="nosotros-headline">NO SOLO<br>LO QUE<br><span class="accent">USÁS.</span></h2>
-      </div>
-      <div class="nosotros-body">
-        <div class="nosotros-divider"></div>
-        <p>
-          Sendera nace del movimiento. De la necesidad de salir, explorar y conectar
-          con lo esencial, sin perder estilo en el camino. Diseñamos para quienes viven
-          en constante búsqueda de nuevos caminos, nuevas metas y nuevas versiones de sí mismos.
-        </p>
-        <a href="#productos" class="btn-outline-light">Nuestra colección →</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- COLECCIONES -->
-  <section class="colecciones-section" id="colecciones">
-    <div class="colecciones-container">
-      <p class="colecciones-label">Explorá por categoría</p>
-      <h2 class="colecciones-title">Colecciones</h2>
-      <div class="colecciones-grid" id="colecciones-grid">
-        <!-- Poblado dinámicamente desde Firebase -->
-      </div>
+  <section class="section nosotros" id="nosotros">
+    <div class="container">
+      <h2>¿Quiénes somos?</h2>
+      <p>
+        Sendera es una marca pensada para quienes viven el aire libre como un estilo de vida.
+        Nos dedicamos a la comercialización de productos para senderismo, trail, running y
+        actividades outdoor, acompañándote en cada aventura.
+      </p>
+      <p>
+        Trabajamos de forma 100% online, a través de distintas plataformas, para que puedas
+        acceder a nuestros productos de forma simple, rápida y segura.
+      </p>
+      <p>
+        Creemos en la conexión con las sierras, en el movimiento y en la libertad de explorar.
+        Ya sea caminando o corriendo, cada paso cuenta. Por eso, seleccionamos productos que
+        combinan funcionalidad, comodidad y estilo.
+      </p>
+      <p>
+        Sendera no es solo equipamiento, es parte del camino.
+      </p>
     </div>
   </section>
 
@@ -292,38 +287,6 @@
   <script>
     let ultimosProductos = [];
 
-    const COLECCION_BG_FALLBACK = ['#2a2218','#2d4a1e','#384050','#6b4c1e','#4a3040','#3d4a50'];
-
-    function irAColeccion(cat) {
-      document.getElementById('productos').scrollIntoView({ behavior: 'smooth' });
-      setTimeout(() => {
-        const btn = [...document.querySelectorAll('.filtro-cat-btn')].find(b => b.textContent.trim() === cat);
-        if (btn) btn.click();
-      }, 400);
-    }
-
-    function renderColecciones(catsOrdenadas) {
-      const grid = document.getElementById('colecciones-grid');
-      if (!grid || catsOrdenadas.length === 0) return;
-      grid.innerHTML = catsOrdenadas.map(([cat, prods], idx) => {
-        const foto = prods.flatMap(p => (p.variantes || []).map(v => v.foto).filter(Boolean))[0];
-        const solidBg = COLECCION_BG_FALLBACK[idx % COLECCION_BG_FALLBACK.length];
-        return `
-          <a class="coleccion-card" href="#productos"
-             onclick="event.preventDefault();irAColeccion(this.dataset.cat);"
-             data-cat="${cat.replace(/"/g,'&quot;')}"
-             style="${foto ? '' : 'background:' + solidBg + ';'}">
-            ${foto ? `<img class="coleccion-bg" src="${foto}" alt="${cat}" />` : ''}
-            <div class="coleccion-overlay"></div>
-            <div class="coleccion-card-content">
-              <div class="coleccion-cat-label">Colección</div>
-              <div class="coleccion-nombre">${cat}</div>
-            </div>
-          </a>
-        `;
-      }).join('');
-    }
-
     function renderCategorias(productos) {
 
       // Actualizar STOCK_MAP con los productos de Firebase
@@ -375,8 +338,6 @@
         if (ib === -1) return -1;
         return ia - ib;
       });
-
-      renderColecciones(catsOrdenadas);
 
       const cont = document.getElementById('categorias-firebase');
       cont.innerHTML = catsOrdenadas.map(([cat, prods]) => {
