@@ -390,51 +390,31 @@
 
       const cont = document.getElementById('categorias-firebase');
       cont.innerHTML = catsOrdenadas.map(([cat, prods]) => {
-        // Agrupar por subgrupo — productos sin subgrupo van todos en una misma grilla
-        const porSubgrupo = {};
-        prods.forEach(p => {
-          const sg = p.subgrupo || '';
-          if (!porSubgrupo[sg]) porSubgrupo[sg] = { desc: p.descripcion, variantes: [] };
-          (p.variantes || []).forEach((v, i) => porSubgrupo[sg].variantes.push({ v, i, p }));
-        });
-
-        const subgruposOrdenados = Object.entries(porSubgrupo).sort(([, a], [, b]) => {
-          const oa = Math.min(...a.variantes.map(({ p }) => p.orden || 999));
-          const ob = Math.min(...b.variantes.map(({ p }) => p.orden || 999));
-          return oa - ob;
-        });
-
-        const html = subgruposOrdenados.map(([sg, data]) => `
-          ${sg ? `<div class="subgrupo-titulo">${sg}</div>` : ''}
-          ${data.desc ? `<div class="subgrupo-desc">${data.desc}</div>` : ''}
-          <div class="productos-grid">
-            ${data.variantes.map(({ v, i, p }) => `
-              <div class="producto-card">
-                <div class="producto-img-wrap" style="cursor:pointer"
-                     onclick="window.location='producto.html?id=${encodeURIComponent(p.id)}&v=${i}'">
-                  ${v.foto
-                    ? `<img src="${v.foto}" alt="${p.nombre} ${v.nombre}" />`
-                    : `<img src="img/logo.png" alt="${p.nombre}" style="object-fit:contain;padding:20px;background:#f2ede6;" />`
-                  }
-                </div>
-                <div class="producto-info">
-                  <h3>${p.nombre}</h3>
-                  <p class="producto-colores">${v.nombre}</p>
-                  <div class="producto-footer">
-                    <span class="precio">$${(v.precio || 0).toLocaleString()}</span>
-                    <div class="qty-control">
-                      <button class="qty-btn qty-minus" onclick="cardChangeQty(this, -1)" style="display:none">−</button>
-                      <span class="qty-num" style="display:none">0</span>
-                      <button class="qty-btn qty-plus" onclick="cardChangeQty(this, 1)">+</button>
-                    </div>
-                  </div>
-                </div>
+        const prodsOrdenados = [...prods].sort((a, b) => (a.orden || 999) - (b.orden || 999));
+        const html = prodsOrdenados.map(p => {
+          const foto = (p.variantes || []).map(v => v.foto).filter(Boolean)[0];
+          const precio = Math.min(...(p.variantes || []).map(v => v.precio || 0).filter(x => x > 0));
+          const nColores = (p.variantes || []).length;
+          return `
+            <a class="prod-model-card" href="producto.html?id=${encodeURIComponent(p.id)}&v=0">
+              <div class="prod-model-img">
+                ${foto
+                  ? `<img src="${foto}" alt="${p.nombre}" />`
+                  : `<img src="img/logo.png" alt="${p.nombre}" style="object-fit:contain;padding:20px;" />`
+                }
               </div>
-            `).join('')}
-          </div>
-        `).join('');
-
-        return `<div class="bloque-categoria" data-cat="${cat}"><div class="categoria-titulo">${cat}</div>${html}</div>`;
+              <div class="prod-model-info">
+                <div class="prod-model-nombre">${p.nombre}</div>
+                <div class="prod-model-colores">${nColores} color${nColores !== 1 ? 'es' : ''}</div>
+                <div class="prod-model-precio">$${precio.toLocaleString()}</div>
+              </div>
+            </a>
+          `;
+        }).join('');
+        return `<div class="bloque-categoria" data-cat="${cat}">
+          <div class="categoria-titulo">${cat}</div>
+          <div class="prod-model-fila">${html}</div>
+        </div>`;
       }).join('');
 
       // Revisar stock de los nuevos productos

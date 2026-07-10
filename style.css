@@ -427,6 +427,66 @@ nav a:hover {
 .categorias .btn-add-cart:hover { background: var(--green); color: #fff; }
 .categorias .btn-cart-qty { background: var(--green); color: #fff; }
 
+/* NUEVA FILA DE MODELOS */
+.prod-model-fila {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  scrollbar-width: none;
+  margin-bottom: 48px;
+}
+.prod-model-fila::-webkit-scrollbar { display: none; }
+
+.prod-model-card {
+  flex: 0 0 200px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.25s;
+}
+.prod-model-card:hover { transform: translateY(-4px); }
+
+.prod-model-img {
+  width: 200px;
+  height: 220px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f0ebe3;
+}
+.prod-model-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s;
+  display: block;
+}
+.prod-model-card:hover .prod-model-img img { transform: scale(1.05); }
+
+.prod-model-info { padding: 10px 2px 0; }
+
+.prod-model-nombre {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  line-height: 1.2;
+  margin-bottom: 3px;
+}
+
+.prod-model-colores {
+  font-size: 0.68rem;
+  color: var(--amber);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+
+.prod-model-precio {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
