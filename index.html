@@ -302,6 +302,43 @@
   <script>
     let ultimosProductos = [];
 
+    const COLECCION_BG_FALLBACK = ['#2a2218','#2d4a1e','#384050','#6b4c1e','#4a3040','#3d4a50'];
+
+    function irAColeccion(cat) {
+      document.getElementById('productos').scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => {
+        const btn = [...document.querySelectorAll('.filtro-cat-btn')].find(b => b.textContent.trim() === cat);
+        if (btn) btn.click();
+      }, 400);
+    }
+
+    function renderColecciones(catsOrdenadas) {
+      const grid = document.getElementById('colecciones-grid');
+      if (!grid || catsOrdenadas.length === 0) return;
+      const todosProd = catsOrdenadas.flatMap(([cat, prods]) =>
+        prods.map(p => ({ ...p, _cat: cat }))
+      );
+      grid.innerHTML = todosProd.map((prod) => {
+        const foto = (prod.variantes || []).map(v => v.foto).filter(Boolean)[0];
+        const avatar = prod.fotoAvatar || '';
+        const bgStyle = foto ? '' : 'background:#2a2420;';
+        return `
+          <a class="coleccion-card" href="producto.html?id=${encodeURIComponent(prod.id)}&v=0"
+             style="${bgStyle}">
+            ${foto ? `<img class="coleccion-bg" src="${foto}" alt="${prod.nombre}" />` : ''}
+            <div class="coleccion-overlay"></div>
+            <div class="coleccion-avatar ${avatar ? '' : 'coleccion-avatar-empty'}">
+              ${avatar ? `<img src="${avatar}" alt="avatar" />` : ''}
+            </div>
+            <div class="coleccion-card-content">
+              <div class="coleccion-cat-label">${prod._cat}</div>
+              <div class="coleccion-nombre">${prod.nombre}</div>
+            </div>
+          </a>
+        `;
+      }).join('');
+    }
+
     function renderCategorias(productos) {
 
       // Actualizar STOCK_MAP con los productos de Firebase
