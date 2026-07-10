@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="apple-touch-icon" href="../img/logo.png" />
+  <link rel="icon" type="image/png" href="../img/logo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Sendera Admin" />
+  <meta name="theme-color" content="#f2ede6" />
+  <title>Sendera - Lookbook</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="../firebase-config.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Montserrat', sans-serif; background: #f2ede6; color: #3a3026; min-height: 100vh; }
+
+    .navbar {
+      background: #fff; border-bottom: 2px solid #e8dfd2; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 10; height: 60px;
+      box-shadow: 0 2px 8px rgba(80,60,30,0.06);
+    }
+    .navbar .logo { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: #3a3026; letter-spacing: 0.12em; display: flex; align-items: center; gap: 8px; }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-links a { color: #7a6e62; text-decoration: none; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 500; }
+    .nav-links a:hover { background: #f2ede6; color: #3a3026; }
+    .nav-links a.active { background: #507a3a; color: #fff; }
+    .btn-logout { font-size: 0.72rem; color: #9a8f82; cursor: pointer; text-transform: uppercase; letter-spacing: 0.08em; background: none; border: 1px solid #ddd5c8; border-radius: 8px; padding: 7px 14px; margin-left: 8px; }
+    .btn-logout:hover { background: #f2ede6; color: #3a3026; }
+    .btn-logout-top { display: none; background: none; border: none; cursor: pointer; font-size: 1rem; color: #9a8f82; padding: 2px 6px; margin-left: 6px; }
+
+    .mobile-nav { display: none; background: #fff; border-top: 2px solid #e8dfd2; position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; padding: 8px 0 12px; }
+    .mobile-nav-links { display: flex; justify-content: space-around; }
+    .mobile-nav-links a { display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: #9a8f82; font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 12px; border-radius: 10px; }
+    .mobile-nav-links a.active { color: #507a3a; }
+    .mobile-nav-links .icon { font-size: 1.2rem; }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 28px 20px 100px; }
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .page-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: #2a2218; }
+    .seccion-titulo { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #9a8f82; margin: 28px 0 14px; }
+
+    /* FORMULARIO */
+    .form-card { background: #fff; border: 1.5px solid #e8dfd2; border-radius: 14px; padding: 22px; margin-bottom: 20px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #7a6e62; margin-bottom: 6px; }
+    .form-group input[type="text"], .form-group input[type="url"] {
+      width: 100%; padding: 10px 14px; border: 1.5px solid #e8dfd2; border-radius: 8px;
+      font-family: inherit; font-size: 0.85rem; color: #3a3026; background: #faf7f3;
+    }
+    .form-group input:focus { outline: none; border-color: #507a3a; }
+
+    .foto-opciones { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .foto-opciones input[type="url"] { flex: 1; min-width: 200px; }
+    .foto-opciones .sep { font-size: 0.75rem; color: #9a8f82; white-space: nowrap; }
+    .btn-file { display: inline-block; padding: 9px 16px; background: #f5f0ea; border: 1.5px solid #e8dfd2; border-radius: 8px; font-size: 0.78rem; font-family: inherit; cursor: pointer; color: #3a3026; white-space: nowrap; }
+    .btn-file:hover { background: #ede6db; }
+    input[type="file"] { display: none; }
+
+    .foto-preview { display: none; margin-top: 12px; border-radius: 10px; overflow: hidden; max-height: 240px; }
+    .foto-preview img { width: 100%; max-height: 240px; object-fit: cover; display: block; }
+    .foto-preview.visible { display: block; }
+
+    .btn-agregar { width: 100%; padding: 12px; background: #507a3a; color: #fff; border: none; border-radius: 10px; font-family: inherit; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; margin-top: 6px; }
+    .btn-agregar:hover { background: #3d5e2c; }
+    .btn-agregar:disabled { background: #b0c9a0; cursor: not-allowed; }
+
+    /* GRILLA */
+    .lookbook-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+    .lb-card { background: #fff; border: 1.5px solid #e8dfd2; border-radius: 12px; overflow: hidden; position: relative; }
+    .lb-card img { width: 100%; height: 200px; object-fit: cover; display: block; }
+    .lb-card-footer { padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .lb-caption { font-size: 0.75rem; color: #7a6e62; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .btn-borrar { background: none; border: 1.5px solid #fca5a5; color: #b91c1c; border-radius: 7px; padding: 4px 10px; font-size: 0.72rem; font-family: inherit; cursor: pointer; white-space: nowrap; }
+    .btn-borrar:hover { background: #fee2e2; }
+
+    .empty { color: #9a8f82; font-size: 0.82rem; padding: 20px 0; }
+
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .btn-logout-top { display: inline-block; }
+      .mobile-nav { display: block; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <div class="logo">SENDERA <button class="btn-logout-top" onclick="logout()" title="Salir">↩</button></div>
+  <div class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="pedidos.html">Pedidos</a>
+    <a href="productos.html">Productos</a>
+    <a href="stock.html">Stock</a>
+    <a href="lookbook.html" class="active">Lookbook</a>
+    <a href="https://analytics.google.com" target="_blank">Analytics</a>
+    <button class="btn-logout" onclick="logout()">↩ Salir</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Lookbook 📸</h1>
+  </div>
+
+  <div class="seccion-titulo">➕ Agregar foto</div>
+  <div class="form-card">
+    <div class="form-group">
+      <label>Foto</label>
+      <div class="foto-opciones">
+        <input type="url" id="lb-url" placeholder="Pegá una URL de imagen..." oninput="onUrlInput()" />
+        <span class="sep">o</span>
+        <label class="btn-file" for="lb-file">📷 Subir foto</label>
+        <input type="file" id="lb-file" accept="image/*" onchange="onFileChange(this)" />
+      </div>
+      <div class="foto-preview" id="lb-preview">
+        <img id="lb-preview-img" src="" alt="preview" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Descripción <span style="font-weight:400;color:#b0a598">(opcional)</span></label>
+      <input type="text" id="lb-caption" placeholder="Ej: Gorro Sendera en el cerro" />
+    </div>
+    <button class="btn-agregar" id="btn-agregar" onclick="agregarFoto()">Agregar al lookbook</button>
+  </div>
+
+  <div class="seccion-titulo">🖼️ Fotos publicadas</div>
+  <div id="lb-grid" class="lookbook-grid">
+    <div class="empty">Cargando...</div>
+  </div>
+</div>
+
+<div class="mobile-nav">
+  <div class="mobile-nav-links">
+    <a href="dashboard.html"><span class="icon">📊</span>Dashboard</a>
+    <a href="pedidos.html"><span class="icon">📦</span>Pedidos</a>
+    <a href="productos.html"><span class="icon">🛍️</span>Productos</a>
+    <a href="stock.html"><span class="icon">🏷️</span>Stock</a>
+    <a href="lookbook.html" class="active"><span class="icon">📸</span>Lookbook</a>
+  </div>
+</div>
+
+<script>
+  if (!localStorage.getItem('sendera_admin')) window.location.href = 'login.html';
+  function logout() { localStorage.removeItem('sendera_admin'); window.location.href = 'login.html'; }
+
+  let fotoData = '';
+
+  function onUrlInput() {
+    const url = document.getElementById('lb-url').value.trim();
+    if (url) {
+      fotoData = url;
+      document.getElementById('lb-preview-img').src = url;
+      document.getElementById('lb-preview').classList.add('visible');
+    } else {
+      fotoData = '';
+      document.getElementById('lb-preview').classList.remove('visible');
+    }
+  }
+
+  function onFileChange(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const MAX = 1000;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        fotoData = canvas.toDataURL('image/jpeg', 0.8);
+        document.getElementById('lb-url').value = '';
+        document.getElementById('lb-preview-img').src = fotoData;
+        document.getElementById('lb-preview').classList.add('visible');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function agregarFoto() {
+    if (!fotoData) { alert('Agregá una foto primero.'); return; }
+    const caption = document.getElementById('lb-caption').value.trim();
+    const btn = document.getElementById('btn-agregar');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+
+    await db.ref('lookbook').push({
+      foto: fotoData,
+      caption,
+      fecha: new Date().toISOString()
+    });
+
+    fotoData = '';
+    document.getElementById('lb-url').value = '';
+    document.getElementById('lb-caption').value = '';
+    document.getElementById('lb-preview').classList.remove('visible');
+    document.getElementById('lb-file').value = '';
+    btn.disabled = false; btn.textContent = 'Agregar al lookbook';
+  }
+
+  function borrarFoto(id) {
+    if (!confirm('¿Borrar esta foto del lookbook?')) return;
+    db.ref('lookbook/' + id).remove();
+  }
+
+  db.ref('lookbook').on('value', snap => {
+    const grid = document.getElementById('lb-grid');
+    const val = snap.val();
+    if (!val) {
+      grid.innerHTML = '<div class="empty">No hay fotos todavía. ¡Agregá la primera!</div>';
+      return;
+    }
+    const entries = Object.entries(val).reverse();
+    grid.innerHTML = entries.map(([id, item]) => `
+      <div class="lb-card">
+        <img src="${item.foto}" alt="${item.caption || 'Lookbook Sendera'}" loading="lazy" />
+        <div class="lb-card-footer">
+          <span class="lb-caption">${item.caption || '—'}</span>
+          <button class="btn-borrar" onclick="borrarFoto('${id}')">Borrar</button>
+        </div>
+      </div>
+    `).join('');
+  });
+</script>
+</body>
+</html>

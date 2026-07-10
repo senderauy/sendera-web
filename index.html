@@ -159,6 +159,15 @@
     </div>
   </section>
 
+  <!-- LOOKBOOK -->
+  <section class="section" id="lookbook" style="padding: 60px 0; background: #f2ede6;">
+    <div class="container">
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:2rem;color:#2a2218;text-align:center;margin-bottom:8px;">Comunidad Sendera</h2>
+      <p style="text-align:center;color:#7a6e62;font-size:0.85rem;margin-bottom:32px;">Aventureros que ya eligieron Sendera</p>
+      <div id="lookbook-grid" style="columns:2;column-gap:12px;"></div>
+    </div>
+  </section>
+
   <!-- CONTACTO -->
   <section class="section contacto" id="contacto">
     <div class="container">
@@ -443,6 +452,22 @@
         card.appendChild(ciudadEl);
       }
       document.getElementById('resenas-grid').appendChild(card);
+    });
+
+    // ── LOOKBOOK ─────────────────────────────────────────────
+    db.ref('lookbook').on('value', snap => {
+      const grid = document.getElementById('lookbook-grid');
+      const section = document.getElementById('lookbook');
+      const val = snap.val();
+      if (!val) { section.style.display = 'none'; return; }
+      section.style.display = '';
+      const entries = Object.values(val);
+      grid.innerHTML = entries.map(item => `
+        <div style="break-inside:avoid;margin-bottom:12px;border-radius:12px;overflow:hidden;">
+          <img src="${item.foto}" alt="${item.caption || 'Sendera'}" loading="lazy"
+            style="width:100%;display:block;border-radius:12px;" />
+        </div>
+      `).join('');
     });
 
   </script>
