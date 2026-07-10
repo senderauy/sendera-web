@@ -94,10 +94,14 @@ nav a:hover {
   padding: 0 24px;
 }
 
+.hero-accent {
+  color: var(--amber);
+}
+
 .hero-content h1 {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
-  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(2.8rem, 6vw, 5.5rem);
+  font-weight: 800;
   color: var(--gold-light);
   letter-spacing: 0.04em;
   margin-bottom: 20px;
@@ -117,7 +121,7 @@ nav a:hover {
 .btn-primary {
   display: inline-block;
   padding: 14px 40px;
-  border: 1px solid var(--gold);
+  border: 2px solid #fff;
   color: var(--gold);
   text-decoration: none;
   font-size: 0.8rem;
@@ -128,8 +132,9 @@ nav a:hover {
 }
 
 .btn-primary:hover {
-  background-color: var(--gold);
-  color: var(--darker);
+  background-color: var(--amber);
+  border-color: var(--amber);
+  color: #fff;
 }
 
 /* SECTIONS */
