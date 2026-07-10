@@ -287,15 +287,9 @@
   <script>
     // Portadas de categorías
     let portadasMap = {};
-    db.ref('portadas').on('value', snap => {
-      portadasMap = {};
-      if (snap.val()) Object.values(snap.val()).forEach(p => { if (p.categoria && p.foto) portadasMap[p.categoria] = p.foto; });
-    });
+    let ultimosProductos = [];
 
-    // Cargar productos dinámicos desde Firebase
-    db.ref('productos').on('value', snapshot => {
-      const productos = [];
-      snapshot.forEach(c => { productos.push({ id: c.key, ...c.val() }); });
+    function renderCategorias(productos) {
 
       // Actualizar STOCK_MAP con los productos de Firebase
       productos.forEach(p => {
@@ -400,6 +394,18 @@
 
       // Revisar stock de los nuevos productos
       checkStockOnLoad();
+    }
+
+    db.ref('portadas').on('value', snap => {
+      portadasMap = {};
+      if (snap.val()) Object.values(snap.val()).forEach(p => { if (p.categoria && p.foto) portadasMap[p.categoria] = p.foto; });
+      if (ultimosProductos.length > 0) renderCategorias(ultimosProductos);
+    });
+
+    db.ref('productos').on('value', snapshot => {
+      ultimosProductos = [];
+      snapshot.forEach(c => { ultimosProductos.push({ id: c.key, ...c.val() }); });
+      renderCategorias(ultimosProductos);
     });
 
     // ── RESEÑAS ───────────────────────────────────────────────
