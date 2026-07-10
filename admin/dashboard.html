@@ -642,6 +642,8 @@
   let portadasData = {};
   let categoriasDisponibles = [];
 
+  const portadasPendientes = {};
+
   function renderPortadas() {
     const el = document.getElementById('portadas-lista');
     if (categoriasDisponibles.length === 0) {
@@ -653,23 +655,30 @@
       const slug = cat.replace(/[^a-zA-Z0-9]/g, '_');
       return `
         <div style="background:#fff;border:1.5px solid #e8dfd2;border-radius:12px;overflow:hidden;">
-          ${portada ? `<img src="${portada}" style="width:100%;max-height:160px;object-fit:cover;display:block;" />` : ''}
-          <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-            <span style="font-weight:600;font-size:0.85rem;">${cat}</span>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <label style="font-size:0.75rem;padding:6px 14px;background:#f5f0ea;border:1.5px solid #e8dfd2;border-radius:8px;cursor:pointer;">
-                ${portada ? '📷 Cambiar' : '📷 Agregar portada'}
-                <input type="file" accept="image/*" style="display:none" onchange="subirPortada('${slug}', '${cat}', this)" />
-              </label>
-              ${portada ? `<button onclick="quitarPortada('${slug}')" style="font-size:0.75rem;padding:6px 12px;border:1.5px solid #fca5a5;border-radius:8px;background:#fff;color:#b91c1c;cursor:pointer;">Quitar</button>` : ''}
+          <img id="portada-preview-${slug}" src="${portada || ''}" style="width:100%;max-height:180px;object-fit:cover;display:${portada ? 'block' : 'none'};" />
+          <div style="padding:12px 16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
+              <span style="font-weight:600;font-size:0.85rem;">${cat}</span>
+              ${portada ? `<button onclick="quitarPortada('${slug}')" style="font-size:0.75rem;padding:6px 12px;border:1.5px solid #fca5a5;border-radius:8px;background:#fff;color:#b91c1c;cursor:pointer;">Quitar portada</button>` : ''}
             </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <label style="font-size:0.75rem;padding:8px 16px;background:#f5f0ea;border:1.5px solid #e8dfd2;border-radius:8px;cursor:pointer;flex:1;text-align:center;">
+                📷 ${portada ? 'Cambiar foto' : 'Elegir foto'}
+                <input type="file" accept="image/*" style="display:none" onchange="previsualizarPortada('${slug}', '${cat}', this)" />
+              </label>
+              <button id="btn-guardar-${slug}" onclick="guardarPortada('${slug}', '${cat}')"
+                style="display:none;font-size:0.75rem;padding:8px 16px;background:#507a3a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:600;">
+                Guardar
+              </button>
+            </div>
+            <div id="portada-msg-${slug}" style="font-size:0.75rem;margin-top:6px;min-height:16px;"></div>
           </div>
         </div>
       `;
     }).join('');
   }
 
-  function subirPortada(slug, cat, input) {
+  function previsualizarPortada(slug, cat, input) {
     const file = input.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -683,11 +692,30 @@
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
         const base64 = canvas.toDataURL('image/jpeg', 0.85);
-        db.ref('portadas/' + slug).set({ foto: base64, categoria: cat });
+        portadasPendientes[slug] = { base64, cat };
+        const preview = document.getElementById('portada-preview-' + slug);
+        preview.src = base64;
+        preview.style.display = 'block';
+        document.getElementById('btn-guardar-' + slug).style.display = 'inline-block';
+        document.getElementById('portada-msg-' + slug).textContent = '';
       };
       img.src = e.target.result;
     };
     reader.readAsDataURL(file);
+  }
+
+  function guardarPortada(slug, cat) {
+    const pendiente = portadasPendientes[slug];
+    if (!pendiente) return;
+    const btn = document.getElementById('btn-guardar-' + slug);
+    btn.textContent = 'Guardando...'; btn.disabled = true;
+    db.ref('portadas/' + slug).set({ foto: pendiente.base64, categoria: pendiente.cat }, () => {
+      delete portadasPendientes[slug];
+      document.getElementById('portada-msg-' + slug).style.color = '#507a3a';
+      document.getElementById('portada-msg-' + slug).textContent = '✅ Portada guardada.';
+      btn.style.display = 'none';
+      btn.disabled = false; btn.textContent = 'Guardar';
+    });
   }
 
   function quitarPortada(slug) {
