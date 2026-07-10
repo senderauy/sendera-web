@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sendera | Producto</title>
+  <link rel="apple-touch-icon" href="img/logo.png" />
+  <link rel="icon" type="image/png" href="img/logo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#e8ddc8" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #e8e4dc;
+      min-height: 100vh;
+    }
+
+    /* ── NAVBAR ─────────────────────────────────────────────────── */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+    }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #3a3026;
+      text-decoration: none;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.65);
+      backdrop-filter: blur(10px);
+      padding: 8px 16px;
+      border-radius: 30px;
+      transition: background 0.2s;
+    }
+    .btn-back:hover { background: rgba(255,255,255,0.88); }
+
+    .cart-nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.65);
+      backdrop-filter: blur(10px);
+      border: none;
+      border-radius: 30px;
+      padding: 8px 16px;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #3a3026;
+      transition: background 0.2s;
+    }
+    .cart-nav-btn:hover { background: rgba(255,255,255,0.88); }
+
+    /* ── LAYOUT PRINCIPAL ───────────────────────────────────────── */
+    .product-page {
+      display: grid;
+      grid-template-columns: 55% 45%;
+      min-height: 100vh;
+    }
+
+    /* ── PANEL IZQUIERDO — imagen + fondo ────────────────────────── */
+    .product-left {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Fondo desenfocado (foto lifestyle) */
+    .product-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      filter: blur(28px);
+      transform: scale(1.1);
+      opacity: 0.55;
+      transition: background-image 0.4s, opacity 0.4s;
+    }
+
+    /* Overlay suave para que la foto del producto destaque */
+    .product-bg-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.25);
+    }
+
+    /* Puntos de color al borde izquierdo */
+    .color-dots-left {
+      position: absolute;
+      left: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 3;
+    }
+
+    .color-dot {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2.5px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.18);
+    }
+    .color-dot.active {
+      border-color: rgba(255,255,255,0.9);
+      box-shadow: 0 0 0 2px #3a3026, 0 2px 8px rgba(0,0,0,0.25);
+    }
+    .color-dot:hover { transform: scale(1.12); }
+
+    /* Foto del producto, encima del fondo */
+    .product-img-container {
+      position: relative;
+      z-index: 2;
+      width: 72%;
+      max-width: 460px;
+      aspect-ratio: 1/1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .product-main-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: opacity 0.3s;
+      filter: drop-shadow(0 8px 32px rgba(0,0,0,0.18));
+    }
+
+    .product-main-img.fading { opacity: 0; }
+
+    /* ── PANEL DERECHO — info ───────────────────────────────────── */
+    .product-right {
+      background: #faf8f4;
+      padding: 80px 48px 60px 44px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      min-height: 100vh;
+    }
+
+    .product-breadcrumb {
+      font-size: 0.63rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #c8861a;
+      margin-bottom: 14px;
+    }
+
+    .product-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 3vw, 3rem);
+      font-weight: 500;
+      color: #1e1a12;
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+
+    .product-subtitle {
+      font-size: 0.75rem;
+      color: #9a8f82;
+      letter-spacing: 0.06em;
+      margin-bottom: 28px;
+      font-weight: 300;
+    }
+
+    .product-price {
+      font-size: 2.4rem;
+      font-weight: 300;
+      color: #1e1a12;
+      margin-bottom: 28px;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    .product-price .currency {
+      font-size: 0.45em;
+      color: #9a8f82;
+      font-weight: 400;
+      vertical-align: middle;
+      letter-spacing: 0.05em;
+    }
+
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: #ede8e0;
+      margin: 20px 0;
+    }
+
+    /* Selector de color */
+    .color-section { margin-bottom: 24px; }
+
+    .color-label {
+      font-size: 0.66rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #9a8f82;
+      margin-bottom: 12px;
+    }
+    .color-label span { color: #1e1a12; }
+
+    .color-swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .swatch {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2.5px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.14);
+    }
+    .swatch.active {
+      border-color: #fff;
+      box-shadow: 0 0 0 2px #1e1a12, 0 2px 8px rgba(0,0,0,0.18);
+    }
+    .swatch:hover { transform: scale(1.1); }
+
+    /* Botones */
+    .btn-add-cart-detail {
+      width: 100%;
+      padding: 15px;
+      background: #1e1a12;
+      color: #f0ebe3;
+      border: none;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      transition: background 0.2s;
+    }
+    .btn-add-cart-detail:hover { background: #3a3026; }
+    .btn-add-cart-detail:active { transform: scale(0.99); }
+
+    .btn-whatsapp-detail {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 13px;
+      background: transparent;
+      border: 1.5px solid #ddd5c8;
+      color: #3a3026;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.74rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 6px;
+      margin-bottom: 24px;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .btn-whatsapp-detail:hover { background: rgba(0,0,0,0.03); border-color: #b0a898; }
+
+    .added-feedback {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.76rem;
+      color: #507a3a;
+      font-weight: 600;
+      margin-bottom: 10px;
+      padding: 10px 14px;
+      background: rgba(80,122,58,0.07);
+      border-radius: 6px;
+    }
+    .added-feedback.visible { display: flex; }
+
+    /* Features */
+    .product-features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.74rem;
+      color: #5a4f44;
+      font-weight: 500;
+    }
+
+    .product-shipping {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.72rem;
+      color: #9a8f82;
+      padding: 14px 0 0;
+      border-top: 1px solid #ede8e0;
+    }
+
+    /* ── CARRITO ─────────────────────────────────────────────────── */
+    #cart-btn {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      z-index: 200;
+      background: #1e1a17;
+      color: #c9b07a;
+      border: none;
+      width: 54px; height: 54px;
+      border-radius: 50%;
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.22);
+      transition: transform 0.2s;
+    }
+    #cart-btn:hover { transform: scale(1.08); }
+    @keyframes bounce { 0%,100%{transform:scale(1)} 50%{transform:scale(1.18)} }
+    .cart-bounce { animation: bounce 0.4s ease; }
+
+    #cart-count {
+      position: absolute;
+      top: -4px; right: -4px;
+      background: #c8861a;
+      color: #fff;
+      font-size: 0.62rem; font-weight: 700;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #cart-modal {
+      position: fixed;
+      bottom: 92px; right: 28px;
+      width: 360px; max-height: 85vh;
+      display: flex; flex-direction: column;
+      background: #1e1a17;
+      border: 1px solid rgba(201,176,122,0.22);
+      z-index: 199;
+      transform: translateY(20px);
+      opacity: 0; pointer-events: none;
+      transition: all 0.3s;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.38);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    #cart-modal.open { transform: translateY(0); opacity: 1; pointer-events: all; }
+
+    .cart-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(201,176,122,0.14);
+    }
+    .cart-header h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem; color: #e0cb9a; letter-spacing: 0.06em;
+    }
+    .cart-close { background: none; border: none; color: #a89880; font-size: 1rem; cursor: pointer; }
+
+    #cart-items { overflow-y: auto; max-height: 180px; padding: 10px 20px; flex-shrink: 0; }
+    .cart-empty { color: #a89880; font-size: 0.86rem; text-align: center; padding: 18px 0; }
+    .cart-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .cart-item-info { flex: 1; display: flex; flex-direction: column; }
+    .cart-item-name { color: #f0ebe3; font-size: 0.83rem; font-weight: 500; }
+    .cart-item-variant { color: #a89880; font-size: 0.73rem; }
+    .cart-item-controls { display: flex; align-items: center; gap: 7px; }
+    .cart-item-controls button { background: rgba(255,255,255,0.08); border: none; color: #f0ebe3; width: 22px; height: 22px; cursor: pointer; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
+    .cart-item-controls span { color: #f0ebe3; font-size: 0.83rem; min-width: 14px; text-align: center; }
+    .cart-item-price { color: #e0cb9a; font-size: 0.85rem; min-width: 48px; text-align: right; }
+    .cart-item-remove { background: none; border: none; color: #a89880; cursor: pointer; font-size: 0.72rem; padding: 3px; }
+
+    .cart-footer { padding: 14px 20px; border-top: 1px solid rgba(201,176,122,0.14); overflow-y: auto; flex: 1; }
+
+    .cart-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 0.82rem; color: #a89880; }
+    .total-final { border-top: 1px solid rgba(201,176,122,0.18); padding-top: 9px; margin-top: 5px; margin-bottom: 13px; font-weight: 600; font-size: 0.96rem; color: #c9b07a; }
+
+    .envio-section { margin-bottom: 10px; }
+    .envio-titulo { font-size: 0.68rem; color: #c9b07a; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 7px; font-weight: 500; }
+    .envio-opcion { display: flex; align-items: center; gap: 9px; padding: 8px 11px; border: 1px solid rgba(201,176,122,0.12); margin-bottom: 4px; cursor: pointer; transition: border-color 0.2s; border-radius: 6px; }
+    .envio-opcion:hover { border-color: rgba(201,176,122,0.32); }
+    .envio-opcion input[type="radio"] { accent-color: #c9b07a; flex-shrink: 0; }
+    .envio-info { display: flex; flex-direction: column; flex: 1; }
+    .envio-nombre { font-size: 0.78rem; color: #f0ebe3; }
+    .envio-detalle { font-size: 0.66rem; color: #a89880; margin-top: 1px; }
+    .envio-precio { font-size: 0.78rem; color: #c9b07a; font-weight: 500; white-space: nowrap; }
+    .envio-campos { padding: 7px 11px 3px; background: rgba(255,255,255,0.02); border: 1px solid rgba(201,176,122,0.1); border-top: none; margin-bottom: 4px; border-radius: 0 0 6px 6px; }
+    .envio-input { width: 100%; padding: 7px 11px; background: rgba(255,255,255,0.05); border: 1px solid rgba(201,176,122,0.18); color: #f0ebe3; font-family: 'Montserrat', sans-serif; font-size: 0.79rem; outline: none; margin-bottom: 6px; transition: border-color 0.2s; border-radius: 5px; }
+    .envio-input:focus { border-color: #c9b07a; }
+    .envio-radio-group { display: flex; gap: 12px; margin-bottom: 6px; }
+    .envio-sub { font-size: 0.73rem; color: #a89880; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+    .envio-sub input { accent-color: #c9b07a; }
+
+    .cart-form { display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; }
+    .cart-form input { background: rgba(255,255,255,0.05); border: 1px solid rgba(201,176,122,0.18); color: #f0ebe3; padding: 8px 13px; font-size: 0.8rem; font-family: 'Montserrat', sans-serif; outline: none; transition: border-color 0.2s; border-radius: 5px; }
+    .cart-form input:focus { border-color: #c9b07a; }
+    .cart-form input::placeholder { color: #a89880; }
+
+    .btn-send-order { width: 100%; padding: 12px; background: #c9b07a; color: #1e1a17; border: none; font-family: 'Montserrat', sans-serif; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; border-radius: 6px; }
+    .btn-send-order:hover { background: #e0cb9a; }
+    .btn-mp { width: 100%; padding: 11px; background: #009ee3; color: #fff; border: none; font-family: 'Montserrat', sans-serif; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; margin-top: 7px; transition: background 0.2s; border-radius: 6px; }
+    .btn-mp:hover { background: #007dc1; }
+    .btn-mp:disabled { opacity: 0.6; cursor: not-allowed; }
+    .envio-row { color: #a89880; }
+    .cart-note { color: #a89880; font-size: 0.7rem; text-align: center; margin-top: 7px; }
+
+    /* ── MOBILE ─────────────────────────────────────────────────── */
+    @media (max-width: 720px) {
+      #cart-modal { width: calc(100vw - 24px); right: 12px; }
+      #cart-btn { right: 14px; bottom: 18px; }
+
+      .product-page { grid-template-columns: 1fr; }
+
+      .product-left {
+        position: static;
+        height: 72vw;
+        max-height: 420px;
+      }
+
+      .color-dots-left {
+        left: 12px;
+        gap: 9px;
+      }
+      .color-dot { width: 22px; height: 22px; }
+
+      .product-img-container { width: 62%; }
+
+      .product-right {
+        padding: 28px 22px 80px;
+        min-height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <a href="index.html" class="btn-back">← Volver</a>
+    <button class="cart-nav-btn" onclick="toggleCart()">🛒</button>
+  </header>
+
+  <div class="product-page" id="product-page">
+    <div style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;min-height:80vh;font-size:0.82rem;color:#9a8f82;letter-spacing:0.1em;">
+      Cargando...
+    </div>
+  </div>
+
+  <!-- CARRITO FLOTANTE -->
+  <button id="cart-btn" onclick="toggleCart()">🛒<span id="cart-count">0</span></button>
+
+  <!-- MODAL CARRITO -->
+  <div id="cart-modal">
+    <div class="cart-header">
+      <h3>Tu pedido</h3>
+      <button onclick="closeCart()" class="cart-close">✕</button>
+    </div>
+    <div id="cart-items"></div>
+    <div class="cart-footer">
+      <div class="envio-section">
+        <p class="envio-titulo">Método de envío</p>
+        <label class="envio-opcion">
+          <input type="radio" name="envio" value="montevideo" onchange="updateEnvio()" />
+          <span class="envio-info"><span class="envio-nombre">📍 Montevideo</span><span class="envio-detalle">Entrega a domicilio</span></span>
+          <span class="envio-precio">$200</span>
+        </label>
+        <div class="envio-campos" id="campos-montevideo" style="display:none;">
+          <input type="text" class="envio-input" id="envio-direccion" placeholder="Dirección de entrega" />
+        </div>
+        <label class="envio-opcion">
+          <input type="radio" name="envio" value="interior" onchange="updateEnvio()" />
+          <span class="envio-info"><span class="envio-nombre">🚛 Interior del país</span><span class="envio-detalle">Por agencia, a cargo del comprador</span></span>
+          <span class="envio-precio">—</span>
+        </label>
+        <div class="envio-campos" id="campos-interior" style="display:none;">
+          <input type="text" class="envio-input" id="envio-ciudad" placeholder="Ciudad / Localidad" />
+          <div class="envio-radio-group">
+            <label class="envio-sub"><input type="radio" name="interior-tipo" value="agencia" /> Retiro en agencia</label>
+            <label class="envio-sub"><input type="radio" name="interior-tipo" value="domicilio" onchange="toggleDomicilioInterior()" /> Entrega a domicilio</label>
+          </div>
+          <input type="text" class="envio-input" id="envio-domicilio-interior" placeholder="Dirección de entrega" style="display:none;" />
+        </div>
+        <label class="envio-opcion">
+          <input type="radio" name="envio" value="pickup" onchange="updateEnvio()" />
+          <span class="envio-info"><span class="envio-nombre">🏡 A coordinar retiro</span><span class="envio-detalle">Zona Cordón · coordinación previa</span></span>
+          <span class="envio-precio">Gratis</span>
+        </label>
+      </div>
+      <div class="cart-total-row"><span>Subtotal</span><span id="cart-subtotal">$0</span></div>
+      <div class="cart-total-row envio-row" id="envio-row" style="display:none;"><span>Envío</span><span id="cart-envio-label">$0</span></div>
+      <div class="cart-total-row total-final"><span>Total</span><span id="cart-total">$0</span></div>
+      <div class="cart-form">
+        <input type="text" id="customer-name" placeholder="Tu nombre" />
+        <input type="tel" id="customer-phone" placeholder="Tu celular (ej: 099 123 456)" />
+      </div>
+      <button class="btn-mp" onclick="pagarMP()">💳 Ir a pagar</button>
+      <p class="cart-note">Te contactaremos para coordinar el envío.</p>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="cart.js"></script>
+  <script>
+    // ── MAPAS DE COLOR ─────────────────────────────────────────────
+    const COLOR_BG = {
+      beige:'#ddd3b0',arena:'#ddd3b0',crema:'#dfd5b4',natural:'#dbd1ac',
+      gris:'#cacdd6',grey:'#cacdd6',gray:'#cacdd6',
+      rosado:'#eacfcb',rosa:'#eacfcb',pink:'#eacfcb',
+      blanco:'#e0dcd4',white:'#e0dcd4',
+      verde:'#bfcfb8',green:'#bfcfb8',lima:'#c4d492',lime:'#c4d492',
+      morado:'#cfc8e0',violeta:'#cfc8e0',lila:'#d5cce8',purple:'#cfc8e0',
+      negro:'#444038',black:'#444038',
+      azul:'#bcc8dc',blue:'#bcc8dc',celeste:'#b8d0e0',
+      rojo:'#e0c4c0',red:'#e0c4c0',
+      naranja:'#e4d0a4',orange:'#e4d0a4',
+      amarillo:'#dcd88c',yellow:'#dcd88c',
+    };
+    const COLOR_SWATCH = {
+      beige:'#c4aa78',arena:'#c4aa78',crema:'#c8b480',natural:'#b89860',
+      gris:'#7a8898',grey:'#7a8898',gray:'#7a8898',
+      rosado:'#dc8888',rosa:'#dc8888',pink:'#e890a0',
+      blanco:'#d5d0c8',white:'#d0ccc4',
+      verde:'#6a9858',green:'#6a9858',lima:'#88c040',lime:'#88c040',
+      morado:'#9878c0',violeta:'#9070b4',lila:'#a88cc8',purple:'#9070b0',
+      negro:'#282420',black:'#202020',
+      azul:'#5070a8',blue:'#4060a0',celeste:'#5898c0',
+      rojo:'#b84040',red:'#b03030',
+      naranja:'#d07030',orange:'#c86820',
+      amarillo:'#c0a820',yellow:'#c8b020',
+    };
+
+    const FEATURES_MAP = {
+      'Gorros Visera':[{i:'🏔️',l:'Liviano'},{i:'💨',l:'Transpirable'},{i:'🔧',l:'Ajustable'},{i:'💧',l:'Impermeable'}],
+      'Gorros Invierno':[{i:'🧊',l:'Térmico'},{i:'🔥',l:'Abrigo'},{i:'🎿',l:'Outdoor'},{i:'✨',l:'Cómodo'}],
+      'Buff':[{i:'💨',l:'Transpirable'},{i:'🔄',l:'Versátil'},{i:'💧',l:'Secado rápido'},{i:'🏃',l:'Running'}],
+      default:[{i:'🏔️',l:'Outdoor'},{i:'⭐',l:'Calidad'},{i:'💧',l:'Resistente'},{i:'✨',l:'Estilo'}],
+    };
+
+    function getBgColor(name, idx) {
+      const n = name.toLowerCase();
+      for (const [k,v] of Object.entries(COLOR_BG)) { if (n.includes(k)) return v; }
+      return ['#ddd3b0','#cacdd6','#eacfcb','#e0dcd4','#bfcfb8','#cfc8e0'][idx % 6];
+    }
+    function getSwatchColor(name, idx) {
+      const n = name.toLowerCase();
+      for (const [k,v] of Object.entries(COLOR_SWATCH)) { if (n.includes(k)) return v; }
+      return ['#c4aa78','#7a8898','#dc8888','#d5d0c8','#6a9858','#9878c0'][idx % 6];
+    }
+
+    // ── ESTADO ─────────────────────────────────────────────────────
+    let productoActual = null;
+    let variantActual = 0;
+
+    const params = new URLSearchParams(window.location.search);
+    const productId = params.get('id');
+    const initialVariant = Math.max(0, parseInt(params.get('v') || '0') || 0);
+
+    if (!productId) { window.location.href = 'index.html'; }
+    else {
+      db.ref('productos/' + productId).once('value', snap => {
+        if (!snap.exists()) { window.location.href = 'index.html'; return; }
+        productoActual = { id: snap.key, ...snap.val() };
+        renderProducto(productoActual, initialVariant);
+      });
+    }
+
+    // ── RENDER ─────────────────────────────────────────────────────
+    function renderProducto(prod, vIdx) {
+      const variantes = prod.variantes || [];
+      if (!variantes.length) return;
+      variantActual = Math.min(vIdx, variantes.length - 1);
+
+      const features = FEATURES_MAP[prod.categoria] || FEATURES_MAP.default;
+      const page = document.getElementById('product-page');
+
+      page.innerHTML = `
+        <!-- Panel izquierdo -->
+        <div class="product-left">
+          <div class="product-bg" id="product-bg"></div>
+          <div class="product-bg-overlay"></div>
+          <div class="color-dots-left" id="color-dots-left">
+            ${variantes.map((v,i) => `
+              <div class="color-dot ${i===variantActual?'active':''}"
+                   style="background:${getSwatchColor(v.nombre,i)}"
+                   title="${v.nombre}"
+                   onclick="selectVariant(${i})"></div>
+            `).join('')}
+          </div>
+          <div class="product-img-container">
+            <img class="product-main-img" id="product-main-img"
+                 src="${variantes[variantActual]?.foto||'img/logo.png'}"
+                 alt="${prod.nombre} ${variantes[variantActual]?.nombre||''}" />
+          </div>
+        </div>
+
+        <!-- Panel derecho -->
+        <div class="product-right">
+          <div class="product-breadcrumb">${prod.categoria||'Colección'} · ${prod.subgrupo||prod.nombre}</div>
+          <h1 class="product-title">${prod.nombre}</h1>
+          <p class="product-subtitle">${variantes.length} color${variantes.length>1?'es':''} · Talle único ajustable</p>
+          <div class="product-price">
+            <span class="currency">$UY</span> ${(variantes[variantActual]?.precio||prod.precio||0).toLocaleString()}
+          </div>
+          <div class="color-section">
+            <p class="color-label">Color — <span id="color-name">${variantes[variantActual]?.nombre||''}</span></p>
+            <div class="color-swatches">
+              ${variantes.map((v,i) => `
+                <div class="swatch ${i===variantActual?'active':''}"
+                     style="background:${getSwatchColor(v.nombre,i)}"
+                     title="${v.nombre}"
+                     onclick="selectVariant(${i})"></div>
+              `).join('')}
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="added-feedback" id="added-feedback">✓ Agregado al carrito</div>
+          <button class="btn-add-cart-detail" onclick="agregarAlCarrito()">Agregar al carrito</button>
+          <a class="btn-whatsapp-detail" href="#" onclick="consultarWA(event)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" opacity="0.6"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Consultar por WhatsApp
+          </a>
+          <div class="product-features">
+            ${features.map(f=>`<div class="feature-item"><span>${f.i}</span><span>${f.l}</span></div>`).join('')}
+          </div>
+          <div class="product-shipping">🚚 Envíos a todo Uruguay</div>
+        </div>
+      `;
+
+      document.title = `${prod.nombre} | Sendera`;
+      actualizarFondo(prod, variantActual);
+    }
+
+    // ── FONDO (avatar desenfocado o color) ─────────────────────────
+    function actualizarFondo(prod, idx) {
+      const variantes = prod.variantes || [];
+      const v = variantes[idx];
+      const bgEl = document.getElementById('product-bg');
+      if (!bgEl) return;
+
+      const bgColor = getBgColor(v?.nombre || '', idx);
+      document.body.style.background = bgColor;
+
+      // Si el producto tiene foto de avatar (lifestyle), la usamos desenfocada
+      if (prod.fotoAvatar) {
+        bgEl.style.backgroundImage = `url('${prod.fotoAvatar}')`;
+        bgEl.style.opacity = '0.55';
+      } else if (v?.foto) {
+        // Fallback: la misma foto del producto pero desenfocada
+        bgEl.style.backgroundImage = `url('${v.foto}')`;
+        bgEl.style.opacity = '0.4';
+      } else {
+        bgEl.style.backgroundImage = 'none';
+        bgEl.style.opacity = '0';
+      }
+    }
+
+    // ── CAMBIAR VARIANTE ───────────────────────────────────────────
+    function selectVariant(idx) {
+      if (!productoActual || idx === variantActual) return;
+      variantActual = idx;
+      const v = productoActual.variantes[idx];
+
+      // Imagen con fade
+      const img = document.getElementById('product-main-img');
+      if (img) {
+        img.classList.add('fading');
+        setTimeout(() => {
+          img.src = v.foto || 'img/logo.png';
+          img.alt = productoActual.nombre + ' ' + v.nombre;
+          img.classList.remove('fading');
+        }, 280);
+      }
+
+      // Labels
+      const cn = document.getElementById('color-name');
+      if (cn) cn.textContent = v.nombre;
+
+      // Precio
+      const pe = document.querySelector('.product-price');
+      if (pe) pe.innerHTML = `<span class="currency">$UY</span> ${(v.precio||productoActual.precio||0).toLocaleString()}`;
+
+      // Dots y swatches activos
+      document.querySelectorAll('.color-dot').forEach((d,i) => d.classList.toggle('active', i===idx));
+      document.querySelectorAll('.swatch').forEach((s,i) => s.classList.toggle('active', i===idx));
+
+      // Fondo
+      actualizarFondo(productoActual, idx);
+
+      // Ocultar feedback
+      const fb = document.getElementById('added-feedback');
+      if (fb) fb.classList.remove('visible');
+    }
+
+    // ── CARRITO ─────────────────────────────────────────────────────
+    function agregarAlCarrito() {
+      if (!productoActual) return;
+      const v = productoActual.variantes[variantActual];
+      if (!v) return;
+      const existing = cart.find(i => i.name === productoActual.nombre && i.variant === v.nombre);
+      if (existing) { existing.qty++; } else {
+        cart.push({ name: productoActual.nombre, variant: v.nombre, price: v.precio || productoActual.precio || 0, qty: 1 });
+      }
+      updateCartUI();
+      showCartNotification();
+      const fb = document.getElementById('added-feedback');
+      if (fb) { fb.classList.add('visible'); setTimeout(() => fb.classList.remove('visible'), 2500); }
+    }
+
+    function consultarWA(e) {
+      e.preventDefault();
+      if (!productoActual) return;
+      const v = productoActual.variantes[variantActual];
+      const msg = encodeURIComponent(`Hola! Me interesa el ${productoActual.nombre} en color ${v?.nombre||''}. ¿Tienen stock? 🎩`);
+      window.open(`https://wa.me/59895290959?text=${msg}`, '_blank');
+    }
+
+    function pagarMP() {
+      if (cart.length === 0) { alert('Agregá productos al carrito primero.'); return; }
+      const data = { items: cart.map(i => ({ nombre: i.name, variante: i.variant, precio: i.price, qty: i.qty })), envio: getEnvio() };
+      sessionStorage.setItem('sendera_pedido', JSON.stringify(data));
+      window.location.href = 'checkout.html';
+    }
+  </script>
+</body>
+</html>

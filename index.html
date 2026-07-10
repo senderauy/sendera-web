@@ -400,7 +400,8 @@
           <div class="productos-grid">
             ${data.variantes.map(({ v, i, p }) => `
               <div class="producto-card">
-                <div class="producto-img-wrap">
+                <div class="producto-img-wrap" style="cursor:pointer"
+                     onclick="window.location='producto.html?id=${encodeURIComponent(p.id)}&v=${i}'">
                   ${v.foto
                     ? `<img src="${v.foto}" alt="${p.nombre} ${v.nombre}" />`
                     : `<img src="img/logo.png" alt="${p.nombre}" style="object-fit:contain;padding:20px;background:#f2ede6;" />`
