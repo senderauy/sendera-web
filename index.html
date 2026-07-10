@@ -298,10 +298,13 @@
 
     const COLECCION_BG_FALLBACK = ['#2a2218','#2d4a1e','#384050','#6b4c1e','#4a3040','#3d4a50'];
 
+    let catsExtraColecciones = [];
+
     db.ref('colecciones').on('value', snap => {
       fotosColecciones = {};
       const val = snap.val() || {};
-      Object.entries(val).forEach(([cat, data]) => { if (data.foto) fotosColecciones[cat] = data.foto; });
+      Object.entries(val).forEach(([cat, data]) => { if (data && data.foto) fotosColecciones[cat] = data.foto; });
+      catsExtraColecciones = Object.keys(val);
       if (ultimosProductos.length) renderCategorias(ultimosProductos);
     });
 
@@ -315,9 +318,16 @@
 
     function renderColecciones(catsOrdenadas) {
       const grid = document.getElementById('colecciones-grid');
-      if (!grid || catsOrdenadas.length === 0) return;
-      grid.innerHTML = catsOrdenadas.map(([cat, prods], idx) => {
-        const foto = fotosColecciones[cat] || prods.flatMap(p => (p.variantes || []).map(v => v.foto).filter(Boolean))[0];
+      if (!grid) return;
+
+      // Agregar categorías creadas desde admin que no tienen productos todavía
+      const catsEnProductos = new Set(catsOrdenadas.map(([c]) => c));
+      const extras = catsExtraColecciones.filter(c => !catsEnProductos.has(c));
+      const todasCats = [...catsOrdenadas, ...extras.map(c => [c, []])];
+      if (!todasCats.length) return;
+
+      grid.innerHTML = todasCats.map(([cat, prods], idx) => {
+        const foto = fotosColecciones[cat] || (prods || []).flatMap(p => (p.variantes || []).map(v => v.foto).filter(Boolean))[0];
         const solidBg = COLECCION_BG_FALLBACK[idx % COLECCION_BG_FALLBACK.length];
         const catSlug = cat.replace(/'/g, "\\'");
         return `

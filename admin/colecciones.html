@@ -151,6 +151,26 @@
 
     .saving-indicator { font-size: 0.7rem; color: #507a3a; margin-top: 6px; display: none; }
 
+    /* FORMULARIO NUEVA COLECCIÓN */
+    .form-nueva {
+      background: #fff;
+      border: 1.5px solid #e8dfd2;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 28px;
+    }
+    .form-nueva h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; color: #2a2218; margin-bottom: 14px; }
+    .form-nueva-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    .form-nueva-row input[type="text"] {
+      flex: 1; min-width: 160px; padding: 10px 14px;
+      border: 1.5px solid #e8dfd2; border-radius: 8px;
+      font-family: inherit; font-size: 0.85rem; color: #3a3026; background: #faf7f3;
+    }
+    .form-nueva-row input:focus { outline: none; border-color: #507a3a; }
+    .btn-nueva { padding: 10px 18px; background: #507a3a; color: #fff; border: none; border-radius: 8px; font-family: inherit; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
+    .btn-nueva:hover { background: #3d5e2c; }
+    .badge-nueva { display: inline-block; font-size: 0.6rem; background: #e8f5e0; color: #3d5e2c; border-radius: 4px; padding: 2px 7px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+
     @media (max-width: 640px) {
       .nav-links { display: none; }
       .btn-logout-top { display: inline-block; }
@@ -181,6 +201,14 @@
   </div>
   <p class="page-subtitle">Gestioná la foto de portada de cada categoría. Aparece en la sección Colecciones de la tienda.</p>
 
+  <div class="form-nueva">
+    <h2>➕ Nueva colección</h2>
+    <div class="form-nueva-row">
+      <input type="text" id="nueva-nombre" placeholder="Nombre de la colección (ej: Mochilas)" />
+      <button class="btn-nueva" onclick="crearColeccion()">Crear colección</button>
+    </div>
+  </div>
+
   <div id="cats-grid" class="cats-grid">
     <div style="color:#9a8f82;font-size:0.82rem;">Cargando categorías...</div>
   </div>
@@ -202,14 +230,25 @@
 
   const ORDEN_CATS = ['Gorros Visera', 'Gorros Invierno', 'Buff', 'Riñoneras', 'Accesorios'];
   let fotosActuales = {};
+  let catsConProductos = new Set();
+  let todasLasCats = [];
+
+  function ordenarCats(cats) {
+    return [...cats].sort((a, b) => {
+      const ia = ORDEN_CATS.indexOf(a), ib = ORDEN_CATS.indexOf(b);
+      if (ia === -1 && ib === -1) return a.localeCompare(b);
+      if (ia === -1) return 1; if (ib === -1) return -1;
+      return ia - ib;
+    });
+  }
 
   function renderGrid(cats) {
     const grid = document.getElementById('cats-grid');
     if (!cats.length) { grid.innerHTML = '<div style="color:#9a8f82;font-size:0.82rem;">No hay categorías todavía.</div>'; return; }
-
     grid.innerHTML = cats.map(cat => {
       const foto = fotosActuales[cat];
       const catId = cat.replace(/\s+/g, '_');
+      const sinProd = !catsConProductos.has(cat);
       return `
         <div class="cat-card" id="card-${catId}">
           ${foto
@@ -217,13 +256,17 @@
             : `<div class="cat-card-placeholder" id="img-${catId}">🏔️</div>`
           }
           <div class="cat-card-body">
-            <div class="cat-nombre">${cat}</div>
+            <div class="cat-nombre">
+              ${sinProd ? '<span class="badge-nueva">Sin productos</span><br>' : ''}
+              ${cat}
+            </div>
             <div class="cat-acciones">
               <label class="btn-file-cat" for="file-${catId}">📷 Subir foto</label>
               <input type="file" class="hidden-file" id="file-${catId}" accept="image/*"
                      onchange="onFileChange(this, '${cat}')" />
               <button class="btn-url-cat" onclick="toggleUrl('${catId}')">🔗 URL</button>
               ${foto ? `<button class="btn-borrar-cat" onclick="borrarFoto('${cat}','${catId}')">✕ Quitar</button>` : ''}
+              ${sinProd ? `<button class="btn-borrar-cat" onclick="eliminarColeccion('${cat}')">🗑 Eliminar</button>` : ''}
             </div>
             <div class="url-input-wrap" id="url-wrap-${catId}">
               <input type="url" id="url-input-${catId}" placeholder="https://..." />
@@ -236,6 +279,20 @@
     }).join('');
   }
 
+  function crearColeccion() {
+    const nombre = document.getElementById('nueva-nombre').value.trim();
+    if (!nombre) { alert('Ingresá un nombre para la colección.'); return; }
+    if (todasLasCats.includes(nombre)) { alert('Esa colección ya existe.'); return; }
+    db.ref('colecciones/' + nombre).set({ creada: new Date().toISOString() }).then(() => {
+      document.getElementById('nueva-nombre').value = '';
+    });
+  }
+
+  function eliminarColeccion(cat) {
+    if (!confirm('¿Eliminar la colección "' + cat + '"? Esto borra la foto y la colección.')) return;
+    db.ref('colecciones/' + cat).remove();
+  }
+
   function toggleUrl(catId) {
     const wrap = document.getElementById('url-wrap-' + catId);
     wrap.classList.toggle('visible');
@@ -243,7 +300,8 @@
   }
 
   function mostrarGuardando(catId, show) {
-    document.getElementById('saving-' + catId).style.display = show ? 'block' : 'none';
+    const el = document.getElementById('saving-' + catId);
+    if (el) el.style.display = show ? 'block' : 'none';
   }
 
   function onFileChange(input, cat) {
@@ -264,8 +322,7 @@
         }
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        const data = canvas.toDataURL('image/jpeg', 0.82);
-        guardarFoto(cat, catId, data);
+        guardarFoto(cat, catId, canvas.toDataURL('image/jpeg', 0.82));
       };
       img.src = e.target.result;
     };
@@ -280,9 +337,7 @@
   }
 
   function guardarFoto(cat, catId, data) {
-    db.ref('colecciones/' + cat + '/foto').set(data).then(() => {
-      mostrarGuardando(catId, false);
-    });
+    db.ref('colecciones/' + cat + '/foto').set(data).then(() => mostrarGuardando(catId, false));
   }
 
   function borrarFoto(cat, catId) {
@@ -290,51 +345,20 @@
     db.ref('colecciones/' + cat + '/foto').remove();
   }
 
-  // Cargar fotos actuales y categorías
-  Promise.all([
-    db.ref('colecciones').once('value'),
-    db.ref('productos').once('value')
-  ]).then(([colSnap, prodSnap]) => {
-    // Fotos de colecciones
-    const colVal = colSnap.val() || {};
-    fotosActuales = {};
-    Object.entries(colVal).forEach(([cat, data]) => { if (data.foto) fotosActuales[cat] = data.foto; });
+  // Cargar todo y escuchar cambios en tiempo real
+  db.ref('productos').once('value').then(prodSnap => {
+    prodSnap.forEach(c => { const cat = c.val().categoria; if (cat) catsConProductos.add(cat); });
 
-    // Categorías desde productos
-    const catsSet = new Set();
-    prodSnap.forEach(c => { const cat = c.val().categoria; if (cat) catsSet.add(cat); });
-    const catsOrdenadas = [...catsSet].sort((a, b) => {
-      const ia = ORDEN_CATS.indexOf(a), ib = ORDEN_CATS.indexOf(b);
-      if (ia === -1 && ib === -1) return 0;
-      if (ia === -1) return 1; if (ib === -1) return -1;
-      return ia - ib;
-    });
-    renderGrid(catsOrdenadas);
-  });
+    db.ref('colecciones').on('value', snap => {
+      const colVal = snap.val() || {};
+      fotosActuales = {};
+      Object.entries(colVal).forEach(([cat, data]) => { if (data && data.foto) fotosActuales[cat] = data.foto; });
 
-  // Escuchar cambios en tiempo real para actualizar las previews
-  db.ref('colecciones').on('value', snap => {
-    const val = snap.val() || {};
-    fotosActuales = {};
-    Object.entries(val).forEach(([cat, data]) => { if (data.foto) fotosActuales[cat] = data.foto; });
-
-    // Actualizar previews sin re-renderizar todo
-    Object.entries(fotosActuales).forEach(([cat, foto]) => {
-      const catId = cat.replace(/\s+/g, '_');
-      const card = document.getElementById('card-' + catId);
-      if (!card) return;
-      const existing = document.getElementById('img-' + catId);
-      if (existing && existing.tagName === 'IMG') {
-        existing.src = foto;
-      } else if (existing) {
-        const img = document.createElement('img');
-        img.className = 'cat-card-foto';
-        img.id = 'img-' + catId;
-        img.src = foto;
-        img.alt = cat;
-        existing.replaceWith(img);
-      }
-      mostrarGuardando(catId, false);
+      // Unión: categorías de productos + categorías creadas en Firebase
+      const catsFirebase = Object.keys(colVal);
+      const union = new Set([...catsConProductos, ...catsFirebase]);
+      todasLasCats = ordenarCats(union);
+      renderGrid(todasLasCats);
     });
   });
 </script>
