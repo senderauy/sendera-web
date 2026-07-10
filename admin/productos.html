@@ -334,6 +334,21 @@
         <textarea id="prod-descripcion" placeholder="Descripción del producto (opcional)"></textarea>
       </div>
 
+      <div class="form-group">
+        <label>Foto lifestyle <span style="font-weight:400;color:#b0a598">(opcional — aparece desenfocada de fondo en la página del producto)</span></label>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <label class="btn-file" for="prod-avatar-file">📷 Subir foto</label>
+          <input type="file" id="prod-avatar-file" accept="image/*" onchange="onAvatarFileChange(this)" />
+          <span style="font-size:0.75rem;color:#9a8f82">o</span>
+          <input type="url" id="prod-avatar-url" placeholder="URL de imagen..." style="flex:1;min-width:180px;"
+                 oninput="onAvatarUrlInput()" />
+        </div>
+        <div id="prod-avatar-preview" style="display:none;margin-top:10px;border-radius:8px;overflow:hidden;max-height:160px;">
+          <img id="prod-avatar-preview-img" src="" style="width:100%;max-height:160px;object-fit:cover;display:block;" />
+        </div>
+        <button type="button" id="btn-borrar-avatar" onclick="borrarAvatar()" style="display:none;margin-top:6px;background:none;border:1px solid #fca5a5;color:#b91c1c;border-radius:6px;padding:4px 12px;font-size:0.72rem;cursor:pointer;">✕ Quitar foto</button>
+      </div>
+
       <!-- VARIANTES -->
       <div class="variantes-section">
         <div class="variantes-label">
@@ -440,6 +455,54 @@
 
   // ── Modal ─────────────────────────────────────────────
   let varCount = 0;
+  let avatarData = '';
+
+  function onAvatarFileChange(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const MAX = 1200;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        avatarData = canvas.toDataURL('image/jpeg', 0.82);
+        document.getElementById('prod-avatar-preview-img').src = avatarData;
+        document.getElementById('prod-avatar-preview').style.display = 'block';
+        document.getElementById('btn-borrar-avatar').style.display = 'inline-block';
+        document.getElementById('prod-avatar-url').value = '';
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function onAvatarUrlInput() {
+    const url = document.getElementById('prod-avatar-url').value.trim();
+    avatarData = url;
+    if (url) {
+      document.getElementById('prod-avatar-preview-img').src = url;
+      document.getElementById('prod-avatar-preview').style.display = 'block';
+      document.getElementById('btn-borrar-avatar').style.display = 'inline-block';
+    } else {
+      borrarAvatar();
+    }
+  }
+
+  function borrarAvatar() {
+    avatarData = '';
+    document.getElementById('prod-avatar-url').value = '';
+    document.getElementById('prod-avatar-file').value = '';
+    document.getElementById('prod-avatar-preview').style.display = 'none';
+    document.getElementById('btn-borrar-avatar').style.display = 'none';
+  }
 
   function abrirModal(prod = null) {
     editandoId = prod ? prod.id : null;
@@ -450,6 +513,22 @@
     document.getElementById('prod-subgrupo').value = prod?.subgrupo || '';
     document.getElementById('prod-descripcion').value = prod?.descripcion || '';
     document.getElementById('prod-orden').value = prod?.orden || '';
+
+    // Foto avatar/lifestyle
+    avatarData = prod?.fotoAvatar || '';
+    document.getElementById('prod-avatar-url').value = '';
+    document.getElementById('prod-avatar-file').value = '';
+    const prev = document.getElementById('prod-avatar-preview');
+    const prevImg = document.getElementById('prod-avatar-preview-img');
+    const btnBorrar = document.getElementById('btn-borrar-avatar');
+    if (avatarData) {
+      prevImg.src = avatarData;
+      prev.style.display = 'block';
+      btnBorrar.style.display = 'inline-block';
+    } else {
+      prev.style.display = 'none';
+      btnBorrar.style.display = 'none';
+    }
 
     // Variantes
     const cont = document.getElementById('variantes-container');
@@ -599,6 +678,7 @@
 
     const prod = { nombre, categoria, subgrupo, descripcion, variantes, actualizado: new Date().toISOString() };
     if (orden !== null) prod.orden = orden;
+    if (avatarData) prod.fotoAvatar = avatarData;
 
     const isNuevo = !editandoId;
     const ref = editandoId ? db.ref('productos/' + editandoId) : db.ref('productos').push();

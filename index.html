@@ -65,26 +65,41 @@
   </section>
 
   <!-- NOSOTROS -->
-  <section class="section nosotros" id="nosotros">
-    <div class="container">
-      <h2>¿Quiénes somos?</h2>
-      <p>
-        Sendera es una marca pensada para quienes viven el aire libre como un estilo de vida.
-        Nos dedicamos a la comercialización de productos para senderismo, trail, running y
-        actividades outdoor, acompañándote en cada aventura.
-      </p>
-      <p>
-        Trabajamos de forma 100% online, a través de distintas plataformas, para que puedas
-        acceder a nuestros productos de forma simple, rápida y segura.
-      </p>
-      <p>
-        Creemos en la conexión con las sierras, en el movimiento y en la libertad de explorar.
-        Ya sea caminando o corriendo, cada paso cuenta. Por eso, seleccionamos productos que
-        combinan funcionalidad, comodidad y estilo.
-      </p>
-      <p>
-        Sendera no es solo equipamiento, es parte del camino.
-      </p>
+  <section class="nosotros" id="nosotros">
+    <div class="nosotros-inner">
+      <div class="nosotros-left">
+        <h2 class="nosotros-headline">¿QUIÉNES<br><span class="accent">SOMOS?</span></h2>
+        <p class="nosotros-tagline">Sendera no es solo equipamiento,<br>es parte del camino.</p>
+      </div>
+      <div class="nosotros-body">
+        <div class="nosotros-divider"></div>
+        <p>
+          Sendera es una marca pensada para quienes viven el aire libre como un estilo de vida.
+          Nos dedicamos a la comercialización de productos para senderismo, trail, running y
+          actividades outdoor, acompañándote en cada aventura.
+        </p>
+        <p>
+          Trabajamos de forma 100% online, a través de distintas plataformas, para que puedas
+          acceder a nuestros productos de forma simple, rápida y segura.
+        </p>
+        <p>
+          Creemos en la conexión con las sierras, en el movimiento y en la libertad de explorar.
+          Ya sea caminando o corriendo, cada paso cuenta. Por eso, seleccionamos productos que
+          combinan funcionalidad, comodidad y estilo.
+        </p>
+        <a href="#productos" class="btn-outline-light">Nuestra colección →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLECCIONES -->
+  <section class="colecciones-section" id="colecciones">
+    <div class="colecciones-container">
+      <p class="colecciones-label">Explorá por categoría</p>
+      <h2 class="colecciones-title">Colecciones</h2>
+      <div class="colecciones-grid" id="colecciones-grid">
+        <!-- Poblado dinámicamente desde Firebase -->
+      </div>
     </div>
   </section>
 
@@ -361,7 +376,8 @@
           <div class="productos-grid">
             ${data.variantes.map(({ v, i, p }) => `
               <div class="producto-card">
-                <div class="producto-img-wrap">
+                <div class="producto-img-wrap" style="cursor:pointer"
+                     onclick="window.location='producto.html?id=${encodeURIComponent(p.id)}&v=${i}'">
                   ${v.foto
                     ? `<img src="${v.foto}" alt="${p.nombre} ${v.nombre}" />`
                     : `<img src="img/logo.png" alt="${p.nombre}" style="object-fit:contain;padding:20px;background:#f2ede6;" />`
