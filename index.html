@@ -285,8 +285,6 @@
   <script src="firebase-config.js"></script>
   <script src="cart.js"></script>
   <script>
-    // Portadas de categorías
-    let portadasMap = {};
     let ultimosProductos = [];
 
     function renderCategorias(productos) {
@@ -386,21 +384,12 @@
           </div>
         `).join('');
 
-        const portadaImg = portadasMap[cat]
-          ? `<img src="${portadasMap[cat]}" alt="${cat}" style="width:100%;max-height:320px;object-fit:cover;border-radius:14px;margin-bottom:20px;display:block;" />`
-          : '';
-        return `<div class="bloque-categoria" data-cat="${cat}">${portadaImg}<div class="categoria-titulo">${cat}</div>${html}</div>`;
+        return `<div class="bloque-categoria" data-cat="${cat}"><div class="categoria-titulo">${cat}</div>${html}</div>`;
       }).join('');
 
       // Revisar stock de los nuevos productos
       checkStockOnLoad();
     }
-
-    db.ref('portadas').on('value', snap => {
-      portadasMap = {};
-      if (snap.val()) Object.values(snap.val()).forEach(p => { if (p.categoria && p.foto) portadasMap[p.categoria] = p.foto; });
-      if (ultimosProductos.length > 0) renderCategorias(ultimosProductos);
-    });
 
     db.ref('productos').on('value', snapshot => {
       ultimosProductos = [];
