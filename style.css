@@ -273,8 +273,8 @@ nav a:hover {
 
 .colecciones-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
 }
 
 .coleccion-card {
@@ -283,13 +283,40 @@ nav a:hover {
   cursor: pointer;
   text-decoration: none;
   display: block;
-  border-radius: 6px;
-  min-height: 180px;
+  border-radius: 8px;
+  min-height: 260px;
   transition: transform 0.3s;
 }
 
-.coleccion-card:first-child {
-  grid-row: span 2;
+.coleccion-avatar {
+  position: absolute;
+  bottom: 56px;
+  right: 14px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.75);
+  overflow: hidden;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(4px);
+}
+
+.coleccion-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.coleccion-avatar-empty::after {
+  content: '📷';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  opacity: 0.4;
 }
 
 .coleccion-card img.coleccion-bg {
@@ -343,8 +370,8 @@ nav a:hover {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
-  .coleccion-card { min-height: 120px; }
-  .coleccion-card:first-child { grid-row: span 2; }
+  .coleccion-card { min-height: 160px; }
+  .coleccion-avatar { width: 38px; height: 38px; bottom: 44px; right: 10px; }
   .colecciones-title { margin-bottom: 24px; }
   .coleccion-nombre { font-size: 0.95rem; }
 }

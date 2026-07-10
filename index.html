@@ -315,19 +315,24 @@
     function renderColecciones(catsOrdenadas) {
       const grid = document.getElementById('colecciones-grid');
       if (!grid || catsOrdenadas.length === 0) return;
-      grid.innerHTML = catsOrdenadas.map(([cat, prods], idx) => {
-        const foto = prods.flatMap(p => (p.variantes || []).map(v => v.foto).filter(Boolean))[0];
-        const solidBg = COLECCION_BG_FALLBACK[idx % COLECCION_BG_FALLBACK.length];
+      const todosProd = catsOrdenadas.flatMap(([cat, prods]) =>
+        prods.map(p => ({ ...p, _cat: cat }))
+      );
+      grid.innerHTML = todosProd.map((prod) => {
+        const foto = (prod.variantes || []).map(v => v.foto).filter(Boolean)[0];
+        const avatar = prod.fotoAvatar || '';
+        const bgStyle = foto ? '' : 'background:#2a2420;';
         return `
-          <a class="coleccion-card" href="#productos"
-             onclick="event.preventDefault();irAColeccion(this.dataset.cat);"
-             data-cat="${cat.replace(/"/g,'&quot;')}"
-             style="${foto ? '' : 'background:' + solidBg + ';'}">
-            ${foto ? `<img class="coleccion-bg" src="${foto}" alt="${cat}" />` : ''}
+          <a class="coleccion-card" href="producto.html?id=${encodeURIComponent(prod.id)}&v=0"
+             style="${bgStyle}">
+            ${foto ? `<img class="coleccion-bg" src="${foto}" alt="${prod.nombre}" />` : ''}
             <div class="coleccion-overlay"></div>
+            <div class="coleccion-avatar ${avatar ? '' : 'coleccion-avatar-empty'}">
+              ${avatar ? `<img src="${avatar}" alt="avatar" />` : ''}
+            </div>
             <div class="coleccion-card-content">
-              <div class="coleccion-cat-label">Colección</div>
-              <div class="coleccion-nombre">${cat}</div>
+              <div class="coleccion-cat-label">${prod._cat}</div>
+              <div class="coleccion-nombre">${prod.nombre}</div>
             </div>
           </a>
         `;
