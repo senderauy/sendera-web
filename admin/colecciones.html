@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="apple-touch-icon" href="../img/logo.png" />
+  <link rel="icon" type="image/png" href="../img/logo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Sendera Admin" />
+  <meta name="theme-color" content="#f2ede6" />
+  <title>Sendera - Colecciones</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="../firebase-config.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Montserrat', sans-serif; background: #f2ede6; color: #3a3026; min-height: 100vh; }
+
+    .navbar {
+      background: #fff; border-bottom: 2px solid #e8dfd2; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 10; height: 60px;
+      box-shadow: 0 2px 8px rgba(80,60,30,0.06);
+    }
+    .navbar .logo { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: #3a3026; letter-spacing: 0.12em; display: flex; align-items: center; gap: 8px; }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-links a { color: #7a6e62; text-decoration: none; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 500; }
+    .nav-links a:hover { background: #f2ede6; color: #3a3026; }
+    .nav-links a.active { background: #507a3a; color: #fff; }
+    .btn-logout { font-size: 0.72rem; color: #9a8f82; cursor: pointer; text-transform: uppercase; letter-spacing: 0.08em; background: none; border: 1px solid #ddd5c8; border-radius: 8px; padding: 7px 14px; margin-left: 8px; }
+    .btn-logout:hover { background: #f2ede6; color: #3a3026; }
+    .btn-logout-top { display: none; background: none; border: none; cursor: pointer; font-size: 1rem; color: #9a8f82; padding: 2px 6px; margin-left: 6px; }
+
+    .mobile-nav { display: none; background: #fff; border-top: 2px solid #e8dfd2; position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; padding: 8px 0 12px; }
+    .mobile-nav-links { display: flex; justify-content: space-around; }
+    .mobile-nav-links a { display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: #9a8f82; font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 12px; border-radius: 10px; }
+    .mobile-nav-links a.active { color: #507a3a; }
+    .mobile-nav-links .icon { font-size: 1.2rem; }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 28px 20px 100px; }
+    .page-header { margin-bottom: 8px; }
+    .page-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: #2a2218; }
+    .page-subtitle { font-size: 0.78rem; color: #9a8f82; margin-bottom: 28px; }
+
+    .cats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 18px;
+    }
+
+    .cat-card {
+      background: #fff;
+      border: 1.5px solid #e8dfd2;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .cat-card-foto {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+      background: #f0ebe3;
+    }
+
+    .cat-card-placeholder {
+      width: 100%;
+      height: 180px;
+      background: #f0ebe3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: #c8b89a;
+    }
+
+    .cat-card-body { padding: 14px 16px; }
+
+    .cat-nombre {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #2a2218;
+      margin-bottom: 12px;
+    }
+
+    .cat-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .btn-file-cat {
+      display: inline-block;
+      padding: 8px 14px;
+      background: #507a3a;
+      color: #fff;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-family: inherit;
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border: none;
+      white-space: nowrap;
+    }
+    .btn-file-cat:hover { background: #3d5e2c; }
+
+    input[type="file"].hidden-file { display: none; }
+
+    .btn-url-cat {
+      padding: 8px 14px;
+      background: #f5f0ea;
+      border: 1.5px solid #e8dfd2;
+      color: #3a3026;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-family: inherit;
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .btn-url-cat:hover { background: #ede6db; }
+
+    .btn-borrar-cat {
+      padding: 8px 14px;
+      background: none;
+      border: 1.5px solid #fca5a5;
+      color: #b91c1c;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-family: inherit;
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .btn-borrar-cat:hover { background: #fee2e2; }
+
+    .url-input-wrap { display: none; margin-top: 10px; gap: 6px; }
+    .url-input-wrap.visible { display: flex; }
+    .url-input-wrap input {
+      flex: 1; padding: 8px 12px; border: 1.5px solid #e8dfd2; border-radius: 8px;
+      font-family: inherit; font-size: 0.82rem; background: #faf7f3; color: #3a3026;
+    }
+    .url-input-wrap input:focus { outline: none; border-color: #507a3a; }
+    .url-input-wrap button {
+      padding: 8px 14px; background: #507a3a; color: #fff; border: none; border-radius: 8px;
+      font-family: inherit; font-size: 0.72rem; cursor: pointer; font-weight: 600;
+    }
+
+    .saving-indicator { font-size: 0.7rem; color: #507a3a; margin-top: 6px; display: none; }
+
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .btn-logout-top { display: inline-block; }
+      .mobile-nav { display: block; }
+      .cats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <div class="logo">SENDERA <button class="btn-logout-top" onclick="logout()" title="Salir">↩</button></div>
+  <div class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="pedidos.html">Pedidos</a>
+    <a href="productos.html">Productos</a>
+    <a href="stock.html">Stock</a>
+    <a href="colecciones.html" class="active">Colecciones</a>
+    <a href="lookbook.html">Lookbook</a>
+    <a href="https://analytics.google.com" target="_blank">Analytics</a>
+    <button class="btn-logout" onclick="logout()">↩ Salir</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Colecciones 🖼️</h1>
+  </div>
+  <p class="page-subtitle">Gestioná la foto de portada de cada categoría. Aparece en la sección Colecciones de la tienda.</p>
+
+  <div id="cats-grid" class="cats-grid">
+    <div style="color:#9a8f82;font-size:0.82rem;">Cargando categorías...</div>
+  </div>
+</div>
+
+<div class="mobile-nav">
+  <div class="mobile-nav-links">
+    <a href="dashboard.html"><span class="icon">📊</span>Dashboard</a>
+    <a href="pedidos.html"><span class="icon">📦</span>Pedidos</a>
+    <a href="productos.html"><span class="icon">🛍️</span>Productos</a>
+    <a href="stock.html"><span class="icon">🏷️</span>Stock</a>
+    <a href="colecciones.html" class="active"><span class="icon">🖼️</span>Colec.</a>
+  </div>
+</div>
+
+<script>
+  if (!localStorage.getItem('sendera_admin')) window.location.href = 'login.html';
+  function logout() { localStorage.removeItem('sendera_admin'); window.location.href = 'login.html'; }
+
+  const ORDEN_CATS = ['Gorros Visera', 'Gorros Invierno', 'Buff', 'Riñoneras', 'Accesorios'];
+  let fotosActuales = {};
+
+  function renderGrid(cats) {
+    const grid = document.getElementById('cats-grid');
+    if (!cats.length) { grid.innerHTML = '<div style="color:#9a8f82;font-size:0.82rem;">No hay categorías todavía.</div>'; return; }
+
+    grid.innerHTML = cats.map(cat => {
+      const foto = fotosActuales[cat];
+      const catId = cat.replace(/\s+/g, '_');
+      return `
+        <div class="cat-card" id="card-${catId}">
+          ${foto
+            ? `<img class="cat-card-foto" id="img-${catId}" src="${foto}" alt="${cat}" />`
+            : `<div class="cat-card-placeholder" id="img-${catId}">🏔️</div>`
+          }
+          <div class="cat-card-body">
+            <div class="cat-nombre">${cat}</div>
+            <div class="cat-acciones">
+              <label class="btn-file-cat" for="file-${catId}">📷 Subir foto</label>
+              <input type="file" class="hidden-file" id="file-${catId}" accept="image/*"
+                     onchange="onFileChange(this, '${cat}')" />
+              <button class="btn-url-cat" onclick="toggleUrl('${catId}')">🔗 URL</button>
+              ${foto ? `<button class="btn-borrar-cat" onclick="borrarFoto('${cat}','${catId}')">✕ Quitar</button>` : ''}
+            </div>
+            <div class="url-input-wrap" id="url-wrap-${catId}">
+              <input type="url" id="url-input-${catId}" placeholder="https://..." />
+              <button onclick="guardarUrl('${cat}','${catId}')">Guardar</button>
+            </div>
+            <div class="saving-indicator" id="saving-${catId}">Guardando...</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function toggleUrl(catId) {
+    const wrap = document.getElementById('url-wrap-' + catId);
+    wrap.classList.toggle('visible');
+    if (wrap.classList.contains('visible')) document.getElementById('url-input-' + catId).focus();
+  }
+
+  function mostrarGuardando(catId, show) {
+    document.getElementById('saving-' + catId).style.display = show ? 'block' : 'none';
+  }
+
+  function onFileChange(input, cat) {
+    const file = input.files[0];
+    if (!file) return;
+    const catId = cat.replace(/\s+/g, '_');
+    mostrarGuardando(catId, true);
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const MAX = 1200;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const data = canvas.toDataURL('image/jpeg', 0.82);
+        guardarFoto(cat, catId, data);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function guardarUrl(cat, catId) {
+    const url = document.getElementById('url-input-' + catId).value.trim();
+    if (!url) return;
+    mostrarGuardando(catId, true);
+    guardarFoto(cat, catId, url);
+  }
+
+  function guardarFoto(cat, catId, data) {
+    db.ref('colecciones/' + cat + '/foto').set(data).then(() => {
+      mostrarGuardando(catId, false);
+    });
+  }
+
+  function borrarFoto(cat, catId) {
+    if (!confirm('¿Quitar la foto de portada de ' + cat + '?')) return;
+    db.ref('colecciones/' + cat + '/foto').remove();
+  }
+
+  // Cargar fotos actuales y categorías
+  Promise.all([
+    db.ref('colecciones').once('value'),
+    db.ref('productos').once('value')
+  ]).then(([colSnap, prodSnap]) => {
+    // Fotos de colecciones
+    const colVal = colSnap.val() || {};
+    fotosActuales = {};
+    Object.entries(colVal).forEach(([cat, data]) => { if (data.foto) fotosActuales[cat] = data.foto; });
+
+    // Categorías desde productos
+    const catsSet = new Set();
+    prodSnap.forEach(c => { const cat = c.val().categoria; if (cat) catsSet.add(cat); });
+    const catsOrdenadas = [...catsSet].sort((a, b) => {
+      const ia = ORDEN_CATS.indexOf(a), ib = ORDEN_CATS.indexOf(b);
+      if (ia === -1 && ib === -1) return 0;
+      if (ia === -1) return 1; if (ib === -1) return -1;
+      return ia - ib;
+    });
+    renderGrid(catsOrdenadas);
+  });
+
+  // Escuchar cambios en tiempo real para actualizar las previews
+  db.ref('colecciones').on('value', snap => {
+    const val = snap.val() || {};
+    fotosActuales = {};
+    Object.entries(val).forEach(([cat, data]) => { if (data.foto) fotosActuales[cat] = data.foto; });
+
+    // Actualizar previews sin re-renderizar todo
+    Object.entries(fotosActuales).forEach(([cat, foto]) => {
+      const catId = cat.replace(/\s+/g, '_');
+      const card = document.getElementById('card-' + catId);
+      if (!card) return;
+      const existing = document.getElementById('img-' + catId);
+      if (existing && existing.tagName === 'IMG') {
+        existing.src = foto;
+      } else if (existing) {
+        const img = document.createElement('img');
+        img.className = 'cat-card-foto';
+        img.id = 'img-' + catId;
+        img.src = foto;
+        img.alt = cat;
+        existing.replaceWith(img);
+      }
+      mostrarGuardando(catId, false);
+    });
+  });
+</script>
+</body>
+</html>
