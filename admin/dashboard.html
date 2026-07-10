@@ -372,6 +372,12 @@
     </div>
   </div>
 
+  <!-- PORTADAS DE CATEGORÍAS -->
+  <div class="seccion-titulo">🖼️ Portadas de categorías</div>
+  <div id="portadas-lista" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+    <div class="empty">Cargando categorías...</div>
+  </div>
+
   <!-- RESEÑAS -->
   <div class="seccion-titulo">⭐ Reseñas</div>
 
@@ -630,6 +636,78 @@
 
   db.ref('codigos_descuento').on('value', snap => {
     renderCodigos(snap.val() || {});
+  });
+
+  // ── Portadas de categorías ────────────────────────────────
+  let portadasData = {};
+  let categoriasDisponibles = [];
+
+  function renderPortadas() {
+    const el = document.getElementById('portadas-lista');
+    if (categoriasDisponibles.length === 0) {
+      el.innerHTML = '<div class="empty">No hay categorías cargadas aún.</div>';
+      return;
+    }
+    el.innerHTML = categoriasDisponibles.map(cat => {
+      const portada = portadasData[cat];
+      const slug = cat.replace(/[^a-zA-Z0-9]/g, '_');
+      return `
+        <div style="background:#fff;border:1.5px solid #e8dfd2;border-radius:12px;overflow:hidden;">
+          ${portada ? `<img src="${portada}" style="width:100%;max-height:160px;object-fit:cover;display:block;" />` : ''}
+          <div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <span style="font-weight:600;font-size:0.85rem;">${cat}</span>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <label style="font-size:0.75rem;padding:6px 14px;background:#f5f0ea;border:1.5px solid #e8dfd2;border-radius:8px;cursor:pointer;">
+                ${portada ? '📷 Cambiar' : '📷 Agregar portada'}
+                <input type="file" accept="image/*" style="display:none" onchange="subirPortada('${slug}', '${cat}', this)" />
+              </label>
+              ${portada ? `<button onclick="quitarPortada('${slug}')" style="font-size:0.75rem;padding:6px 12px;border:1.5px solid #fca5a5;border-radius:8px;background:#fff;color:#b91c1c;cursor:pointer;">Quitar</button>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function subirPortada(slug, cat, input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const MAX = 1200;
+        let w = img.width, h = img.height;
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const base64 = canvas.toDataURL('image/jpeg', 0.85);
+        db.ref('portadas/' + slug).set({ foto: base64, categoria: cat });
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function quitarPortada(slug) {
+    if (!confirm('¿Quitar la portada de esta categoría?')) return;
+    db.ref('portadas/' + slug).remove();
+  }
+
+  db.ref('productos').once('value', snap => {
+    const cats = new Set();
+    snap.forEach(c => { const cat = c.val().categoria; if (cat) cats.add(cat); });
+    categoriasDisponibles = [...cats];
+    renderPortadas();
+  });
+
+  db.ref('portadas').on('value', snap => {
+    portadasData = {};
+    if (snap.val()) {
+      Object.values(snap.val()).forEach(p => { if (p.categoria && p.foto) portadasData[p.categoria] = p.foto; });
+    }
+    renderPortadas();
   });
 </script>
 </body>
