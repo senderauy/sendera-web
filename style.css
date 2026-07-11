@@ -373,8 +373,8 @@ nav a:hover {
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
-  .coleccion-card { aspect-ratio: 1/1; min-height: unset; grid-column: span 1 !important; }
-  .coleccion-card:nth-child(n+4) { aspect-ratio: 1/1; min-height: unset; }
+  .coleccion-card { aspect-ratio: 3/4; min-height: unset; grid-column: span 1 !important; }
+  .coleccion-card:nth-child(n+4) { aspect-ratio: 3/4; min-height: unset; }
   .colecciones-title { margin-bottom: 24px; }
   .coleccion-nombre { font-size: 0.78rem; margin-bottom: 0; font-weight: 700; }
   .coleccion-btn { display: none !important; }
