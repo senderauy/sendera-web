@@ -351,12 +351,13 @@ nav a:hover {
   background: #fff;
   color: var(--text-dark);
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.65rem;
+  font-size: 0.55rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  padding: 8px 16px;
+  padding: 6px 12px;
   border-radius: 3px;
+  white-space: nowrap;
   transition: background 0.2s, color 0.2s;
 }
 
