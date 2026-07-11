@@ -35,7 +35,7 @@
   <meta name="apple-mobile-web-app-title" content="Sendera" />
   <meta name="theme-color" content="#1a1510" />
   <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
 
@@ -403,6 +403,8 @@
         if (ib === -1) return -1;
         return ia - ib;
       });
+
+      renderColecciones(catsOrdenadas);
 
       const cont = document.getElementById('categorias-firebase');
       cont.innerHTML = catsOrdenadas.map(([cat, prods]) => {
