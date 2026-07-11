@@ -339,12 +339,13 @@
         const foto = fotosColecciones[cat] || (prods || []).flatMap(p => (p.variantes || []).map(v => v.foto).filter(Boolean))[0];
         const pos = posicionesColecciones[cat] || '50% 50%';
         const orientacion = orientacionesColecciones[cat] || '';
+        const alturaStyle = orientacion === 'vertical' ? 'min-height:240px;' : orientacion === 'horizontal' ? 'min-height:110px;' : '';
         const solidBg = COLECCION_BG_FALLBACK[idx % COLECCION_BG_FALLBACK.length];
         const catSlug = cat.replace(/'/g, "\\'");
         return `
-          <a class="coleccion-card${orientacion ? ' orientacion-' + orientacion : ''}" href="#productos"
+          <a class="coleccion-card" href="#productos"
              onclick="event.preventDefault();irAColeccion('${catSlug}');"
-             style="${foto ? '' : 'background:' + solidBg + ';'}">
+             style="${foto ? '' : 'background:' + solidBg + ';'}${alturaStyle}">
             ${foto ? `<img class="coleccion-bg" src="${foto}" alt="${cat}" style="object-position:${pos}" />` : ''}
             <div class="coleccion-overlay"></div>
             <div class="coleccion-card-content">
