@@ -325,6 +325,8 @@ function checkStockOnLoad() {
       if (qtyControl) {
         qtyControl.innerHTML = '<span style="font-size:0.72rem;color:#e74c3c;letter-spacing:0.08em;text-transform:uppercase;padding:8px 6px;">Sin stock</span>';
       }
+      const grid = card.closest('.productos-grid');
+      if (grid) grid.appendChild(card);
     }
   });
 }
