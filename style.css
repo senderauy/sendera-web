@@ -361,6 +361,7 @@ nav a:hover {
 }
 
 @media (max-width: 768px) {
+  .colecciones-section { padding: 48px 16px 32px; }
   .colecciones-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
