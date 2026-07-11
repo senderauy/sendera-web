@@ -340,7 +340,7 @@
         const foto = fotosColecciones[cat] || (prods || []).flatMap(p => (p.variantes || []).map(v => v.foto).filter(Boolean))[0];
         const pos = posicionesColecciones[cat] || '50% 50%';
         const orientacion = orientacionesColecciones[cat] || '';
-        const alturaStyle = orientacion === 'vertical' ? 'min-height:240px;' : orientacion === 'horizontal' ? 'min-height:110px;' : '';
+        const alturaStyle = orientacion === 'vertical' ? 'aspect-ratio:3/4;' : orientacion === 'horizontal' ? 'aspect-ratio:16/9;' : '';
         const solidBg = COLECCION_BG_FALLBACK[idx % COLECCION_BG_FALLBACK.length];
         const catSlug = cat.replace(/'/g, "\\'");
         return `

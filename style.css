@@ -280,6 +280,7 @@ nav a:hover {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 12px;
+  align-items: start;
 }
 
 .coleccion-card {
@@ -289,14 +290,16 @@ nav a:hover {
   text-decoration: none;
   display: block;
   border-radius: 8px;
-  min-height: 240px;
+  aspect-ratio: 4/3;
+  min-height: 200px;
   grid-column: span 2;
   transition: transform 0.3s;
 }
 
 .coleccion-card:nth-child(n+4) {
   grid-column: span 3;
-  min-height: 320px;
+  aspect-ratio: 16/9;
+  min-height: unset;
 }
 
 .coleccion-card img.coleccion-bg {
@@ -346,8 +349,8 @@ nav a:hover {
   margin-bottom: 8px;
 }
 
-.coleccion-card.orientacion-vertical { min-height: 340px; }
-.coleccion-card.orientacion-horizontal { min-height: 180px; }
+.coleccion-card.orientacion-vertical { aspect-ratio: 3/4 !important; min-height: unset; }
+.coleccion-card.orientacion-horizontal { aspect-ratio: 16/9 !important; min-height: unset; }
 
 .coleccion-btn {
   display: inline-block;
@@ -369,12 +372,9 @@ nav a:hover {
   .colecciones-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
-    align-items: start;
   }
-  .coleccion-card { min-height: 160px; grid-column: span 1 !important; }
-  .coleccion-card:nth-child(n+4) { min-height: 160px; }
-  .coleccion-card.orientacion-vertical { min-height: 240px !important; }
-  .coleccion-card.orientacion-horizontal { min-height: 110px !important; }
+  .coleccion-card { aspect-ratio: 1/1; min-height: unset; grid-column: span 1 !important; }
+  .coleccion-card:nth-child(n+4) { aspect-ratio: 1/1; min-height: unset; }
   .colecciones-title { margin-bottom: 24px; }
   .coleccion-nombre { font-size: 0.78rem; margin-bottom: 0; font-weight: 700; }
   .coleccion-btn { display: none !important; }
