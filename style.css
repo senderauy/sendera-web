@@ -348,21 +348,15 @@ nav a:hover {
 
 .coleccion-btn {
   display: inline-block;
-  background: #fff;
-  color: var(--text-dark);
+  color: rgba(255,255,255,0.8);
   font-family: 'Montserrat', sans-serif;
-  font-size: 0.55rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 6px 12px;
-  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 500;
   white-space: nowrap;
-  transition: background 0.2s, color 0.2s;
+  transition: color 0.2s;
 }
 
 .coleccion-card:hover .coleccion-btn {
-  background: var(--green);
   color: #fff;
 }
 
