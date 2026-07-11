@@ -1293,6 +1293,13 @@ nav a:hover {
   }
 }
 
+@media (max-width: 640px) {
+  .subgrupo-titulo { margin-top: 28px; padding-top: 20px; }
+  .categoria-titulo { margin-top: 36px; padding-top: 24px; }
+  #categorias-firebase .categoria-titulo { margin-top: 36px; padding-top: 24px; }
+  .productos-grid { margin-bottom: 24px; }
+}
+
 /* RESPONSIVE */
 @media (max-width: 640px) {
   .navbar-inner {
