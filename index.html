@@ -301,14 +301,17 @@
     let catsExtraColecciones = [];
 
     let posicionesColecciones = {};
+    let orientacionesColecciones = {};
 
     db.ref('colecciones').on('value', snap => {
       fotosColecciones = {};
       posicionesColecciones = {};
+      orientacionesColecciones = {};
       const val = snap.val() || {};
       Object.entries(val).forEach(([cat, data]) => {
         if (data && data.foto) fotosColecciones[cat] = data.foto;
         if (data && data.posicion) posicionesColecciones[cat] = data.posicion;
+        if (data && data.orientacion) orientacionesColecciones[cat] = data.orientacion;
       });
       catsExtraColecciones = Object.keys(val);
       if (ultimosProductos.length) renderCategorias(ultimosProductos);
@@ -335,10 +338,11 @@
       grid.innerHTML = todasCats.map(([cat, prods], idx) => {
         const foto = fotosColecciones[cat] || (prods || []).flatMap(p => (p.variantes || []).map(v => v.foto).filter(Boolean))[0];
         const pos = posicionesColecciones[cat] || '50% 50%';
+        const orientacion = orientacionesColecciones[cat] || '';
         const solidBg = COLECCION_BG_FALLBACK[idx % COLECCION_BG_FALLBACK.length];
         const catSlug = cat.replace(/'/g, "\\'");
         return `
-          <a class="coleccion-card" href="#productos"
+          <a class="coleccion-card${orientacion ? ' orientacion-' + orientacion : ''}" href="#productos"
              onclick="event.preventDefault();irAColeccion('${catSlug}');"
              style="${foto ? '' : 'background:' + solidBg + ';'}">
             ${foto ? `<img class="coleccion-bg" src="${foto}" alt="${cat}" style="object-position:${pos}" />` : ''}

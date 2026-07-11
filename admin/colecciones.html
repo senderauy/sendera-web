@@ -275,6 +275,7 @@
   const ORDEN_CATS = ['Gorros Visera', 'Gorros Invierno', 'Buff', 'Riñoneras', 'Accesorios'];
   let fotosActuales = {};
   let posicionesActuales = {};
+  let orientacionesActuales = {};
   let catsConProductos = new Set();
   let todasLasCats = [];
 
@@ -318,6 +319,16 @@
               <button class="btn-url-cat" onclick="toggleUrl('${catId}')">🔗 URL</button>
               ${foto ? `<button class="btn-borrar-cat" onclick="borrarFoto('${cat}','${catId}')">✕ Quitar</button>` : ''}
               ${sinProd ? `<button class="btn-borrar-cat" onclick="eliminarColeccion('${cat}')">🗑 Eliminar</button>` : ''}
+            </div>
+            <div style="display:flex;gap:6px;margin-top:10px;">
+              <button onclick="setOrientacion('${cat}','parada')"
+                style="flex:1;padding:7px 4px;border-radius:7px;font-size:0.7rem;font-weight:600;cursor:pointer;border:1.5px solid ${(orientacionesActuales[cat]||'parada')==='parada'?'#507a3a':'#e8dfd2'};background:${(orientacionesActuales[cat]||'parada')==='parada'?'#507a3a':'#fff'};color:${(orientacionesActuales[cat]||'parada')==='parada'?'#fff':'#3a3026'};">
+                📱 Parada
+              </button>
+              <button onclick="setOrientacion('${cat}','acostada')"
+                style="flex:1;padding:7px 4px;border-radius:7px;font-size:0.7rem;font-weight:600;cursor:pointer;border:1.5px solid ${orientacionesActuales[cat]==='acostada'?'#507a3a':'#e8dfd2'};background:${orientacionesActuales[cat]==='acostada'?'#507a3a':'#fff'};color:${orientacionesActuales[cat]==='acostada'?'#fff':'#3a3026'};">
+                🖼 Acostada
+              </button>
             </div>
             <div class="url-input-wrap" id="url-wrap-${catId}">
               <input type="url" id="url-input-${catId}" placeholder="https://..." />
@@ -396,6 +407,10 @@
     db.ref('colecciones/' + cat + '/foto').remove();
   }
 
+  function setOrientacion(cat, valor) {
+    db.ref('colecciones/' + cat + '/orientacion').set(valor);
+  }
+
   function setFocalPoint(event, wrap, cat, catId) {
     const rect = wrap.getBoundingClientRect();
     const x = Math.round((event.clientX - rect.left) / rect.width * 100);
@@ -417,9 +432,11 @@
       const colVal = snap.val() || {};
       fotosActuales = {};
       posicionesActuales = {};
+      orientacionesActuales = {};
       Object.entries(colVal).forEach(([cat, data]) => {
         if (data && data.foto) fotosActuales[cat] = data.foto;
         if (data && data.posicion) posicionesActuales[cat] = data.posicion;
+        if (data && data.orientacion) orientacionesActuales[cat] = data.orientacion;
       });
 
       // Unión: categorías de productos + categorías creadas en Firebase
