@@ -376,8 +376,9 @@ nav a:hover {
   .coleccion-card.orientacion-vertical { min-height: 240px !important; }
   .coleccion-card.orientacion-horizontal { min-height: 110px !important; }
   .colecciones-title { margin-bottom: 24px; }
-  .coleccion-nombre { font-size: 0.9rem; margin-bottom: 4px; }
-  .coleccion-btn { display: none; }
+  .coleccion-nombre { font-size: 0.78rem; margin-bottom: 0; font-weight: 700; }
+  .coleccion-btn { display: none !important; }
+  .coleccion-card-content { padding: 8px 10px; }
 }
 
 /* CARDS */
