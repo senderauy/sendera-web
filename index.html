@@ -318,11 +318,12 @@
     });
 
     function irAColeccion(cat) {
-      document.getElementById('productos').scrollIntoView({ behavior: 'smooth' });
-      setTimeout(() => {
-        const btn = [...document.querySelectorAll('.filtro-cat-btn')].find(b => b.textContent.trim() === cat);
-        if (btn) btn.click();
-      }, 400);
+      const bloque = document.querySelector('.bloque-categoria[data-cat="' + cat + '"]');
+      if (bloque) {
+        bloque.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        document.getElementById('productos').scrollIntoView({ behavior: 'smooth' });
+      }
     }
 
     function renderColecciones(catsOrdenadas) {
