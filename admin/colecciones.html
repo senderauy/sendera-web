@@ -321,12 +321,12 @@
               ${sinProd ? `<button class="btn-borrar-cat" onclick="eliminarColeccion('${cat}')">🗑 Eliminar</button>` : ''}
             </div>
             <div style="display:flex;gap:6px;margin-top:10px;">
-              <button onclick="setOrientacion('${cat}','parada')"
-                style="flex:1;padding:7px 4px;border-radius:7px;font-size:0.7rem;font-weight:600;cursor:pointer;border:1.5px solid ${(orientacionesActuales[cat]||'parada')==='parada'?'#507a3a':'#e8dfd2'};background:${(orientacionesActuales[cat]||'parada')==='parada'?'#507a3a':'#fff'};color:${(orientacionesActuales[cat]||'parada')==='parada'?'#fff':'#3a3026'};">
+              <button onclick="setOrientacion('${cat}','vertical')"
+                style="flex:1;padding:7px 4px;border-radius:7px;font-size:0.7rem;font-weight:600;cursor:pointer;border:1.5px solid ${(orientacionesActuales[cat]||'vertical')==='vertical'?'#507a3a':'#e8dfd2'};background:${(orientacionesActuales[cat]||'vertical')==='vertical'?'#507a3a':'#fff'};color:${(orientacionesActuales[cat]||'vertical')==='vertical'?'#fff':'#3a3026'};">
                 📱 Parada
               </button>
-              <button onclick="setOrientacion('${cat}','acostada')"
-                style="flex:1;padding:7px 4px;border-radius:7px;font-size:0.7rem;font-weight:600;cursor:pointer;border:1.5px solid ${orientacionesActuales[cat]==='acostada'?'#507a3a':'#e8dfd2'};background:${orientacionesActuales[cat]==='acostada'?'#507a3a':'#fff'};color:${orientacionesActuales[cat]==='acostada'?'#fff':'#3a3026'};">
+              <button onclick="setOrientacion('${cat}','horizontal')"
+                style="flex:1;padding:7px 4px;border-radius:7px;font-size:0.7rem;font-weight:600;cursor:pointer;border:1.5px solid ${orientacionesActuales[cat]==='horizontal'?'#507a3a':'#e8dfd2'};background:${orientacionesActuales[cat]==='horizontal'?'#507a3a':'#fff'};color:${orientacionesActuales[cat]==='horizontal'?'#fff':'#3a3026'};">
                 🖼 Acostada
               </button>
             </div>
