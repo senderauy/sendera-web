@@ -854,6 +854,9 @@
       document.getElementById('res-icon').textContent = '🏔️';
       document.getElementById('res-titulo').textContent = '¡Gracias por tu compra!';
       document.getElementById('res-msg').innerHTML = 'Te avisaremos el estado de tu pedido.<br>¡Nos vemos en la aventura!';
+      const cupWrap = document.querySelector('.cupon-wrap');
+      if (cupWrap) cupWrap.style.display = 'none';
+      document.getElementById('cupon-msg').style.display = 'none';
     }
   }
 
