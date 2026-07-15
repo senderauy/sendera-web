@@ -834,6 +834,22 @@
         })
       }).catch(() => {});
     });
+    // Enviar WhatsApp al cliente
+    if (celular) {
+      const productosWA = pedidoData.items.map(i => `• ${i.name} - ${i.variant} x${i.qty}`).join('\n');
+      fetch('/api/send-whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: celular,
+          template: 'confirmacion_pedido',
+          cliente: nombre,
+          productos: productosWA,
+          total: pedido.total.toLocaleString(),
+          envio: pedidoData.envio?.label || '—'
+        })
+      }).catch(() => {});
+    }
   }
 
   // ── Mostrar resultado ─────────────────────────────────────

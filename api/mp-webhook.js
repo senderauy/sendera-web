@@ -137,6 +137,27 @@ export default async function handler(req, res) {
       console.error('Error enviando notificación push:', e);
     }
 
+    // Enviar WhatsApp al cliente
+    try {
+      if (orderTemp.celular) {
+        const productosWA = (orderTemp.productos || []).map(p => `• ${p.nombre} - ${p.variante} x${p.qty}`).join('\n');
+        await fetch('https://www.senderauy.com/api/send-whatsapp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: orderTemp.celular,
+            template: 'confirmacion_pedido',
+            cliente: orderTemp.cliente,
+            productos: productosWA,
+            total: orderTemp.total.toLocaleString(),
+            envio: orderTemp.envio || '—'
+          })
+        });
+      }
+    } catch (e) {
+      console.error('Error enviando WhatsApp:', e);
+    }
+
     return res.status(200).json({ ok: true });
   } catch (e) {
     console.error('Error en mp-webhook:', e);
