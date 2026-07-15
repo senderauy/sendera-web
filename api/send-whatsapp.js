@@ -7,13 +7,8 @@ function normalizePhone(raw) {
   return '598' + digits;
 }
 
-function envioMsg(envioLabel) {
-  if (!envioLabel) return '¡Nos ponemos en contacto pronto!';
-  const l = envioLabel.toLowerCase();
-  if (l.includes('interior'))  return 'Te avisaremos cuando sea despachado.';
-  if (l.includes('montevideo')) return 'Nos pondremos en contacto para coordinar la entrega.';
-  if (l.includes('pick up') || l.includes('pickup') || l.includes('retiro') || l.includes('cord')) return 'Nos pondremos en contacto para coordinar el retiro.';
-  return '¡Nos ponemos en contacto pronto!';
+function envioMsg() {
+  return ' ';
 }
 
 export default async function handler(req, res) {
