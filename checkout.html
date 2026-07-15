@@ -834,8 +834,8 @@
         })
       }).catch(() => {});
     });
-    // Enviar WhatsApp al cliente
-    if (celular) {
+    // Enviar WhatsApp al cliente (solo para transferencia — MP lo maneja el webhook)
+    if (celular && metodoPago === 'transferencia') {
       const productosWA = pedidoData.items.map(i => `• ${i.name} - ${i.variant} x${i.qty}`).join('\n');
       fetch('/api/send-whatsapp', {
         method: 'POST',
