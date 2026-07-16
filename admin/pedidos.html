@@ -145,6 +145,29 @@
     .lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 12px; box-shadow: 0 8px 40px rgba(0,0,0,0.5); }
     .lightbox-close { position: absolute; top: 20px; right: 24px; color: #fff; font-size: 2rem; cursor: pointer; line-height: 1; }
 
+    /* TABS */
+    .tabs-nav {
+      display: flex; gap: 4px; margin-bottom: 20px;
+      background: #fff; border: 1.5px solid #e8dfd2; border-radius: 14px;
+      padding: 6px; box-shadow: 0 2px 6px rgba(80,60,30,0.04);
+    }
+    .tab-btn {
+      flex: 1; padding: 10px 16px; border: none; cursor: pointer; border-radius: 10px;
+      font-family: 'Montserrat', sans-serif; font-size: 0.75rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em; transition: all 0.2s;
+      background: none; color: #9a8f82; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .tab-btn:hover { background: #f2ede6; color: #3a3026; }
+    .tab-btn.active { background: #507a3a; color: #fff; }
+    .tab-btn .tab-badge {
+      background: #e67e22; color: #fff; border-radius: 20px;
+      padding: 1px 8px; font-size: 0.68rem; font-weight: 700; min-width: 22px; text-align: center;
+      display: none;
+    }
+    .tab-btn.active .tab-badge { background: rgba(255,255,255,0.25); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
     @media (max-width: 700px) {
       .resumen { grid-template-columns: repeat(2, 1fr); }
       .nav-links, .btn-logout { display: none; }
@@ -199,24 +222,30 @@
     <span>Tenés <span class="alerta-num" id="alerta-transf-num">0</span> transferencia(s) por confirmar — verificá en Prex y actualizá el estado.</span>
   </div>
 
-  <!-- Filtros -->
-  <div class="filtros">
-    <button class="filtro-btn active" onclick="filtrar('todos', this)">Todos</button>
-    <button class="filtro-btn naranja" onclick="filtrar('pendiente-transferencia', this)">🏦 Transf. pendientes</button>
-    <button class="filtro-btn" onclick="filtrar('pendiente', this)">Pendientes</button>
-    <button class="filtro-btn" onclick="filtrar('confirmado', this)">Confirmados</button>
-    <button class="filtro-btn" onclick="filtrar('camino', this)">En camino</button>
-    <button class="filtro-btn" onclick="filtrar('entregado', this)">Entregados</button>
+  <!-- Tabs -->
+  <div class="tabs-nav">
+    <button class="tab-btn active" id="tab-btn-pedidos" onclick="cambiarTab('pedidos')">📦 Pedidos</button>
+    <button class="tab-btn" id="tab-btn-carritos" onclick="cambiarTab('carritos')">
+      🛒 Carritos abandonados
+      <span class="tab-badge" id="abandonados-count">0</span>
+    </button>
   </div>
 
-  <div id="pedidos-lista"></div>
-
-  <!-- Carritos abandonados -->
-  <div style="margin-top:40px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-      <h2 style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:#3a3026">🛒 Carritos abandonados</h2>
-      <span id="abandonados-count" style="background:#e67e22;color:#fff;border-radius:20px;padding:2px 10px;font-size:0.72rem;font-weight:700;display:none"></span>
+  <!-- Panel: Pedidos -->
+  <div class="tab-panel active" id="panel-pedidos">
+    <div class="filtros">
+      <button class="filtro-btn active" onclick="filtrar('todos', this)">Todos</button>
+      <button class="filtro-btn naranja" onclick="filtrar('pendiente-transferencia', this)">🏦 Transf. pendientes</button>
+      <button class="filtro-btn" onclick="filtrar('pendiente', this)">Pendientes</button>
+      <button class="filtro-btn" onclick="filtrar('confirmado', this)">Confirmados</button>
+      <button class="filtro-btn" onclick="filtrar('camino', this)">En camino</button>
+      <button class="filtro-btn" onclick="filtrar('entregado', this)">Entregados</button>
     </div>
+    <div id="pedidos-lista"></div>
+  </div>
+
+  <!-- Panel: Carritos abandonados -->
+  <div class="tab-panel" id="panel-carritos">
     <p style="font-size:0.75rem;color:#9a8f82;margin-bottom:16px">Clientes que llegaron al checkout pero no completaron la compra.</p>
     <div id="abandonados-lista"></div>
   </div>
@@ -242,6 +271,13 @@
 <script>
   if (!localStorage.getItem('sendera_admin')) window.location.href = 'login.html';
   function logout() { localStorage.removeItem('sendera_admin'); window.location.href = 'login.html'; }
+
+  function cambiarTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-btn-' + tab).classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+  }
 
   // ── Notificaciones push ───────────────────────────────────
   const VAPID_PUBLIC_KEY = 'BA4NqXXi5tqqH2ZT6Yg8mx35MAAC_EJRgo-7-JpynTGImlQua3mAcryr4hNPlh0kIFjeMWxUJtmQXoOrmbxmMOQ';
