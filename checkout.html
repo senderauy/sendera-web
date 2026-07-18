@@ -437,6 +437,12 @@
     window.location.href = 'index.html';
   }
 
+  // Pre-rellenar nombre y celular guardados al armar el carrito
+  window.addEventListener('DOMContentLoaded', function() {
+    if (pedidoData?.cliente) document.getElementById('ch-nombre').value = pedidoData.cliente;
+    if (pedidoData?.celular) document.getElementById('ch-celular').value = pedidoData.celular;
+  });
+
   // ── Render resumen ────────────────────────────────────────
   function renderResumen() {
     const { items, envio, cliente, celular } = pedidoData;
