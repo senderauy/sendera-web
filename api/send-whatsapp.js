@@ -7,12 +7,15 @@ function normalizePhone(raw) {
   return '598' + digits;
 }
 
+const AVISO_AUTOMATICO = '⚠️ Este es un mensaje automático. Para consultas escribinos al 095 290 959.';
+
 function envioMsg(envio) {
   const e = String(envio || '').toLowerCase();
-  if (e.includes('interior')) return 'Te avisaremos cuando sea despachado. 📦';
-  if (e.includes('pick up') || e.includes('retiro')) return 'Nos contactamos para coordinar el retiro. 🏔️';
-  if (e.includes('montevideo')) return 'Nos contactamos para coordinar la entrega. 🚴';
-  return ' ';
+  let msg = '';
+  if (e.includes('interior')) msg = 'Te avisaremos cuando sea despachado. 📦';
+  else if (e.includes('pick up') || e.includes('retiro')) msg = 'Nos contactamos para coordinar el retiro. 🏔️';
+  else if (e.includes('montevideo')) msg = 'Nos contactamos para coordinar la entrega. 🚴';
+  return (msg ? msg + '\n\n' : '') + AVISO_AUTOMATICO;
 }
 
 export default async function handler(req, res) {
