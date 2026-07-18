@@ -822,6 +822,23 @@
     db.ref('pedidos').push(pedido);
     localStorage.removeItem('sendera_checkout');
     eliminarCarritoAbandonado();
+    // Enviar email al cliente si lo proporcionó
+    const emailEl = document.getElementById('ch-email');
+    const emailCliente = emailEl ? emailEl.value.trim() : '';
+    if (emailCliente) {
+      const productosMsg = pedidoData.items.map(i => `• ${i.name} - ${i.variant} x${i.qty}`).join('\n');
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: emailCliente,
+          cliente: nombre,
+          productos: productosMsg,
+          total: calcularTotal().toLocaleString(),
+          envio: pedidoData.envio?.label || '—'
+        })
+      }).catch(() => {});
+    }
     // Enviar notificación push
     db.ref('push_subscriptions').once('value', snap => {
       const subscriptions = Object.values(snap.val() || {});
