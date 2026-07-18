@@ -823,15 +823,13 @@
     localStorage.removeItem('sendera_checkout');
     eliminarCarritoAbandonado();
     // Enviar email al cliente si lo proporcionó
-    const emailEl = document.getElementById('ch-email');
-    const emailCliente = emailEl ? emailEl.value.trim() : '';
-    if (emailCliente) {
+    if (email) {
       const productosMsg = pedidoData.items.map(i => `• ${i.name} - ${i.variant} x${i.qty}`).join('\n');
       fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          to: emailCliente,
+          to: email,
           cliente: nombre,
           productos: productosMsg,
           total: calcularTotal().toLocaleString(),
