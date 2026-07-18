@@ -1324,12 +1324,13 @@ nav a:hover {
   }
 
   .logo-wrap {
-    height: 38px;
+    height: auto;
+    overflow: visible;
   }
 
   .logo {
-    height: 92px;
-    margin-top: -17px;
+    height: 54px;
+    margin-top: 0;
   }
 
   nav {
