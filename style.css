@@ -967,8 +967,8 @@ nav a:hover {
   max-height: 85vh;
   display: flex;
   flex-direction: column;
-  background: #1e1a17;
-  border: 1px solid rgba(201,176,122,0.25);
+  background: #faf7f3;
+  border: 1px solid #e0d8cc;
   z-index: 199;
   display: flex;
   flex-direction: column;
@@ -976,7 +976,7 @@ nav a:hover {
   opacity: 0;
   pointer-events: none;
   transition: all 0.3s;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  box-shadow: 0 8px 40px rgba(60,40,20,0.18);
 }
 
 #cart-modal.open {
@@ -991,20 +991,20 @@ nav a:hover {
   justify-content: space-between;
   align-items: center;
   padding: 18px 20px;
-  border-bottom: 1px solid rgba(201,176,122,0.15);
+  border-bottom: 1px solid #ede5d8;
 }
 
 .cart-header h3 {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.3rem;
-  color: var(--gold-light);
+  color: #2a2218;
   letter-spacing: 0.06em;
 }
 
 .cart-close {
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: #9a8f82;
   font-size: 1rem;
   cursor: pointer;
 }
@@ -1017,10 +1017,10 @@ nav a:hover {
 }
 #cart-items::-webkit-scrollbar { width: 3px; }
 #cart-items::-webkit-scrollbar-track { background: transparent; }
-#cart-items::-webkit-scrollbar-thumb { background: rgba(201,176,122,0.2); border-radius: 2px; }
+#cart-items::-webkit-scrollbar-thumb { background: #d0c8bc; border-radius: 2px; }
 
 .cart-empty {
-  color: var(--text-muted);
+  color: #9a8f82;
   font-size: 0.88rem;
   text-align: center;
   padding: 20px 0;
@@ -1031,7 +1031,7 @@ nav a:hover {
   align-items: center;
   gap: 10px;
   padding: 10px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid #f0ebe3;
 }
 
 .cart-item-info {
@@ -1041,13 +1041,13 @@ nav a:hover {
 }
 
 .cart-item-name {
-  color: var(--text);
+  color: #2a2218;
   font-size: 0.85rem;
   font-weight: 500;
 }
 
 .cart-item-variant {
-  color: var(--text-muted);
+  color: #9a8f82;
   font-size: 0.75rem;
 }
 
@@ -1058,9 +1058,9 @@ nav a:hover {
 }
 
 .cart-item-controls button {
-  background: rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.06);
   border: none;
-  color: var(--text);
+  color: #2a2218;
   width: 24px;
   height: 24px;
   cursor: pointer;
@@ -1068,18 +1068,20 @@ nav a:hover {
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 4px;
 }
 
 .cart-item-controls span {
-  color: var(--text);
+  color: #2a2218;
   font-size: 0.85rem;
   min-width: 16px;
   text-align: center;
 }
 
 .cart-item-price {
-  color: var(--gold-light);
+  color: #2a2218;
   font-size: 0.88rem;
+  font-weight: 600;
   min-width: 50px;
   text-align: right;
 }
@@ -1087,7 +1089,7 @@ nav a:hover {
 .cart-item-remove {
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: #9a8f82;
   cursor: pointer;
   font-size: 0.75rem;
   padding: 4px;
@@ -1095,22 +1097,21 @@ nav a:hover {
 
 .cart-footer {
   padding: 16px 20px;
-  border-top: 1px solid rgba(201,176,122,0.15);
+  border-top: 1px solid #ede5d8;
   overflow-y: auto;
   flex: 1;
 }
 .cart-footer::-webkit-scrollbar { width: 3px; }
 .cart-footer::-webkit-scrollbar-track { background: transparent; }
-.cart-footer::-webkit-scrollbar-thumb { background: rgba(201,176,122,0.2); border-radius: 2px; }
+.cart-footer::-webkit-scrollbar-thumb { background: #d0c8bc; border-radius: 2px; }
 
 .cart-total-row {
   display: flex;
   justify-content: space-between;
   margin-bottom: 16px;
-  font-size: 1rem;
-  color: var(--gold-light);
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.2rem;
+  color: #2a2218;
 }
 
 .cart-form {
@@ -1121,29 +1122,30 @@ nav a:hover {
 }
 
 .cart-form input {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(201,176,122,0.2);
-  color: var(--text);
+  background: #fff;
+  border: 1px solid #e0d8cc;
+  color: #2a2218;
   padding: 10px 14px;
   font-size: 0.85rem;
   font-family: 'Montserrat', sans-serif;
   outline: none;
+  border-radius: 8px;
   transition: border-color 0.2s;
 }
 
 .cart-form input:focus {
-  border-color: var(--gold);
+  border-color: #507a3a;
 }
 
 .cart-form input::placeholder {
-  color: var(--text-muted);
+  color: #b0a598;
 }
 
 .btn-send-order {
   width: 100%;
   padding: 13px;
-  background-color: var(--gold);
-  color: var(--darker);
+  background-color: #507a3a;
+  color: #fff;
   border: none;
   font-family: 'Montserrat', sans-serif;
   font-size: 0.8rem;
@@ -1152,10 +1154,11 @@ nav a:hover {
   text-transform: uppercase;
   cursor: pointer;
   transition: background 0.2s;
+  border-radius: 10px;
 }
 
 .btn-send-order:hover {
-  background-color: var(--gold-light);
+  background-color: #3d5e2c;
 }
 
 .btn-mp {
@@ -1171,13 +1174,14 @@ nav a:hover {
   text-transform: uppercase;
   cursor: pointer;
   margin-top: 10px;
+  border-radius: 10px;
   transition: background 0.2s;
 }
 .btn-mp:hover { background-color: #007dc1; }
 .btn-mp:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .cart-note {
-  color: var(--text-muted);
+  color: #9a8f82;
   font-size: 0.74rem;
   text-align: center;
   margin-top: 10px;
@@ -1190,49 +1194,52 @@ nav a:hover {
 }
 .envio-titulo {
   font-size: 0.72rem;
-  color: var(--gold);
+  color: #7a6e62;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   margin-bottom: 10px;
-  font-weight: 500;
+  font-weight: 600;
 }
 .envio-opcion {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border: 1px solid rgba(201,176,122,0.12);
+  border: 1px solid #e0d8cc;
+  border-radius: 8px;
   margin-bottom: 6px;
   cursor: pointer;
   transition: border-color 0.2s;
+  background: #fff;
 }
-.envio-opcion:hover { border-color: rgba(201,176,122,0.35); }
-.envio-opcion input[type="radio"] { accent-color: #c9b07a; flex-shrink: 0; }
+.envio-opcion:hover { border-color: #507a3a; }
+.envio-opcion input[type="radio"] { accent-color: #507a3a; flex-shrink: 0; }
 .envio-info { display: flex; flex-direction: column; flex: 1; }
-.envio-nombre { font-size: 0.82rem; color: #f0ebe3; }
-.envio-detalle { font-size: 0.7rem; color: var(--text-muted); margin-top: 1px; }
-.envio-precio { font-size: 0.82rem; color: var(--gold); font-weight: 500; white-space: nowrap; }
+.envio-nombre { font-size: 0.82rem; color: #2a2218; }
+.envio-detalle { font-size: 0.7rem; color: #9a8f82; margin-top: 1px; }
+.envio-precio { font-size: 0.82rem; color: #507a3a; font-weight: 600; white-space: nowrap; }
 
 .cart-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem; }
-.total-final { border-top: 1px solid rgba(201,176,122,0.2); padding-top: 10px; margin-top: 6px; margin-bottom: 14px; font-weight: 600; font-size: 1rem; color: var(--gold); }
-.envio-row { color: var(--text-muted); font-size: 0.8rem; }
+.total-final { border-top: 1px solid #e0d8cc; padding-top: 10px; margin-top: 6px; margin-bottom: 14px; font-weight: 700; font-size: 1rem; color: #2a2218; }
+.envio-row { color: #9a8f82; font-size: 0.8rem; }
 
-.envio-campos { padding: 10px 12px 4px; background: rgba(255,255,255,0.02); border: 1px solid rgba(201,176,122,0.1); border-top: none; margin-bottom: 6px; }
+.envio-campos { padding: 10px 12px 4px; background: #f5f0ea; border: 1px solid #e0d8cc; border-top: none; border-radius: 0 0 8px 8px; margin-bottom: 6px; }
 .envio-input {
   width: 100%; padding: 9px 12px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(201,176,122,0.2);
-  color: #f0ebe3;
+  background: #fff;
+  border: 1px solid #e0d8cc;
+  color: #2a2218;
   font-family: 'Montserrat', sans-serif;
   font-size: 0.82rem;
   outline: none;
+  border-radius: 6px;
   margin-bottom: 8px;
   transition: border-color 0.2s;
 }
-.envio-input:focus { border-color: #c9b07a; }
+.envio-input:focus { border-color: #507a3a; }
 .envio-radio-group { display: flex; gap: 16px; margin-bottom: 8px; }
-.envio-sub { font-size: 0.78rem; color: #a89880; display: flex; align-items: center; gap: 6px; cursor: pointer; }
-.envio-sub input { accent-color: #c9b07a; }
+.envio-sub { font-size: 0.78rem; color: #7a6e62; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.envio-sub input { accent-color: #507a3a; }
 
 @media (max-width: 420px) {
   #cart-modal { width: calc(100vw - 32px); right: 16px; }
