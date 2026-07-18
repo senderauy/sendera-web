@@ -80,7 +80,18 @@
     .total-row.final { font-size: 1.1rem; font-weight: 700; color: #2a2218; margin-top: 12px; padding-top: 12px; border-top: 1.5px solid #e0d8cc; }
     .total-row.descuento { color: #507a3a; font-weight: 600; }
 
-    .cupon-wrap { padding: 12px 24px; border-top: 1.5px solid #ede5d8; display: flex; gap: 8px; }
+    .cupon-section {
+      margin: 16px 0 12px;
+      background: #faf8f4;
+      border: 1.5px solid #e8dfd2;
+      border-radius: 10px;
+      padding: 14px 16px 8px;
+    }
+    .cupon-label {
+      font-size: 0.75rem; font-weight: 600; color: #7a6e62;
+      letter-spacing: 0.04em; margin-bottom: 10px;
+    }
+    .cupon-wrap { display: flex; gap: 8px; }
     .cupon-input {
       flex: 1; border: 1.5px solid #e0d8cc; border-radius: 8px;
       padding: 9px 14px; font-size: 0.82rem; font-family: inherit;
@@ -95,7 +106,7 @@
       font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.2s;
     }
     .cupon-btn:hover { background: #5e4428; }
-    .cupon-msg { padding: 0 24px 10px; font-size: 0.78rem; min-height: 18px; }
+    .cupon-msg { padding: 6px 2px 2px; font-size: 0.78rem; min-height: 18px; }
 
     .envio-info {
       padding: 14px 24px;
@@ -390,11 +401,14 @@
             </div>
           </div>
 
-          <div class="cupon-wrap">
-            <input class="cupon-input" id="cupon-input" type="text" placeholder="Código de descuento" />
-            <button class="cupon-btn" onclick="aplicarCupon()">Aplicar</button>
+          <div class="cupon-section">
+            <div class="cupon-label">🏷️ ¿Tenés un código de descuento?</div>
+            <div class="cupon-wrap">
+              <input class="cupon-input" id="cupon-input" type="text" placeholder="Ingresá tu código" />
+              <button class="cupon-btn" onclick="aplicarCupon()">Aplicar</button>
+            </div>
+            <div class="cupon-msg" id="cupon-msg"></div>
           </div>
-          <div class="cupon-msg" id="cupon-msg"></div>
 
           <button class="btn-transferi" id="btn-transferi" onclick="confirmarTransferencia()">
             ✅ Ya transferí
