@@ -78,6 +78,7 @@ export default async function handler(req, res) {
     const orderTemp = {
       cliente: body.cliente,
       celular: String(body.celular),
+      email: body.email || '',
       productos: body.items.map(i => ({ nombre: i.nombre, variante: i.variante, qty: i.qty, precio: i.precio })),
       envio: body.envio?.label || '—',
       total: parseFloat(body.total) || 0,

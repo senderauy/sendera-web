@@ -782,7 +782,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cliente: nombre, celular,
+          cliente: nombre, celular, email,
           items: pedidoData.items.map(i => ({ nombre: i.name, variante: i.variant, qty: parseInt(i.qty), precio: parseFloat(i.precio) })),
           envio: pedidoData.envio,
           carritoId: carritoAbandonadoId || '',
@@ -834,21 +834,37 @@
         })
       }).catch(() => {});
     });
-    // Enviar WhatsApp al cliente (solo para transferencia — MP lo maneja el webhook)
-    if (celular && metodoPago === 'transferencia') {
-      const productosWA = pedidoData.items.map(i => `• ${i.name} - ${i.variant} x${i.qty}`).join('\n');
-      fetch('/api/send-whatsapp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: celular,
-          template: 'confirmacion_pedido',
-          cliente: nombre,
-          productos: productosWA,
-          total: pedido.total.toLocaleString(),
-          envio: pedidoData.envio?.label || '—'
-        })
-      }).catch(() => {});
+    // Enviar WhatsApp y email al cliente (solo para transferencia — MP lo maneja el webhook)
+    if (metodoPago === 'transferencia') {
+      const productosMsg = pedidoData.items.map(i => `• ${i.name} - ${i.variant} x${i.qty}`).join('\n');
+      const envioLabel = pedidoData.envio?.label || '—';
+      if (celular) {
+        fetch('/api/send-whatsapp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: celular,
+            template: 'confirmacion_pedido',
+            cliente: nombre,
+            productos: productosMsg,
+            total: pedido.total.toLocaleString(),
+            envio: envioLabel
+          })
+        }).catch(() => {});
+      }
+      if (email) {
+        fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: email,
+            cliente: nombre,
+            productos: productosMsg,
+            total: pedido.total.toLocaleString(),
+            envio: envioLabel
+          })
+        }).catch(() => {});
+      }
     }
   }
 

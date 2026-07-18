@@ -137,10 +137,10 @@ export default async function handler(req, res) {
       console.error('Error enviando notificación push:', e);
     }
 
-    // Enviar WhatsApp al cliente
+    // Enviar WhatsApp y email al cliente
+    const productosMsg = (orderTemp.productos || []).map(p => `• ${p.nombre} - ${p.variante} x${p.qty}`).join('\n');
     try {
       if (orderTemp.celular) {
-        const productosWA = (orderTemp.productos || []).map(p => `• ${p.nombre} - ${p.variante} x${p.qty}`).join('\n');
         await fetch('https://www.senderauy.com/api/send-whatsapp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -148,7 +148,7 @@ export default async function handler(req, res) {
             to: orderTemp.celular,
             template: 'confirmacion_pedido',
             cliente: orderTemp.cliente,
-            productos: productosWA,
+            productos: productosMsg,
             total: orderTemp.total.toLocaleString(),
             envio: orderTemp.envio || '—'
           })
@@ -156,6 +156,23 @@ export default async function handler(req, res) {
       }
     } catch (e) {
       console.error('Error enviando WhatsApp:', e);
+    }
+    try {
+      if (orderTemp.email) {
+        await fetch('https://www.senderauy.com/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: orderTemp.email,
+            cliente: orderTemp.cliente,
+            productos: productosMsg,
+            total: orderTemp.total.toLocaleString(),
+            envio: orderTemp.envio || '—'
+          })
+        });
+      }
+    } catch (e) {
+      console.error('Error enviando email:', e);
     }
 
     return res.status(200).json({ ok: true });
