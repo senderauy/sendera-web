@@ -1201,7 +1201,7 @@ nav a:hover {
 }
 .envio-titulo {
   font-size: 0.72rem;
-  color: #7a5c3a;
+  color: #507a3a;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   margin-bottom: 10px;
@@ -1219,15 +1219,15 @@ nav a:hover {
   transition: border-color 0.2s;
   background: #fff;
 }
-.envio-opcion:hover { border-color: #7a5c3a; }
-.envio-opcion input[type="radio"] { accent-color: #7a5c3a; flex-shrink: 0; }
+.envio-opcion:hover { border-color: #507a3a; }
+.envio-opcion input[type="radio"] { accent-color: #507a3a; flex-shrink: 0; }
 .envio-info { display: flex; flex-direction: column; flex: 1; }
 .envio-nombre { font-size: 0.82rem; color: #2a2218; }
 .envio-detalle { font-size: 0.7rem; color: #9a8f82; margin-top: 1px; }
-.envio-precio { font-size: 0.82rem; color: #7a5c3a; font-weight: 600; white-space: nowrap; }
+.envio-precio { font-size: 0.82rem; color: #507a3a; font-weight: 600; white-space: nowrap; }
 
 .cart-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem; }
-.total-final { border-top: 1px solid #e0d8cc; padding-top: 10px; margin-top: 6px; margin-bottom: 14px; font-weight: 700; font-size: 1rem; color: #7a5c3a; }
+.total-final { border-top: 1px solid #e0d8cc; padding-top: 10px; margin-top: 6px; margin-bottom: 14px; font-weight: 700; font-size: 1rem; color: #507a3a; }
 .envio-row { color: #9a8f82; font-size: 0.8rem; }
 
 .envio-campos { padding: 10px 12px 4px; background: #f5f0ea; border: 1px solid #e0d8cc; border-top: none; border-radius: 0 0 8px 8px; margin-bottom: 6px; }
@@ -1243,10 +1243,10 @@ nav a:hover {
   margin-bottom: 8px;
   transition: border-color 0.2s;
 }
-.envio-input:focus { border-color: #7a5c3a; }
+.envio-input:focus { border-color: #507a3a; }
 .envio-radio-group { display: flex; gap: 16px; margin-bottom: 8px; }
 .envio-sub { font-size: 0.78rem; color: #7a6e62; display: flex; align-items: center; gap: 6px; cursor: pointer; }
-.envio-sub input { accent-color: #7a5c3a; }
+.envio-sub input { accent-color: #507a3a; }
 
 @media (max-width: 420px) {
   #cart-modal { width: calc(100vw - 32px); right: 16px; }
