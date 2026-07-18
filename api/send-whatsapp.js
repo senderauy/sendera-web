@@ -7,7 +7,11 @@ function normalizePhone(raw) {
   return '598' + digits;
 }
 
-function envioMsg() {
+function envioMsg(envio) {
+  const e = String(envio || '').toLowerCase();
+  if (e.includes('interior')) return 'Te avisaremos cuando sea despachado. 📦';
+  if (e.includes('pick up') || e.includes('retiro')) return 'Nos contactamos para coordinar el retiro. 🏔️';
+  if (e.includes('montevideo')) return 'Nos contactamos para coordinar la entrega. 🚴';
   return ' ';
 }
 
