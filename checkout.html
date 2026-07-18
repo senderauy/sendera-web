@@ -293,11 +293,6 @@
       <span>📦</span>
       <span id="envio-detalle">—</span>
     </div>
-    <div class="cupon-wrap">
-      <input class="cupon-input" id="cupon-input" type="text" placeholder="Código de descuento" />
-      <button class="cupon-btn" onclick="aplicarCupon()">Aplicar</button>
-    </div>
-    <div class="cupon-msg" id="cupon-msg"></div>
     <div class="resumen-totales">
       <div class="total-row"><span>Subtotal</span><span id="subtotal-val">$0</span></div>
       <div class="total-row" id="envio-row" style="display:none"><span>Envío</span><span id="envio-val">$0</span></div>
@@ -394,6 +389,12 @@
               <img id="comprobante-img" src="" alt="Comprobante" />
             </div>
           </div>
+
+          <div class="cupon-wrap">
+            <input class="cupon-input" id="cupon-input" type="text" placeholder="Código de descuento" />
+            <button class="cupon-btn" onclick="aplicarCupon()">Aplicar</button>
+          </div>
+          <div class="cupon-msg" id="cupon-msg"></div>
 
           <button class="btn-transferi" id="btn-transferi" onclick="confirmarTransferencia()">
             ✅ Ya transferí
