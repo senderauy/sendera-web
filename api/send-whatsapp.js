@@ -15,7 +15,7 @@ function envioMsg(envio) {
   if (e.includes('interior')) msg = 'Te avisaremos cuando sea despachado. 📦';
   else if (e.includes('pick up') || e.includes('retiro')) msg = 'Nos contactamos para coordinar el retiro. 🏔️';
   else if (e.includes('montevideo')) msg = 'Nos contactamos para coordinar la entrega. 🚴';
-  return (msg ? msg + '\n\n' : '') + AVISO_AUTOMATICO;
+  return (msg ? msg + ' | ' : '') + AVISO_AUTOMATICO;
 }
 
 export default async function handler(req, res) {
