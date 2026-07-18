@@ -332,10 +332,6 @@ function checkStockOnLoad() {
 }
 
 async function pagarMP() {
-  const name = document.getElementById('customer-name').value.trim();
-  const phone = document.getElementById('customer-phone').value.trim();
-
-  if (!name || !phone) { alert('Por favor completá tu nombre y celular.'); return; }
   if (cart.length === 0) { alert('Tu carrito está vacío.'); return; }
 
   const envio = getEnvio();
@@ -363,8 +359,6 @@ async function pagarMP() {
 
   // Guardar datos en sessionStorage y redirigir a checkout.html
   const checkoutData = {
-    cliente: name,
-    celular: phone,
     items: cart.map(i => ({ name: i.name, variant: i.variant, qty: i.qty, precio: i.price })),
     envio: { label: envioLabel, costo: envio.costo, tipo: envio.tipo }
   };

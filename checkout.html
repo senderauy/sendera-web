@@ -437,12 +437,6 @@
     window.location.href = 'index.html';
   }
 
-  // Pre-rellenar nombre y celular guardados al armar el carrito
-  window.addEventListener('DOMContentLoaded', function() {
-    if (pedidoData?.cliente) document.getElementById('ch-nombre').value = pedidoData.cliente;
-    if (pedidoData?.celular) document.getElementById('ch-celular').value = pedidoData.celular;
-  });
-
   // ── Render resumen ────────────────────────────────────────
   function renderResumen() {
     const { items, envio, cliente, celular } = pedidoData;
@@ -605,8 +599,8 @@
     const celular = document.getElementById('ch-celular').value.trim();
     const email = document.getElementById('ch-email').value.trim();
 
-    if (!nombre || !celular) {
-      alert('Por favor completá nombre y celular.');
+    if (!nombre || !celular || !email) {
+      alert('Por favor completá nombre, celular y email.');
       return;
     }
 
@@ -703,7 +697,8 @@
   async function confirmarTransferencia() {
     const nombre = document.getElementById('ch-nombre').value.trim();
     const celular = document.getElementById('ch-celular').value.trim();
-    if (!nombre || !celular) { alert('Por favor completá tu nombre y celular.'); return; }
+    const email = document.getElementById('ch-email').value.trim();
+    if (!nombre || !celular || !email) { alert('Por favor completá tu nombre, celular y email.'); return; }
 
     if (!comprobanteBase64) {
       alert('Por favor adjuntá el comprobante de la transferencia.');
@@ -778,7 +773,8 @@
   async function pagarConMP() {
     const nombre = document.getElementById('ch-nombre').value.trim();
     const celular = document.getElementById('ch-celular').value.trim();
-    if (!nombre || !celular) { alert('Por favor completá tu nombre y celular.'); return; }
+    const email = document.getElementById('ch-email').value.trim();
+    if (!nombre || !celular || !email) { alert('Por favor completá tu nombre, celular y email.'); return; }
 
     const btn = document.getElementById('btn-pagar-mp');
     btn.disabled = true; btn.innerHTML = '⏳ Procesando...';
@@ -809,8 +805,10 @@
   function guardarPedidoFirebase(estado, mpId, metodoPago = 'tarjeta') {
     const nombreEl = document.getElementById('ch-nombre');
     const celularEl = document.getElementById('ch-celular');
+    const emailEl = document.getElementById('ch-email');
     const nombre = (nombreEl && nombreEl.value.trim()) || localStorage.getItem('sendera_cliente_nombre') || '';
     const celular = (celularEl && celularEl.value.trim()) || localStorage.getItem('sendera_cliente_celular') || '';
+    const email = (emailEl && emailEl.value.trim()) || '';
     const pedido = {
       fecha: new Date().toISOString(),
       cliente: nombre, celular,
