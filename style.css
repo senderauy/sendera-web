@@ -176,7 +176,7 @@ nav a:hover {
 /* NOSOTROS */
 .nosotros {
   background: var(--darker);
-  padding: 100px 24px;
+  padding: 150px 24px;
 }
 
 .nosotros-inner {
@@ -184,7 +184,7 @@ nav a:hover {
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 64px;
+  gap: 80px;
   align-items: center;
 }
 
