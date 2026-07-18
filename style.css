@@ -57,7 +57,7 @@ body {
 .logo {
   height: 155px;
   width: auto;
-  margin-top: -24px;
+  margin-top: -27px;
   filter: invert(79%) sepia(30%) saturate(500%) hue-rotate(5deg) brightness(95%);
 }
 
