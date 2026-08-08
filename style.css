@@ -929,18 +929,18 @@ nav a:hover {
   bottom: 32px;
   right: 32px;
   z-index: 200;
-  background-color: var(--amber);
-  color: #fff;
+  background-color: var(--gold);
+  color: var(--darker);
   border: none;
   width: 58px;
   height: 58px;
   border-radius: 50%;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(200,134,26,0.5);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
   transition: transform 0.2s;
 }
 
