@@ -209,9 +209,14 @@ export default async function handler(req, res) {
       const reply = rawReply.replace(/\*/g, '');
       if (reply) {
         await sendWhatsAppReply(from, reply);
-        // Si el bot dio datos de transferencia, notificá al dueño
-        if (reply.includes('19467638')) {
-          await sendWhatsAppReply(OWNER_PHONE, `🛒 *Posible compra!* El cliente +${from} pidió datos de transferencia. Revisá la conversación en WhatsApp.`);
+        // Si el bot dio datos de pago, guardar lead en Firebase
+        if (reply.includes('19467638') || reply.toLowerCase().includes('mercadopago')) {
+          const lead = { phone: from, fecha: new Date().toISOString(), tipo: reply.includes('19467638') ? 'transferencia' : 'mercadopago' };
+          await fetch(`${FIREBASE_URL}/leads_whatsapp.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(lead),
+          }).catch(() => {});
         }
       }
     }
