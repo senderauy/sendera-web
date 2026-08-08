@@ -80,6 +80,7 @@ ENVÍOS:
 - Tiempo de entrega: el envío se realiza al día siguiente de la compra (tanto Montevideo como interior)
 
 POLÍTICA DE CAMBIOS: 15 días de cambio desde la compra.
+NO TENEMOS LOCAL FÍSICO: trabajamos 100% online. Las compras se hacen por sendera.uy o por este WhatsApp.
 FORMAS DE PAGO: MercadoPago o transferencia bancaria.
 SITIO WEB: sendera.uy
 INSTAGRAM: @sendera.uy
