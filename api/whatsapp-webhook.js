@@ -37,6 +37,29 @@ async function getHistorial(from) {
   }
 }
 
+async function extractOrderFromConversation(historial) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return null;
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 400,
+        system: `Analizá esta conversación de WhatsApp de una tienda deportiva uruguaya y extraé los datos de compra. Respondé ÚNICAMENTE con JSON válido, sin texto adicional. Formato: {"cliente":"nombre o Sin nombre","productos":[{"nombre":"nombre producto","variante":"color o talle","qty":1,"precio":0}],"total":0,"metodo_pago":"transferencia o mercadopago","envio":"Envío Montevideo, Envío interior o Pick up Cordón"}. Si no hay datos de compra claros, respondé: {"sinDatos":true}`,
+        messages: [{ role: 'user', content: JSON.stringify(historial) }],
+      }),
+    });
+    const data = await response.json();
+    const text = (data.content?.[0]?.text || '').trim();
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    return jsonMatch ? JSON.parse(jsonMatch[0]) : { sinDatos: true };
+  } catch {
+    return null;
+  }
+}
+
 async function saveHistorial(from, historial) {
   try {
     await fetch(`${FIREBASE_URL}/conversaciones/${from}.json`, {
@@ -237,6 +260,25 @@ export default async function handler(req, res) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ phone: from, comprobante: dataUri, tipo: 'comprobante', fechaComprobante: new Date().toISOString() }),
           }).catch(() => {});
+          // Intentar crear pedido extrayendo datos de la conversación
+          const historialComprobante = await getHistorial(from);
+          if (historialComprobante.length > 0) {
+            const orderData = await extractOrderFromConversation(historialComprobante);
+            if (orderData && !orderData.sinDatos && orderData.productos?.length > 0) {
+              await fetch(`${FIREBASE_URL}/pedidos.json`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  ...orderData,
+                  celular: from.replace(/^598/, '0'),
+                  fecha: new Date().toISOString(),
+                  estado: 'pendiente-transferencia',
+                  comprobante: dataUri,
+                  origen: 'whatsapp',
+                }),
+              }).catch(() => {});
+            }
+          }
           await sendWhatsAppReply(from, '¡Gracias por enviarnos el comprobante! 🙌 En breve nos comunicamos con vos para coordinar todo.');
         } catch (e) {
           console.error('Error guardando comprobante:', e);
