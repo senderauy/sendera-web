@@ -62,7 +62,7 @@ CARACTERÍSTICAS DE PRODUCTOS:
 - Riñonera Sendera: para senderismo y trekking
 - Riñonera Running: para trail y running, liviana
 - Medallero RUN: 30 cm, acero, color negro
-- Porta Celular: para running y trail
+- Porta Celular: va en el brazo, talle universal (entra cualquier celular), para running y trail
 - Todos los gorros son medida universal (talle único)
 
 ENVÍOS:
