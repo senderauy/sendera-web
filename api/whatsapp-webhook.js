@@ -200,7 +200,7 @@ export default async function handler(req, res) {
     const [productos, historialPrevio] = await Promise.all([getProductos(), getHistorial(from)]);
 
     if (historialPrevio.length === 0) {
-      const bienvenida = `¡Hola! Gracias por ponerte en contacto con nosotros ✨\n\nSoy Senderita, la asesora virtual de Sendera. Somos una tienda 100% online para que puedas acceder a nuestros productos de forma simple, rápida y segura.\n\n👉 Conocé todo en www.sendera.uy y encontrá lo que necesitás para tu próxima aventura!\n\nCualquier consulta, estoy para ayudarte.`;
+      const bienvenida = `¡Hola! Gracias por ponerte en contacto con nosotros ✨\n\nSoy Senderita, la asesora virtual de Sendera. Estoy para ayudarte con todo lo que necesites.\n\n📌 Envíos:\n📍 Montevideo: $200 a domicilio\n📍 Interior: por agencia, costo a cargo del comprador 🚛\n📍 Pick up en Cordón (Montevideo): gratis con coordinación previa 🏡\n\n¿En qué te puedo ayudar?`;
       await sendWhatsAppReply(from, bienvenida);
       await saveHistorial(from, [{ role: 'user', content: text }, { role: 'assistant', content: bienvenida }]);
     } else {
