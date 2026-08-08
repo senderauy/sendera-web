@@ -187,9 +187,30 @@ export default async function handler(req, res) {
 
     const from = message.from;
 
-    // Si el cliente manda una imagen, notificá al dueño (probablemente es un comprobante)
+    // Si el cliente manda una imagen, guardar como comprobante en Firebase
     if (message.type === 'image' || message.type === 'document') {
-      await sendWhatsAppReply(OWNER_PHONE, `📎 El cliente +${from} envió una imagen o comprobante. Revisá la conversación.`);
+      const mediaId = message.image?.id || message.document?.id;
+      const mimeType = message.image?.mime_type || message.document?.mime_type || 'image/jpeg';
+      if (mediaId) {
+        try {
+          const token = process.env.WHATSAPP_TOKEN;
+          const infoRes = await fetch(`https://graph.facebook.com/v21.0/${mediaId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const info = await infoRes.json();
+          const imgRes = await fetch(info.url, { headers: { 'Authorization': `Bearer ${token}` } });
+          const buffer = await imgRes.arrayBuffer();
+          const base64 = Buffer.from(buffer).toString('base64');
+          const dataUri = `data:${mimeType};base64,${base64}`;
+          await fetch(`${FIREBASE_URL}/leads_whatsapp.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: from, fecha: new Date().toISOString(), tipo: 'comprobante', comprobante: dataUri }),
+          }).catch(() => {});
+        } catch (e) {
+          console.error('Error guardando comprobante:', e);
+        }
+      }
       return res.status(200).end();
     }
 
