@@ -1,16 +1,59 @@
 const PHONE_NUMBER_ID = '1159269003943325';
+const FIREBASE_URL = 'https://sendera-34791-default-rtdb.firebaseio.com';
+const MAX_HISTORY = 10; // mensajes a recordar por conversación
 
-const SYSTEM_PROMPT = `Sos el asistente virtual de Sendera, una tienda de accesorios outdoor y trekking de Uruguay. Respondés consultas de clientes de manera amable y breve, en español rioplatense (Uruguay). Máximo 3-4 líneas por respuesta.
+async function getProductos() {
+  try {
+    const res = await fetch(`${FIREBASE_URL}/productos.json`);
+    const data = await res.json();
+    if (!data) return '';
+    const lines = [];
+    for (const prod of Object.values(data)) {
+      const nombre = prod.nombre || '';
+      const variantes = prod.variantes || [];
+      for (const v of variantes) {
+        if (!v || typeof v !== 'object') continue;
+        const color = v.color || v.nombre || '';
+        const precio = v.precio ? `$${v.precio}` : '';
+        const stock = v.stock === 0 ? ' [SIN STOCK]' : '';
+        lines.push(`- ${nombre}${color ? ' ' + color : ''}${precio ? ' — ' + precio : ''}${stock}`);
+      }
+    }
+    return lines.join('\n');
+  } catch {
+    return '';
+  }
+}
 
-PRODUCTOS DISPONIBLES:
-- Go One More (Blanco, Rosa, Verde, Violeta) — buff/cuello multifunción para running y trail
-- Trail Cap (Azul, Negro) — gorra trail running
-- Sunset Flower (Rojo/Amarillo, Gris/Verde) — vincha/banda
-- Gorro Lana Montaña (Negro, Azul, Rosa) — gorro de lana
-- Riñonera Sendera — para senderismo y trekking
-- Riñonera Running (Celeste, Negra) — para trail y running
-- Medallero RUN — 30 cm, acero, negro
-- Porta Celular — para running y trail
+async function getHistorial(from) {
+  try {
+    const res = await fetch(`${FIREBASE_URL}/conversaciones/${from}.json`);
+    const data = await res.json();
+    if (!data || !Array.isArray(data)) return [];
+    return data.slice(-MAX_HISTORY);
+  } catch {
+    return [];
+  }
+}
+
+async function saveHistorial(from, historial) {
+  try {
+    await fetch(`${FIREBASE_URL}/conversaciones/${from}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(historial.slice(-MAX_HISTORY)),
+    });
+  } catch {}
+}
+
+async function callClaude(from, texto, productos) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY no configurado');
+
+  const systemPrompt = `Sos el asistente virtual de Sendera, una tienda de accesorios outdoor y trekking de Uruguay. Respondés consultas de clientes de manera amable y breve, en español rioplatense (Uruguay). Máximo 3-4 líneas por respuesta.
+
+PRODUCTOS Y PRECIOS ACTUALES:
+${productos}
 
 ENVÍOS:
 - Montevideo: $200, entrega a domicilio
@@ -18,18 +61,17 @@ ENVÍOS:
 - Pick up en Cordón (Montevideo): gratis, con coordinación previa
 
 FORMAS DE PAGO: MercadoPago o transferencia bancaria.
-SITIO WEB: sendera.uy (productos y precios actualizados)
+SITIO WEB: sendera.uy
 CONTACTO HUMANO: 095 290 959
 
 Reglas:
-- Si no sabés algo con certeza, invitá a escribir al 095 290 959 o visitar sendera.uy.
-- Nunca inventes precios exactos ni stock disponible.
+- Respondés preguntas sobre productos, precios, envíos y pagos usando la info de arriba.
+- Si no sabés algo con certeza, invitá a escribir al 095 290 959.
 - Para comprar, dirigí a sendera.uy o al 095 290 959.
 - No respondas consultas ajenas a Sendera.`;
 
-async function callClaude(text) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY no configurado');
+  const historial = await getHistorial(from);
+  historial.push({ role: 'user', content: texto });
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -41,8 +83,8 @@ async function callClaude(text) {
     body: JSON.stringify({
       model: 'claude-opus-5',
       max_tokens: 400,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: text }],
+      system: systemPrompt,
+      messages: historial,
     }),
   });
 
@@ -52,7 +94,14 @@ async function callClaude(text) {
   }
 
   const data = await response.json();
-  return data.content?.[0]?.text || '';
+  const reply = data.content?.[0]?.text || '';
+
+  if (reply) {
+    historial.push({ role: 'assistant', content: reply });
+    await saveHistorial(from, historial);
+  }
+
+  return reply;
 }
 
 async function sendWhatsAppReply(to, text) {
@@ -80,12 +129,10 @@ async function sendWhatsAppReply(to, text) {
 }
 
 export default async function handler(req, res) {
-  // Verificación del webhook (Meta lo llama al registrar el endpoint)
   if (req.method === 'GET') {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
-
     if (mode === 'subscribe' && token === process.env.WHATSAPP_VERIFY_TOKEN) {
       return res.status(200).send(challenge);
     }
@@ -96,8 +143,6 @@ export default async function handler(req, res) {
 
   try {
     const value = req.body?.entry?.[0]?.changes?.[0]?.value;
-
-    // Ignorar actualizaciones de estado (recibido, leído, etc.)
     if (!value || value.statuses) return res.status(200).end();
 
     const message = value.messages?.[0];
@@ -109,7 +154,8 @@ export default async function handler(req, res) {
 
     console.log(`WhatsApp incoming from ${from}: ${text}`);
 
-    const reply = await callClaude(text);
+    const productos = await getProductos();
+    const reply = await callClaude(from, text, productos);
     if (reply) await sendWhatsAppReply(from, reply);
   } catch (e) {
     console.error('whatsapp-webhook error:', e);
