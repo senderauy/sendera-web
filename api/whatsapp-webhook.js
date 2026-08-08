@@ -80,12 +80,11 @@ CARACTERÍSTICAS DE PRODUCTOS:
 - Todos los gorros son medida universal (talle único)
 
 ENVÍOS:
-- Montevideo: $200, entrega a domicilio
-- Interior del país: por agencia, costo a cargo del comprador
-- Pick up en Cordón (Montevideo): gratis, con coordinación previa
-- Tiempo de despacho: despachamos al día siguiente de la compra en ambos casos
-- Montevideo: entrega a domicilio al día siguiente del despacho
-- Interior: una vez despachado, el tiempo de entrega depende de la agencia de transporte
+- Hacemos envíos a todo el país
+- Dentro de Montevideo: $200, entrega a domicilio
+- Interior del país: por agencia de transporte, el costo lo paga el comprador
+- Pick up gratis en Cordón (Montevideo): con coordinación previa
+- Despachamos al día siguiente de la compra en todos los casos
 
 POLÍTICA DE CAMBIOS: 15 días de cambio desde la compra.
 NO TENEMOS LOCAL FÍSICO: trabajamos 100% online. Las compras se hacen por sendera.uy o por este WhatsApp.
