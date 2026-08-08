@@ -74,6 +74,7 @@ ENVÍOS:
 POLÍTICA DE CAMBIOS: 15 días de cambio desde la compra.
 FORMAS DE PAGO: MercadoPago o transferencia bancaria.
 SITIO WEB: sendera.uy
+INSTAGRAM: @sendera.uy
 CONTACTO HUMANO: 095 290 959
 
 Reglas:
