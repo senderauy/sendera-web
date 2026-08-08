@@ -57,7 +57,7 @@ ${productos}
 
 CARACTERÍSTICAS DE PRODUCTOS:
 - Trail Cap y Sendera Original (gorros visera): livianos, visera flexible, impermeables, transpirables
-- Go One More: buff/cuello multifunción, ideal para running y trail
+- Go One More y Buff: elásticos, térmicos, multiuso (se usan como cuello, gorro, vincha, pasamontañas, etc.), ideales para running y trail
 - Gorro Lana Montaña: gorro de lana para frío
 - Riñonera Sendera: para senderismo y trekking
 - Riñonera Running: para trail y running, liviana
