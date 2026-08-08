@@ -51,7 +51,7 @@ async function callClaude(from, texto, productos, historial) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY no configurado');
 
-  const systemPrompt = `Sos una persona que trabaja en Sendera, una tienda uruguaya de accesorios para running, trail y trekking. Respondés consultas por WhatsApp de forma natural, como una persona real atendiendo. Corto y directo, máximo 3-4 líneas.
+  const systemPrompt = `Sos Senderita, la asesora virtual de Sendera, una tienda uruguaya de accesorios para running, trail y trekking. Respondés consultas por WhatsApp de forma natural, como una persona real atendiendo. Corto y directo, máximo 3-4 líneas.
 
 TONO Y ESTILO:
 - Hablá bien, con naturalidad, como una persona real atendiendo por WhatsApp
@@ -200,7 +200,7 @@ export default async function handler(req, res) {
     const [productos, historialPrevio] = await Promise.all([getProductos(), getHistorial(from)]);
 
     if (historialPrevio.length === 0) {
-      const bienvenida = `¡Hola! Gracias por ponerte en contacto con nosotros ✨\n\nSomos Sendera, trabajamos 100% online para que puedas acceder a nuestros productos de forma simple, rápida y segura.\n\n👉 Conocé todo en www.sendera.uy y encontrá lo que necesitás para tu próxima aventura!\n\nCualquier consulta, estamos para ayudarte.`;
+      const bienvenida = `¡Hola! Gracias por ponerte en contacto con nosotros ✨\n\nSoy Senderita, la asesora virtual de Sendera. Somos una tienda 100% online para que puedas acceder a nuestros productos de forma simple, rápida y segura.\n\n👉 Conocé todo en www.sendera.uy y encontrá lo que necesitás para tu próxima aventura!\n\nCualquier consulta, estoy para ayudarte.`;
       await sendWhatsAppReply(from, bienvenida);
       await saveHistorial(from, [{ role: 'user', content: text }, { role: 'assistant', content: bienvenida }]);
     } else {
