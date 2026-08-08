@@ -205,7 +205,8 @@ export default async function handler(req, res) {
       await sendWhatsAppReply(from, bienvenida);
       await saveHistorial(from, [{ role: 'user', content: text }, { role: 'assistant', content: bienvenida }]);
     } else {
-      const reply = await callClaude(from, text, productos, historialPrevio);
+      const rawReply = await callClaude(from, text, productos, historialPrevio);
+      const reply = rawReply.replace(/\*/g, '');
       if (reply) {
         await sendWhatsAppReply(from, reply);
         // Si el bot dio datos de transferencia, notificá al dueño
