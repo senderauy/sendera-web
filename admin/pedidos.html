@@ -622,6 +622,7 @@
     leads.reverse();
     countWA = leads.length;
     if (countWA > 0) { badgeWA.style.display = 'inline'; badgeWA.textContent = countWA; }
+    else { badgeWA.style.display = 'none'; }
     if (leads.length === 0) {
       listaWA.innerHTML = '<p style="font-size:0.8rem;color:#9a8f82;padding:16px 0">Sin leads todavía.</p>';
       return;
