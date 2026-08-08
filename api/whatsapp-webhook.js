@@ -1,6 +1,7 @@
 const PHONE_NUMBER_ID = '1159269003943325';
 const FIREBASE_URL = 'https://sendera-34791-default-rtdb.firebaseio.com';
-const MAX_HISTORY = 10; // mensajes a recordar por conversación
+const MAX_HISTORY = 10;
+const OWNER_PHONE = '59895290959';
 
 async function getProductos() {
   try {
@@ -179,9 +180,18 @@ export default async function handler(req, res) {
     if (!value || value.statuses) return res.status(200).end();
 
     const message = value.messages?.[0];
-    if (!message || message.type !== 'text') return res.status(200).end();
+    if (!message) return res.status(200).end();
 
     const from = message.from;
+
+    // Si el cliente manda una imagen, notificá al dueño (probablemente es un comprobante)
+    if (message.type === 'image' || message.type === 'document') {
+      await sendWhatsAppReply(OWNER_PHONE, `📎 El cliente +${from} envió una imagen o comprobante. Revisá la conversación.`);
+      return res.status(200).end();
+    }
+
+    if (message.type !== 'text') return res.status(200).end();
+
     const text = message.text?.body;
     if (!from || !text) return res.status(200).end();
 
@@ -195,7 +205,13 @@ export default async function handler(req, res) {
       await saveHistorial(from, [{ role: 'user', content: text }, { role: 'assistant', content: bienvenida }]);
     } else {
       const reply = await callClaude(from, text, productos, historialPrevio);
-      if (reply) await sendWhatsAppReply(from, reply);
+      if (reply) {
+        await sendWhatsAppReply(from, reply);
+        // Si el bot dio datos de transferencia, notificá al dueño
+        if (reply.includes('19467638')) {
+          await sendWhatsAppReply(OWNER_PHONE, `🛒 *Posible compra!* El cliente +${from} pidió datos de transferencia. Revisá la conversación en WhatsApp.`);
+        }
+      }
     }
   } catch (e) {
     console.error('whatsapp-webhook error:', e);
