@@ -183,11 +183,10 @@ export default async function handler(req, res) {
       const bienvenida = `¡Hola! Gracias por ponerte en contacto con nosotros ✨\n\nSomos Sendera, trabajamos 100% online para que puedas acceder a nuestros productos de forma simple, rápida y segura.\n\n👉 Conocé todo en www.sendera.uy y encontrá lo que necesitás para tu próxima aventura!\n\nCualquier consulta, estamos para ayudarte.`;
       await sendWhatsAppReply(from, bienvenida);
       await saveHistorial(from, [{ role: 'user', content: text }, { role: 'assistant', content: bienvenida }]);
-      return res.status(200).end();
+    } else {
+      const reply = await callClaude(from, text, productos, historialPrevio);
+      if (reply) await sendWhatsAppReply(from, reply);
     }
-
-    const reply = await callClaude(from, text, productos, historialPrevio);
-    if (reply) await sendWhatsAppReply(from, reply);
   } catch (e) {
     console.error('whatsapp-webhook error:', e);
   }
