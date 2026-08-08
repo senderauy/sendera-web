@@ -228,6 +228,12 @@ export default async function handler(req, res) {
       const bienvenida = `¡Hola! Gracias por ponerte en contacto con nosotros ✨\n\nSoy Senderita, la asesora virtual de Sendera. Estoy para ayudarte con todo lo que necesites.\n\n📌 Envíos:\n📍 Montevideo: $200 a domicilio\n📍 Interior: por agencia, costo a cargo del comprador 🚛\n📍 Pick up en Cordón (Montevideo): gratis con coordinación previa 🏡\n\n¿En qué te puedo ayudar?`;
       await sendWhatsAppReply(from, bienvenida);
       await saveHistorial(from, [{ role: 'user', content: text }, { role: 'assistant', content: bienvenida }]);
+      // Guardar como lead desde el primer mensaje
+      await fetch(`${FIREBASE_URL}/leads_whatsapp.json`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: from, fecha: new Date().toISOString(), tipo: 'nuevo_contacto', primerMensaje: text }),
+      }).catch(() => {});
     } else {
       const rawReply = await callClaude(from, text, productos, historialPrevio);
       const reply = rawReply.replace(/\*/g, '');
