@@ -94,7 +94,9 @@ ${productos}
 CARACTERÍSTICAS DE PRODUCTOS:
 
 Gorros runner (Trail Cap, Sendera Original, Go One More, Sunset Flower):
-- Son CUATRO modelos. Todos livianos, respirables, impermeables, visera corta y flexible, ajuste trasero, talle único
+- Son CUATRO modelos. Todos livianos, respirables, impermeables, ajuste trasero, talle único
+- Sendera Original y Go One More: visera liviana y flexible
+- Trail Cap y Sunset Flower: visera corta pero rígida
 - Para running, trail, trekking, ciudad. Go One More es un gorro runner, NO una cuellera ni buff
 - NO afirmes que son térmicos, que soportan inmersión ni que protegen en lluvia intensa prolongada
 
