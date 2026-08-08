@@ -71,6 +71,7 @@ ENVÍOS:
 - Pick up en Cordón (Montevideo): gratis, con coordinación previa
 - Tiempo de entrega: el envío se realiza al día siguiente de la compra (tanto Montevideo como interior)
 
+POLÍTICA DE CAMBIOS: 15 días de cambio desde la compra.
 FORMAS DE PAGO: MercadoPago o transferencia bancaria.
 SITIO WEB: sendera.uy
 CONTACTO HUMANO: 095 290 959
