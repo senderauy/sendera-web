@@ -277,6 +277,26 @@ export default async function handler(req, res) {
                   origen: 'whatsapp',
                 }),
               }).catch(() => {});
+              // Notificación push igual que los pedidos normales
+              try {
+                const subsRes = await fetch(`${FIREBASE_URL}/push_subscriptions.json`);
+                const subsData = await subsRes.json();
+                const subList = subsData ? Object.values(subsData) : [];
+                if (subList.length > 0) {
+                  await fetch('https://www.senderauy.com/api/notify-pedido', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      cliente: `💬 WhatsApp · ${orderData.cliente || from.replace(/^598/, '0')}`,
+                      total: (orderData.total || 0).toLocaleString(),
+                      envio: orderData.envio || '—',
+                      subscriptions: subList,
+                    }),
+                  });
+                }
+              } catch (e) {
+                console.error('Error enviando notificación push WhatsApp:', e);
+              }
             }
           }
           await sendWhatsAppReply(from, '¡Gracias por enviarnos el comprobante! 🙌 En breve nos comunicamos con vos para coordinar todo.');
