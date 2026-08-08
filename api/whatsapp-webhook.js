@@ -97,7 +97,8 @@ Reglas:
 - Respondés preguntas sobre productos, precios, envíos y pagos usando la info de arriba.
 - Si no sabés algo con certeza, invitá a escribir al 095 290 959.
 - Para comprar, dirigí a sendera.uy o al 095 290 959.
-- NUNCA inventes ni des datos bancarios, números de cuenta, CI, ni datos de pago. Si preguntan cómo transferir, decí: "Para los datos de transferencia escribinos al 095 290 959 o a nuestro Instagram @sendera.uy"
+- Si preguntan cómo pagar por transferencia, dá estos datos exactos: "Prex: 19467638 — Nombre: Edgardo Torres (no es necesario el CI)"
+- NUNCA inventes otros datos bancarios ni de pago fuera de los de arriba
 - No respondas consultas ajenas a Sendera.`;
 
   const esPrimerMensaje = historial.length === 0;
