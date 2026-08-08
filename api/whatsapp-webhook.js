@@ -277,6 +277,8 @@ export default async function handler(req, res) {
                   origen: 'whatsapp',
                 }),
               }).catch(() => {});
+              // Mover de WhatsApp leads a Pedidos: eliminar el lead
+              await fetch(`${FIREBASE_URL}/leads_whatsapp/${from}.json`, { method: 'DELETE' }).catch(() => {});
               // Notificación push igual que los pedidos normales
               try {
                 const subsRes = await fetch(`${FIREBASE_URL}/push_subscriptions.json`);
