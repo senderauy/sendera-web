@@ -74,7 +74,7 @@ ${productos}
 
 CARACTERÍSTICAS DE PRODUCTOS:
 - Gorros visera (Trail Cap, Sendera Original, Go One More, Sunset Flower): livianos, visera flexible, impermeables, transpirables, medida universal
-- Buff: elástico, térmico, multiuso (se usa como cuello, gorro, vincha, pasamontañas, etc.), ideal para running y trail
+- Buff: cuellera elástica y térmica, ideal para running y trail en clima frío
 - Gorro Lana Montaña: gorro de lana para frío
 - Riñonera Sendera: para senderismo y trekking
 - Riñonera Running: para trail y running, liviana
