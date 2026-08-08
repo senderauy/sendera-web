@@ -46,11 +46,11 @@ async function saveHistorial(from, historial) {
   } catch {}
 }
 
-async function callClaude(from, texto, productos) {
+async function callClaude(from, texto, productos, historial) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY no configurado');
 
-  const systemPrompt = `Sos una persona que trabaja en Sendera, una tienda uruguaya de accesorios para running, trail y trekking. Respondés consultas por WhatsApp de forma natural, como si fueras un uruguayo/a chateando. Corto y directo, máximo 3-4 líneas.
+  const systemPrompt = `Sos una persona que trabaja en Sendera, una tienda uruguaya de accesorios para running, trail y trekking. Respondés consultas por WhatsApp de forma natural, como una persona real atendiendo. Corto y directo, máximo 3-4 líneas.
 
 TONO Y ESTILO:
 - Hablá bien, con naturalidad, como una persona real atendiendo por WhatsApp
@@ -91,7 +91,6 @@ Reglas:
 - Para comprar, dirigí a sendera.uy o al 095 290 959.
 - No respondas consultas ajenas a Sendera.`;
 
-  const historial = await getHistorial(from);
   historial.push({ role: 'user', content: texto });
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -102,7 +101,7 @@ Reglas:
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'claude-opus-5',
+      model: 'claude-haiku-4-5',
       max_tokens: 400,
       system: systemPrompt,
       messages: historial,
@@ -175,8 +174,8 @@ export default async function handler(req, res) {
 
     console.log(`WhatsApp incoming from ${from}: ${text}`);
 
-    const productos = await getProductos();
-    const reply = await callClaude(from, text, productos);
+    const [productos, historialPrevio] = await Promise.all([getProductos(), getHistorial(from)]);
+    const reply = await callClaude(from, text, productos, historialPrevio);
     if (reply) await sendWhatsAppReply(from, reply);
   } catch (e) {
     console.error('whatsapp-webhook error:', e);
