@@ -232,10 +232,10 @@ export default async function handler(req, res) {
           const buffer = await imgRes.arrayBuffer();
           const base64 = Buffer.from(buffer).toString('base64');
           const dataUri = `data:${mimeType};base64,${base64}`;
-          await fetch(`${FIREBASE_URL}/leads_whatsapp.json`, {
-            method: 'POST',
+          await fetch(`${FIREBASE_URL}/leads_whatsapp/${from}.json`, {
+            method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone: from, fecha: new Date().toISOString(), tipo: 'comprobante', comprobante: dataUri }),
+            body: JSON.stringify({ phone: from, comprobante: dataUri, tipo: 'comprobante', fechaComprobante: new Date().toISOString() }),
           }).catch(() => {});
         } catch (e) {
           console.error('Error guardando comprobante:', e);
@@ -257,9 +257,9 @@ export default async function handler(req, res) {
       const bienvenida = `¡Hola! Gracias por ponerte en contacto con nosotros ✨\n\nSoy Senderita, la asesora virtual de Sendera. Estoy para ayudarte con todo lo que necesites.\n\n📌 Envíos:\n📍 Montevideo: $200 a domicilio\n📍 Interior: por agencia, costo a cargo del comprador 🚛\n📍 Pick up en Cordón (Montevideo): gratis con coordinación previa 🏡\n\n¿En qué te puedo ayudar?`;
       await sendWhatsAppReply(from, bienvenida);
       await saveHistorial(from, [{ role: 'user', content: text }, { role: 'assistant', content: bienvenida }]);
-      // Guardar como lead desde el primer mensaje
-      await fetch(`${FIREBASE_URL}/leads_whatsapp.json`, {
-        method: 'POST',
+      // Guardar como lead desde el primer mensaje (clave = número, sin duplicados)
+      await fetch(`${FIREBASE_URL}/leads_whatsapp/${from}.json`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: from, fecha: new Date().toISOString(), tipo: 'nuevo_contacto', primerMensaje: text }),
       }).catch(() => {});
@@ -268,13 +268,12 @@ export default async function handler(req, res) {
       const reply = rawReply.replace(/\*/g, '');
       if (reply) {
         await sendWhatsAppReply(from, reply);
-        // Si el bot dio datos de pago, guardar lead en Firebase
+        // Si el bot dio datos de pago, actualizar el lead existente
         if (reply.includes('19467638') || reply.toLowerCase().includes('mercadopago')) {
-          const lead = { phone: from, fecha: new Date().toISOString(), tipo: reply.includes('19467638') ? 'transferencia' : 'mercadopago' };
-          await fetch(`${FIREBASE_URL}/leads_whatsapp.json`, {
-            method: 'POST',
+          await fetch(`${FIREBASE_URL}/leads_whatsapp/${from}.json`, {
+            method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(lead),
+            body: JSON.stringify({ phone: from, tipo: reply.includes('19467638') ? 'transferencia' : 'mercadopago' }),
           }).catch(() => {});
         }
       }
