@@ -1434,34 +1434,26 @@ nav a:hover {
 .whatsapp-float {
   position: fixed;
   bottom: 104px;
-  right: 24px;
+  right: 32px;
   z-index: 9999;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
   background: #25D366;
-  color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
   text-decoration: none;
-  padding: 12px 18px 12px 14px;
-  border-radius: 50px;
-  box-shadow: 0 4px 16px rgba(37,211,102,0.4);
-  font-family: 'Montserrat', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s;
 }
-.whatsapp-float:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(37,211,102,0.5);
-}
+.whatsapp-float:hover { transform: scale(1.08); }
 .whatsapp-float svg {
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   fill: #fff;
-  flex-shrink: 0;
 }
+.whatsapp-float span { display: none; }
 @media (max-width: 640px) {
-  .whatsapp-float span { display: none; }
-  .whatsapp-float { padding: 14px; border-radius: 50%; }
+  .whatsapp-float { right: 16px; bottom: 90px; }
 }
