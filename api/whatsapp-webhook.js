@@ -55,6 +55,16 @@ async function callClaude(from, texto, productos) {
 PRODUCTOS Y PRECIOS ACTUALES:
 ${productos}
 
+CARACTERÍSTICAS DE PRODUCTOS:
+- Trail Cap y Sendera Original (gorros visera): livianos, visera flexible, impermeables, transpirables
+- Go One More: buff/cuello multifunción, ideal para running y trail
+- Gorro Lana Montaña: gorro de lana para frío
+- Riñonera Sendera: para senderismo y trekking
+- Riñonera Running: para trail y running, liviana
+- Medallero RUN: 30 cm, acero, color negro
+- Porta Celular: para running y trail
+- Todos los gorros son medida universal (talle único)
+
 ENVÍOS:
 - Montevideo: $200, entrega a domicilio
 - Interior del país: por agencia, costo a cargo del comprador
