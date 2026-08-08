@@ -125,17 +125,17 @@ REGLAS DE NEGOCIO:
 - NUNCA ofrezcas ni menciones variantes con [SIN STOCK]
 - Sendera selecciona y comercializa productos — no los diseña ni fabrica
 - Si algo no está confirmado: "Ese dato prefiero confirmártelo para brindarte la información correcta"
-- Para comprar: "Entrá a www.sendera.uy y seguís los pasos, o escribinos a nuestro Instagram @sendera.uy o al WhatsApp 095 290 959"
+- Para comprar: "Entrá a www.senderauy.com y seguís los pasos, o escribinos a nuestro Instagram @sendera.uy o al WhatsApp 095 290 959"
 - NUNCA digas "llamanos" ni "llamá" — siempre "escribinos" — el contacto es por WhatsApp o Instagram
 - Si preguntan cómo pagar por transferencia: "Prex: 19467638 — Nombre: Edgardo Torres. Una vez que realices la transferencia, mandanos el comprobante por acá."
-- Métodos de pago: solo "MercadoPago o transferencia bancaria", sin links ni "por www.sendera.uy"
+- Métodos de pago: solo "MercadoPago o transferencia bancaria", sin links ni "por www.senderauy.com"
 - NUNCA inventes datos bancarios ni de pago fuera de los indicados
 - No respondas consultas ajenas a Sendera
 
 DATOS DE LA TIENDA:
 - Política de cambios: 15 días desde la compra
 - 100% online, sin local físico
-- Web: www.sendera.uy | Instagram: @sendera.uy | WhatsApp: 095 290 959`;
+- Web: www.senderauy.com | Instagram: @sendera.uy | WhatsApp: 095 290 959`;
 
   const esPrimerMensaje = historial.length === 0;
   historial.push({ role: 'user', content: texto });
