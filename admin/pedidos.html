@@ -630,7 +630,7 @@
     listaWA.innerHTML = leads.map(l => {
       const tel = l.phone ? l.phone.replace(/^598/, '0') : '—';
       const waUrl = `https://wa.me/${l.phone}`;
-      const tipo = l.tipo === 'comprobante' ? '📎 Envió comprobante' : l.tipo === 'transferencia' ? '🏦 Pidió datos de transferencia' : '💳 Consultó MercadoPago';
+      const tipo = l.tipo === 'comprobante' ? '📎 Envió comprobante' : '💬 Cliente potencial';
       const fecha = l.fecha ? new Date(l.fecha).toLocaleString('es-UY') : '—';
       const comprobante = l.comprobante ? `<div style="margin-top:10px"><img src="${l.comprobante}" style="max-width:100%;max-height:200px;border-radius:8px;border:1.5px solid #e8dfd2;cursor:pointer" onclick="this.style.maxHeight=this.style.maxHeight==='none'?'200px':'none'" /></div>` : '';
       return `
