@@ -925,21 +925,22 @@ nav a:hover {
 
 /* CARRITO FLOTANTE */
 #cart-btn {
-  position: relative;
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
   z-index: 200;
   background-color: var(--gold);
   color: var(--darker);
   border: none;
-  width: 42px;
-  height: 42px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
-  font-size: 1.1rem;
+  font-size: 1.4rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
   transition: transform 0.2s;
 }
 
@@ -967,7 +968,7 @@ nav a:hover {
 /* MODAL CARRITO */
 #cart-modal {
   position: fixed;
-  top: 80px;
+  bottom: 100px;
   right: 32px;
   width: 360px;
   max-height: 85vh;
@@ -1432,7 +1433,7 @@ nav a:hover {
 /* Botón flotante WhatsApp */
 .whatsapp-float {
   position: fixed;
-  bottom: 32px;
+  bottom: 104px;
   right: 32px;
   z-index: 9999;
   display: flex;
@@ -1454,5 +1455,5 @@ nav a:hover {
 }
 .whatsapp-float span { display: none; }
 @media (max-width: 640px) {
-  .whatsapp-float { right: 16px; bottom: 24px; }
+  .whatsapp-float { right: 16px; bottom: 90px; }
 }
