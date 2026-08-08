@@ -83,7 +83,9 @@ ENVÍOS:
 - Montevideo: $200, entrega a domicilio
 - Interior del país: por agencia, costo a cargo del comprador
 - Pick up en Cordón (Montevideo): gratis, con coordinación previa
-- Tiempo de entrega: el envío se realiza al día siguiente de la compra (tanto Montevideo como interior)
+- Tiempo de despacho: despachamos al día siguiente de la compra en ambos casos
+- Montevideo: entrega a domicilio al día siguiente del despacho
+- Interior: una vez despachado, el tiempo de entrega depende de la agencia de transporte
 
 POLÍTICA DE CAMBIOS: 15 días de cambio desde la compra.
 NO TENEMOS LOCAL FÍSICO: trabajamos 100% online. Las compras se hacen por sendera.uy o por este WhatsApp.
