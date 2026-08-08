@@ -152,10 +152,15 @@
       padding: 6px; box-shadow: 0 2px 6px rgba(80,60,30,0.04);
     }
     .tab-btn {
-      flex: 1; padding: 10px 16px; border: none; cursor: pointer; border-radius: 10px;
+      flex: 1; padding: 10px 8px; border: none; cursor: pointer; border-radius: 10px;
       font-family: 'Montserrat', sans-serif; font-size: 0.75rem; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.08em; transition: all 0.2s;
-      background: none; color: #9a8f82; display: flex; align-items: center; justify-content: center; gap: 8px;
+      text-transform: uppercase; letter-spacing: 0.06em; transition: all 0.2s;
+      background: none; color: #9a8f82; display: flex; align-items: center; justify-content: center; gap: 6px;
+      white-space: nowrap;
+    }
+    @media (max-width: 500px) {
+      .tab-btn { font-size: 0.62rem; padding: 8px 4px; gap: 4px; letter-spacing: 0.03em; }
+      .tabs-nav { gap: 3px; padding: 4px; }
     }
     .tab-btn:hover { background: #f2ede6; color: #3a3026; }
     .tab-btn.active { background: #507a3a; color: #fff; }
