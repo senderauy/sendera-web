@@ -616,10 +616,10 @@
   const badgeWA = document.getElementById('whatsapp-count');
   let countWA = 0;
 
-  db.ref('leads_whatsapp').orderByChild('fecha').on('value', snap => {
+  db.ref('leads_whatsapp').on('value', snap => {
     const leads = [];
     snap.forEach(c => leads.push({ id: c.key, ...c.val() }));
-    leads.reverse();
+    leads.sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
     countWA = leads.length;
     if (countWA > 0) { badgeWA.style.display = 'inline'; badgeWA.textContent = countWA; }
     else { badgeWA.style.display = 'none'; }
