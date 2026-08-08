@@ -237,6 +237,7 @@ export default async function handler(req, res) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ phone: from, comprobante: dataUri, tipo: 'comprobante', fechaComprobante: new Date().toISOString() }),
           }).catch(() => {});
+          await sendWhatsAppReply(from, '¡Gracias por enviarnos el comprobante! 🙌 En breve nos comunicamos con vos para coordinar todo.');
         } catch (e) {
           console.error('Error guardando comprobante:', e);
         }
