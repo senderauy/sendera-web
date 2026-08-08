@@ -92,6 +92,7 @@ Reglas:
 - Para comprar, dirigí a sendera.uy o al 095 290 959.
 - No respondas consultas ajenas a Sendera.`;
 
+  const esPrimerMensaje = historial.length === 0;
   historial.push({ role: 'user', content: texto });
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -176,6 +177,12 @@ export default async function handler(req, res) {
     console.log(`WhatsApp incoming from ${from}: ${text}`);
 
     const [productos, historialPrevio] = await Promise.all([getProductos(), getHistorial(from)]);
+
+    if (historialPrevio.length === 0) {
+      const bienvenida = `¡Hola! Gracias por ponerte en contacto con nosotros ✨\n\nSomos Sendera, trabajamos 100% online para que puedas acceder a nuestros productos de forma simple, rápida y segura.\n\n👉 Conocé todo en www.sendera.uy y encontrá lo que necesitás para tu próxima aventura!\n\nCualquier consulta, estamos para ayudarte.`;
+      await sendWhatsAppReply(from, bienvenida);
+    }
+
     const reply = await callClaude(from, text, productos, historialPrevio);
     if (reply) await sendWhatsAppReply(from, reply);
   } catch (e) {
