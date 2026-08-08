@@ -929,8 +929,8 @@ nav a:hover {
   bottom: 32px;
   right: 32px;
   z-index: 200;
-  background-color: var(--gold);
-  color: var(--darker);
+  background-color: var(--green);
+  color: #fff;
   border: none;
   width: 58px;
   height: 58px;
@@ -940,7 +940,7 @@ nav a:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 20px rgba(80,122,58,0.5);
   transition: transform 0.2s;
 }
 
