@@ -73,7 +73,7 @@ PRODUCTOS Y PRECIOS ACTUALES:
 ${productos}
 
 CARACTERÍSTICAS DE PRODUCTOS:
-- Gorros visera (Trail Cap, Sendera Original, Go One More, Sunset Flower): livianos, visera flexible, impermeables, transpirables, medida universal
+- Gorros con visera — son CUATRO productos: Trail Cap, Sendera Original, Go One More y Sunset Flower. Todos livianos, visera flexible, impermeables, transpirables, medida universal. IMPORTANTE: Go One More es un gorro visera, NO una cuellera ni buff.
 - Buff: cuellera elástica y térmica, ideal para running y trail en clima frío
 - Gorro Lana Montaña: gorro de lana para frío
 - Riñonera Sendera: para senderismo y trekking
