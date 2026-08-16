@@ -16,7 +16,6 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Montserrat', sans-serif; background: #f2ede6; color: #3a3026; min-height: 100vh; }
 
-    /* NAV */
     .navbar { background:#fff; border-bottom:2px solid #e8dfd2; padding:0 24px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; height:60px; box-shadow:0 2px 8px rgba(80,60,30,.06); }
     .navbar .logo { font-family:'Cormorant Garamond',serif; font-size:1.4rem; color:#3a3026; letter-spacing:.12em; }
     .nav-links { display:flex; align-items:center; gap:4px; }
@@ -27,22 +26,19 @@
     .btn-logout:hover { background:#f2ede6; color:#3a3026; }
     .btn-logout-top { display:none; background:none; border:none; cursor:pointer; font-size:1rem; color:#9a8f82; padding:2px 6px; margin-left:6px; }
 
-    /* LAYOUT */
     .container { max-width:1100px; margin:0 auto; padding:24px 20px 60px; }
 
-    /* HEADER */
     .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
     .page-header h1 { font-family:'Cormorant Garamond',serif; font-size:2rem; color:#3a3026; }
     .page-header p { font-size:.75rem; color:#9a8f82; margin-top:2px; }
     .header-btns { display:flex; gap:8px; flex-wrap:wrap; }
     .btn-sec { background:none; border:1.5px solid #c8d8be; border-radius:10px; padding:8px 16px; font-family:'Montserrat',sans-serif; font-size:.72rem; color:#507a3a; cursor:pointer; transition:all .2s; font-weight:500; }
     .btn-sec:hover { background:#507a3a; color:#fff; border-color:#507a3a; }
-    .btn-prim { background:#507a3a; border:none; border-radius:10px; padding:8px 18px; font-family:'Montserrat',sans-serif; font-size:.72rem; color:#fff; cursor:pointer; font-weight:600; letter-spacing:.04em; transition:background .2s; }
+    .btn-prim { background:#507a3a; border:none; border-radius:10px; padding:8px 18px; font-family:'Montserrat',sans-serif; font-size:.72rem; color:#fff; cursor:pointer; font-weight:600; transition:background .2s; }
     .btn-prim:hover { background:#3d5c2c; }
     .btn-compra { background:#1a5276; border:none; border-radius:10px; padding:8px 18px; font-family:'Montserrat',sans-serif; font-size:.72rem; color:#fff; cursor:pointer; font-weight:600; transition:background .2s; }
     .btn-compra:hover { background:#154360; }
 
-    /* PERIOD */
     .period-bar { display:flex; align-items:center; gap:10px; margin-bottom:22px; flex-wrap:wrap; }
     .period-label { font-size:.65rem; color:#9a8f82; text-transform:uppercase; letter-spacing:.1em; }
     .mes-pills { display:flex; gap:4px; flex-wrap:wrap; }
@@ -51,7 +47,6 @@
     .mes-btn.active { background:#507a3a; color:#fff; border-color:#507a3a; }
     .mes-btn.all.active { background:#3a3026; border-color:#3a3026; }
 
-    /* KPI CARDS */
     .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:14px; }
     .kpi-card { background:#3a3026; border-radius:14px; padding:20px 18px; color:#fff; position:relative; overflow:hidden; }
     .kpi-card::before { content:''; position:absolute; right:-20px; top:-20px; width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,.05); }
@@ -63,7 +58,6 @@
     .kpi-value { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:600; font-variant-numeric:tabular-nums; line-height:1; }
     .kpi-sub { font-size:.65rem; opacity:.6; margin-top:6px; }
 
-    /* STOCK BAR */
     .stock-bar { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
     .stock-kpi { background:#fff; border:1.5px solid #e8dfd2; border-radius:12px; padding:14px 18px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 6px rgba(80,60,30,.04); }
     .stock-kpi-icon { font-size:1.5rem; }
@@ -74,7 +68,6 @@
     .stock-kpi.warn2 { border-color:#fde68a; }
     .stock-kpi.warn2 .stock-kpi-val { color:#b45309; }
 
-    /* CHARTS GRID */
     .charts-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
     .chart-card { background:#fff; border-radius:14px; border:1.5px solid #e8dfd2; padding:20px; box-shadow:0 2px 6px rgba(80,60,30,.04); }
     .chart-card.wide { grid-column:span 2; }
@@ -83,7 +76,6 @@
     .chart-wrap canvas { max-height:240px; }
     .chart-wrap.tall canvas { max-height:300px; }
 
-    /* LOW STOCK */
     .alerta-lista { list-style:none; }
     .alerta-item { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f5f0ea; font-size:.78rem; }
     .alerta-item:last-child { border-bottom:none; }
@@ -92,8 +84,7 @@
     .badge-0 { background:#fee2e2; color:#c0392b; border-radius:10px; padding:2px 8px; font-size:.65rem; font-weight:700; }
     .badge-bajo { background:#fef3c7; color:#b45309; border-radius:10px; padding:2px 8px; font-size:.65rem; font-weight:700; }
 
-    /* TABLES */
-    .tables-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .tables-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
     .table-card { background:#fff; border-radius:14px; border:1.5px solid #e8dfd2; overflow:hidden; box-shadow:0 2px 6px rgba(80,60,30,.04); }
     .table-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1.5px solid #f0ebe3; background:#faf8f4; }
     .table-header h3 { font-family:'Cormorant Garamond',serif; font-size:1.1rem; color:#3a3026; }
@@ -111,15 +102,21 @@
     .badge-azul  { background:#e8f0fd; color:#1a5276; }
     .btn-add-row { display:block; width:100%; padding:10px; text-align:center; font-family:'Montserrat',sans-serif; font-size:.7rem; color:#507a3a; background:#f9fbf7; border:none; border-top:1.5px solid #f0ebe3; cursor:pointer; transition:background .2s; font-weight:600; }
     .btn-add-row:hover { background:#f0f7ea; }
+    .btn-add-row.azul { color:#1a5276; background:#f0f4fd; }
+    .btn-add-row.azul:hover { background:#e0eaf8; }
 
-    /* PANEL */
-    .add-panel { display:none; position:fixed; top:0; right:0; width:380px; height:100vh; background:#fff; box-shadow:-4px 0 24px rgba(0,0,0,.12); z-index:200; padding:28px 24px; overflow-y:auto; }
+    /* Tabla compras full width */
+    .compras-card { background:#fff; border-radius:14px; border:1.5px solid #d0dff8; overflow:hidden; box-shadow:0 2px 6px rgba(80,60,30,.04); }
+    .compras-card .table-header { background:#f0f4fd; border-bottom-color:#d0dff8; }
+    .compras-card .mini-table th { background:#f5f8fe; }
+
+    .add-panel { display:none; position:fixed; top:0; right:0; width:400px; height:100vh; background:#fff; box-shadow:-4px 0 24px rgba(0,0,0,.12); z-index:200; padding:28px 24px; overflow-y:auto; }
     .add-panel.open { display:block; animation:slideIn .25s ease; }
     @keyframes slideIn { from{transform:translateX(30px);opacity:0}to{transform:translateX(0);opacity:1} }
     .panel-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
     .panel-header h3 { font-family:'Cormorant Garamond',serif; font-size:1.3rem; color:#3a3026; }
-    .btn-close-panel { background:none; border:none; font-size:1.3rem; color:#9a8f82; cursor:pointer; padding:4px; }
-    .form-group { margin-bottom:16px; }
+    .btn-close-panel { background:none; border:none; font-size:1.3rem; color:#9a8f82; cursor:pointer; }
+    .form-group { margin-bottom:14px; }
     .form-group label { display:block; font-size:.62rem; color:#9a8f82; text-transform:uppercase; letter-spacing:.08em; margin-bottom:5px; }
     .form-group input, .form-group select {
       width:100%; padding:9px 12px; border:1.5px solid #e8dfd2; border-radius:8px;
@@ -127,23 +124,25 @@
     }
     .form-group input:focus, .form-group select:focus { border-color:#507a3a; }
     .form-row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .form-row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+    .total-preview { background:#f0f4fd; border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:.8rem; color:#1a5276; font-weight:600; display:flex; justify-content:space-between; }
     .stock-disp { font-size:.7rem; margin-top:4px; padding:5px 8px; border-radius:6px; background:#f0f7ea; color:#507a3a; }
     .stock-disp.sin { background:#fee2e2; color:#c0392b; }
     .stock-disp.bajo { background:#fef3c7; color:#b45309; }
-    .btn-guardar { width:100%; background:#507a3a; color:#fff; border:none; border-radius:10px; padding:12px; font-family:'Montserrat',sans-serif; font-size:.8rem; font-weight:600; cursor:pointer; margin-top:8px; letter-spacing:.04em; }
+    .btn-guardar { width:100%; background:#507a3a; color:#fff; border:none; border-radius:10px; padding:12px; font-family:'Montserrat',sans-serif; font-size:.8rem; font-weight:600; cursor:pointer; margin-top:8px; }
     .btn-guardar:hover { background:#3d5c2c; }
     .btn-guardar.azul-btn { background:#1a5276; }
     .btn-guardar.azul-btn:hover { background:#154360; }
     .panel-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.3); z-index:199; }
     .panel-overlay.open { display:block; }
-    .divider { border:none; border-top:1.5px solid #f0ebe3; margin:16px 0; }
-    .info-box { background:#f0f7ea; border-radius:8px; padding:10px 12px; font-size:.72rem; color:#507a3a; margin-bottom:14px; }
+    .divider { border:none; border-top:1.5px solid #f0ebe3; margin:14px 0; }
+    .info-box { border-radius:8px; padding:10px 12px; font-size:.72rem; margin-bottom:14px; }
+    .info-box.verde { background:#f0f7ea; color:#507a3a; }
     .info-box.azul { background:#e8f0fd; color:#1a5276; }
 
-    /* IMPORT MODAL */
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:300; align-items:center; justify-content:center; }
     .modal-overlay.open { display:flex; }
-    .modal-box { background:#fff; border-radius:16px; padding:28px; max-width:420px; width:90%; }
+    .modal-box { background:#fff; border-radius:16px; padding:28px; max-width:440px; width:90%; }
     .modal-box h3 { font-family:'Cormorant Garamond',serif; font-size:1.3rem; color:#3a3026; margin-bottom:8px; }
     .modal-box p { font-size:.78rem; color:#7a6e62; margin-bottom:18px; line-height:1.6; }
     .import-drop { border:2.5px dashed #c8d8be; border-radius:12px; padding:28px 20px; text-align:center; cursor:pointer; transition:all .2s; margin-bottom:14px; }
@@ -193,12 +192,11 @@
     <div class="header-btns">
       <button class="btn-sec" onclick="abrirImport()">⬆ Importar Excel</button>
       <button class="btn-prim" onclick="abrirPanel('gasto')">+ Gasto</button>
-      <button class="btn-compra" onclick="abrirPanel('compra')">📦 Reposición</button>
+      <button class="btn-compra" onclick="abrirPanel('compra')">📦 Compra mercadería</button>
       <button class="btn-prim" onclick="abrirPanel('venta')">+ Venta</button>
     </div>
   </div>
 
-  <!-- Period -->
   <div class="period-bar">
     <span class="period-label">Período</span>
     <div class="mes-pills" id="mes-pills"></div>
@@ -284,8 +282,8 @@
     </div>
   </div>
 
-  <!-- Tables -->
-  <div class="tables-grid">
+  <!-- Ventas + Gastos -->
+  <div class="tables-grid" style="margin-bottom:16px">
     <div class="table-card">
       <div class="table-header">
         <h3>💰 Últimas ventas</h3>
@@ -308,6 +306,31 @@
       </table>
       <button class="btn-add-row" onclick="abrirPanel('gasto')">+ Agregar gasto</button>
     </div>
+  </div>
+
+  <!-- Compras de mercadería (tabla propia) -->
+  <div class="compras-card">
+    <div class="table-header">
+      <h3>📦 Compras de mercadería</h3>
+      <span class="total-lbl" id="tbl-compras-total" style="color:#1a5276"></span>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="mini-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Proveedor</th>
+            <th>Insumo</th>
+            <th>Descripción</th>
+            <th class="num">Cant.</th>
+            <th class="num">Costo unit.</th>
+            <th class="num">Total</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-compras"></tbody>
+      </table>
+    </div>
+    <button class="btn-add-row azul" onclick="abrirPanel('compra')">📦 Registrar compra de mercadería</button>
   </div>
 
 </div>
@@ -346,7 +369,7 @@
       </div>
     </div>
     <hr class="divider">
-    <div class="info-box">📦 Si vendiste algo del stock, elegí el producto para descontarlo automáticamente.</div>
+    <div class="info-box verde">📦 Si vendiste algo del stock, elegí el producto para descontarlo automáticamente.</div>
     <div class="form-group">
       <label>Producto del stock <span style="opacity:.6;font-weight:400">— opcional</span></label>
       <select id="v-producto" onchange="onVentaProductoChange()">
@@ -355,12 +378,10 @@
     </div>
     <div id="v-cantidad-group" style="display:none">
       <div class="form-row2">
-        <div class="form-group">
-          <label>Cantidad</label>
+        <div class="form-group"><label>Cantidad</label>
           <input type="number" id="v-cantidad" value="1" min="1" oninput="onVentaCantidadChange()">
         </div>
-        <div class="form-group">
-          <label>Descuento $</label>
+        <div class="form-group"><label>Descuento $</label>
           <input type="number" id="v-desc2" placeholder="0">
         </div>
       </div>
@@ -377,16 +398,16 @@
     </div>
     <div class="form-group"><label>Categoría</label>
       <select id="g-cat">
-        <option>Mercadería</option><option>Publicidad</option><option>Packaging</option>
+        <option>Publicidad</option><option>Packaging</option>
         <option>Financieros</option><option>Envíos</option><option>Varios</option>
       </select>
     </div>
     <div class="form-group"><label>Detalle</label>
-      <input type="text" id="g-detalle" placeholder="Ej: Compra Temu — Gorros">
+      <input type="text" id="g-detalle" placeholder="Ej: Publicidad Meta — Agosto">
     </div>
     <div class="form-row2">
       <div class="form-group"><label>Proveedor</label>
-        <input type="text" id="g-prov" placeholder="Ej: Temu">
+        <input type="text" id="g-prov" placeholder="Ej: Meta">
       </div>
       <div class="form-group"><label>Forma de pago</label>
         <select id="g-pago">
@@ -398,38 +419,54 @@
     <button class="btn-guardar" onclick="guardarGasto()">Guardar gasto</button>
   </div>
 
-  <!-- REPOSICIÓN -->
+  <!-- COMPRA DE MERCADERÍA -->
   <div id="form-compra" style="display:none">
-    <div class="info-box azul">📦 El stock sube automáticamente y se registra como gasto de mercadería.</div>
+    <div class="info-box azul">📦 El stock sube automáticamente al confirmar. Completá igual si la compra no tiene producto en stock asignado.</div>
     <div class="form-row2">
       <div class="form-group"><label>Fecha</label><input type="date" id="c-fecha"></div>
-      <div class="form-group"><label>Total pagado $</label><input type="number" id="c-importe" placeholder="0"></div>
-    </div>
-    <div class="form-group">
-      <label>Producto</label>
-      <select id="c-producto" onchange="onCompraProductoChange()">
-        <option value="">— Elegí un producto —</option>
-      </select>
-    </div>
-    <div class="stock-disp" id="c-stock-disp" style="margin-bottom:12px"></div>
-    <div class="form-row2">
-      <div class="form-group"><label>Unidades a agregar</label>
-        <input type="number" id="c-cantidad" value="1" min="1">
-      </div>
       <div class="form-group"><label>Proveedor</label>
-        <input type="text" id="c-prov" placeholder="Ej: Temu">
+        <select id="c-prov">
+          <option>Temu</option><option>Alibaba</option><option>Otro</option>
+        </select>
       </div>
     </div>
-    <div class="form-group"><label>Detalle</label>
-      <input type="text" id="c-detalle" placeholder="Ej: Gorros Runner x10">
+    <div class="form-row2">
+      <div class="form-group"><label>Forma de pago</label>
+        <select id="c-pago">
+          <option>Prex Edgardo</option><option>OCA Edgardo</option>
+          <option>Lore</option><option>Mercado Pago</option><option>Efectivo</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Insumo</label>
+        <select id="c-insumo">
+          <option>Gorro</option><option>Riñonera</option><option>Buff</option>
+          <option>Medallero</option><option>Porta Celular</option><option>Otro</option>
+        </select>
+      </div>
     </div>
-    <div class="form-group"><label>Forma de pago</label>
-      <select id="c-pago">
-        <option>Prex Edgardo</option><option>OCA Edgardo</option>
-        <option>Mercado Pago</option><option>Efectivo</option>
+    <div class="form-group"><label>Descripción</label>
+      <input type="text" id="c-desc" placeholder="Ej: Gorro térmico negro">
+    </div>
+    <div class="form-row3">
+      <div class="form-group"><label>Cantidad</label>
+        <input type="number" id="c-cantidad" value="1" min="1" oninput="calcTotalCompra()">
+      </div>
+      <div class="form-group"><label>Costo unit. $</label>
+        <input type="number" id="c-costo-unit" placeholder="0" oninput="calcTotalCompra()">
+      </div>
+      <div class="form-group"><label>Total $</label>
+        <input type="number" id="c-total" placeholder="Auto">
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="form-group">
+      <label>Vincular a stock <span style="opacity:.6;font-weight:400">— opcional</span></label>
+      <select id="c-producto" onchange="onCompraProductoChange()">
+        <option value="">— No vincular al stock —</option>
       </select>
     </div>
-    <button class="btn-guardar azul-btn" onclick="guardarCompra()">Confirmar reposición</button>
+    <div class="stock-disp" id="c-stock-disp" style="display:none;margin-bottom:12px"></div>
+    <button class="btn-guardar azul-btn" onclick="guardarCompra()">Confirmar compra</button>
   </div>
 </div>
 
@@ -437,7 +474,7 @@
 <div class="modal-overlay" id="modal-import">
   <div class="modal-box">
     <h3>Importar Excel histórico</h3>
-    <p>Subí el Excel de Sendera. Se importan todas las ventas y gastos a Firebase — solo para migrar lo que ya tenés.</p>
+    <p>Subí el Excel de Sendera. Se importan ventas, gastos <strong>y compras de mercadería</strong>.</p>
     <label for="import-file" class="import-drop">
       <div style="font-size:2rem;margin-bottom:8px">📂</div>
       <p style="font-size:.8rem;color:#507a3a;font-weight:600">Hacé clic o arrastrá el archivo</p>
@@ -455,7 +492,6 @@
 if (!localStorage.getItem('sendera_admin')) window.location.href = 'login.html';
 function logout() { localStorage.removeItem('sendera_admin'); window.location.href = 'login.html'; }
 
-// ── Config ────────────────────────────────────────────────
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
                'Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
 const ESTADOS_VENTA = ['confirmado','camino','entregado'];
@@ -463,155 +499,168 @@ const AÑO = new Date().getFullYear();
 const COLORS = ['#507a3a','#2563eb','#e67e22','#7c3aed','#c0392b','#16a085','#d35400','#8e44ad'];
 
 let mesFiltro = new Date().getMonth();
-let todosPedidos = [], todasVentas = [], todosGastos = [];
-let productosFirebase = {}, stockData = {};
-let charts = {};
+let todosPedidos=[], todasVentas=[], todosGastos=[], todasCompras=[];
+let productosFirebase={}, stockData={};
+let charts={};
 
 // ── Period ─────────────────────────────────────────────────
 function renderPills() {
-  const pills = document.getElementById('mes-pills');
-  pills.innerHTML =
+  document.getElementById('mes-pills').innerHTML =
     `<button class="mes-btn all ${mesFiltro===-1?'active':''}" onclick="setMes(-1)">Todo el año</button>` +
     MESES.map((m,i)=>`<button class="mes-btn ${mesFiltro===i?'active':''}" onclick="setMes(${i})">${m.slice(0,3)}</button>`).join('');
   document.getElementById('chart-año').textContent = AÑO;
   document.getElementById('period-desc').textContent =
     mesFiltro===-1 ? `Año ${AÑO} completo` : `${MESES[mesFiltro]} ${AÑO}`;
 }
-function setMes(i) { mesFiltro=i; renderPills(); renderTodo(); }
-function esPeriodo(fechaISO) {
+function setMes(i){mesFiltro=i;renderPills();renderTodo();}
+function esPeriodo(fechaISO){
   if(!fechaISO) return false;
-  const d = new Date(fechaISO);
-  return d.getFullYear()===AÑO && (mesFiltro===-1 || d.getMonth()===mesFiltro);
+  const d=new Date(fechaISO);
+  return d.getFullYear()===AÑO&&(mesFiltro===-1||d.getMonth()===mesFiltro);
 }
 
 // ── Formato ────────────────────────────────────────────────
-function fmt(n) { return '$'+Math.round(n||0).toLocaleString('es-UY'); }
-function fmtF(iso) { return new Date(iso).toLocaleDateString('es-UY',{day:'2-digit',month:'2-digit'}); }
+function fmt(n){return '$'+Math.round(n||0).toLocaleString('es-UY');}
+function fmtF(iso){return new Date(iso).toLocaleDateString('es-UY',{day:'2-digit',month:'2-digit'});}
 
-// ── Stock helpers ─────────────────────────────────────────
-function getStock(id) { return stockData[id]!==undefined ? stockData[id] : 0; }
-
-function getAllVariants() {
+// ── Stock ─────────────────────────────────────────────────
+function getStock(id){return stockData[id]!==undefined?stockData[id]:0;}
+function getAllVariants(){
   return Object.entries(productosFirebase).flatMap(([pid,prod])=>
     (prod.variantes||[]).map((v,i)=>({
-      id:pid+'-'+i, nombre:prod.nombre, variante:v.nombre,
-      precio:v.precio||0, categoria:prod.categoria||'Otros',
-      stock:getStock(pid+'-'+i)
+      id:pid+'-'+i,nombre:prod.nombre,variante:v.nombre,
+      precio:v.precio||0,categoria:prod.categoria||'Otros',stock:getStock(pid+'-'+i)
     }))
   );
 }
-
-function obtenerNombreProd(id) {
-  const v = getAllVariants().find(v=>v.id===id);
-  return v ? `${v.nombre} — ${v.variante}` : 'Producto';
+function obtenerNombreProd(id){
+  const v=getAllVariants().find(v=>v.id===id);
+  return v?`${v.nombre} — ${v.variante}`:'Producto';
 }
 
-// ── Main render ────────────────────────────────────────────
-function renderTodo() {
-  const ventasMes = [
+// ── Render ─────────────────────────────────────────────────
+function renderTodo(){
+  const ventasMes=[
     ...todosPedidos.filter(p=>ESTADOS_VENTA.includes(p.estado)&&esPeriodo(p.fecha))
       .map(p=>({id:p.id,tipo:'auto',fecha:p.fecha,desc:p.cliente||'Pedido web',
                 canal:p.origen==='whatsapp'?'WhatsApp':'Web',importe:p.total||0})),
     ...todasVentas.filter(v=>esPeriodo(v.fecha))
   ].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
 
-  const gastosMes = todosGastos.filter(g=>esPeriodo(g.fecha))
+  const gastosMes=todosGastos.filter(g=>esPeriodo(g.fecha))
     .sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
 
-  const totalV = ventasMes.reduce((s,v)=>s+(v.importe||0),0);
-  const totalG = gastosMes.reduce((s,g)=>s+(g.importe||0),0);
-  const balance = totalV - totalG;
+  const comprasMes=todasCompras.filter(c=>esPeriodo(c.fecha))
+    .sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
 
-  document.getElementById('k-ventas').textContent = fmt(totalV);
-  document.getElementById('k-gastos').textContent = fmt(totalG);
-  document.getElementById('k-balance').textContent = fmt(balance);
-  document.getElementById('k-ticket').textContent = ventasMes.length ? fmt(totalV/ventasMes.length) : '$0';
-  document.getElementById('k-ventas-sub').textContent = `${ventasMes.length} transacciones`;
-  document.getElementById('k-gastos-sub').textContent = `${gastosMes.length} registros`;
-  document.getElementById('k-balance-sub').textContent = balance>=0 ? '↑ positivo' : '↓ negativo';
-  document.getElementById('k-balance-card').className = 'kpi-card '+(balance>=0?'azul':'rojo');
+  const totalV=ventasMes.reduce((s,v)=>s+(v.importe||0),0);
+  const totalG=gastosMes.reduce((s,g)=>s+(g.importe||0),0);
+  const totalC=comprasMes.reduce((s,c)=>s+(c.total||0),0);
+  const balance=totalV-(totalG+totalC);
 
-  renderTablaVentas(ventasMes, totalV);
-  renderTablaGastos(gastosMes, totalG);
-  document.getElementById('tbl-ventas-total').textContent = fmt(totalV);
-  document.getElementById('tbl-gastos-total').textContent = fmt(totalG);
+  document.getElementById('k-ventas').textContent=fmt(totalV);
+  document.getElementById('k-gastos').textContent=fmt(totalG+totalC);
+  document.getElementById('k-balance').textContent=fmt(balance);
+  document.getElementById('k-ticket').textContent=ventasMes.length?fmt(totalV/ventasMes.length):'$0';
+  document.getElementById('k-ventas-sub').textContent=`${ventasMes.length} transacciones`;
+  document.getElementById('k-gastos-sub').textContent=`${gastosMes.length+comprasMes.length} registros`;
+  document.getElementById('k-balance-sub').textContent=balance>=0?'↑ positivo':'↓ negativo';
+  document.getElementById('k-balance-card').className='kpi-card '+(balance>=0?'azul':'rojo');
+
+  renderTablaVentas(ventasMes,totalV);
+  renderTablaGastos(gastosMes,totalG);
+  renderTablaCompras(comprasMes,totalC);
+  document.getElementById('tbl-ventas-total').textContent=fmt(totalV);
+  document.getElementById('tbl-gastos-total').textContent=fmt(totalG);
+  document.getElementById('tbl-compras-total').textContent=fmt(totalC);
 
   renderChartMeses();
   renderChartPlat(ventasMes);
-  renderChartGastos(gastosMes);
+  renderChartGastos(gastosMes,comprasMes);
 }
 
-function renderStockUI() {
-  const vars = getAllVariants();
-  const totalUnits = vars.reduce((s,v)=>s+v.stock,0);
-  const valorInv   = vars.reduce((s,v)=>s+v.stock*v.precio,0);
-  const sinStock   = vars.filter(v=>v.stock===0);
-  const bajoStock  = vars.filter(v=>v.stock>0&&v.stock<=2);
+function renderStockUI(){
+  const vars=getAllVariants();
+  const totalUnits=vars.reduce((s,v)=>s+v.stock,0);
+  const valorInv=vars.reduce((s,v)=>s+v.stock*v.precio,0);
+  const sinStock=vars.filter(v=>v.stock===0);
+  const bajoStock=vars.filter(v=>v.stock>0&&v.stock<=2);
 
-  document.getElementById('sk-valor').textContent = fmt(valorInv);
-  document.getElementById('sk-units').textContent = totalUnits.toLocaleString('es-UY');
-  document.getElementById('sk-sin').textContent   = sinStock.length;
-  document.getElementById('sk-bajo').textContent  = bajoStock.length;
+  document.getElementById('sk-valor').textContent=fmt(valorInv);
+  document.getElementById('sk-units').textContent=totalUnits.toLocaleString('es-UY');
+  document.getElementById('sk-sin').textContent=sinStock.length;
+  document.getElementById('sk-bajo').textContent=bajoStock.length;
 
-  // Alertas
-  const alertas = [...sinStock,...bajoStock].slice(0,10);
-  const wrap = document.getElementById('alerta-lista-wrap');
-  if(!alertas.length) {
-    wrap.innerHTML='<p class="empty-msg" style="color:#507a3a">✓ Todo el stock en orden</p>';
-  } else {
-    wrap.innerHTML=`<ul class="alerta-lista">${alertas.map(v=>`
+  const alertas=[...sinStock,...bajoStock].slice(0,10);
+  const wrap=document.getElementById('alerta-lista-wrap');
+  wrap.innerHTML=!alertas.length
+    ?'<p class="empty-msg" style="color:#507a3a">✓ Todo el stock en orden</p>'
+    :`<ul class="alerta-lista">${alertas.map(v=>`
       <li class="alerta-item">
         <div><div class="alerta-nombre">${v.nombre}</div><div class="alerta-variante">${v.variante}</div></div>
         <span class="${v.stock===0?'badge-0':'badge-bajo'}">${v.stock===0?'SIN STOCK':v.stock+' ud.'}</span>
       </li>`).join('')}</ul>`;
-  }
 
   renderChartStock(vars);
   llenarSelectProductos();
 }
 
-function renderTablaVentas(ventas) {
-  const tb = document.getElementById('tbl-ventas');
-  const rows = ventas.slice(0,8);
+function renderTablaVentas(ventas){
+  const tb=document.getElementById('tbl-ventas');
+  const rows=ventas.slice(0,8);
   if(!rows.length){tb.innerHTML=`<tr><td colspan="4" class="empty-msg">Sin ventas en el período</td></tr>`;return;}
-  tb.innerHTML=rows.map(v=>`
-    <tr>
-      <td class="muted">${fmtF(v.fecha)}</td>
-      <td>${v.desc||'—'}${v.tipo==='auto'?'<span class="badge badge-azul" style="margin-left:4px">Auto</span>':''}</td>
-      <td class="muted">${v.canal||'—'}</td>
-      <td class="num">${fmt(v.importe)}</td>
-    </tr>`).join('');
+  tb.innerHTML=rows.map(v=>`<tr>
+    <td class="muted">${fmtF(v.fecha)}</td>
+    <td>${v.desc||'—'}${v.tipo==='auto'?'<span class="badge badge-azul" style="margin-left:4px">Auto</span>':''}</td>
+    <td class="muted">${v.canal||'—'}</td>
+    <td class="num">${fmt(v.importe)}</td>
+  </tr>`).join('');
 }
 
-function renderTablaGastos(gastos) {
-  const tb = document.getElementById('tbl-gastos');
-  const rows = gastos.slice(0,8);
+function renderTablaGastos(gastos){
+  const tb=document.getElementById('tbl-gastos');
+  const rows=gastos.slice(0,8);
   if(!rows.length){tb.innerHTML=`<tr><td colspan="4" class="empty-msg">Sin gastos en el período</td></tr>`;return;}
-  tb.innerHTML=rows.map(g=>`
-    <tr>
-      <td class="muted">${fmtF(g.fecha)}</td>
-      <td><span class="badge badge-rojo">${g.categoria||'—'}</span></td>
-      <td class="muted">${(g.detalle||'').slice(0,28)||'—'}</td>
-      <td class="num">${fmt(g.importe)}</td>
-    </tr>`).join('');
+  tb.innerHTML=rows.map(g=>`<tr>
+    <td class="muted">${fmtF(g.fecha)}</td>
+    <td><span class="badge badge-rojo">${g.categoria||'—'}</span></td>
+    <td class="muted">${(g.detalle||'').slice(0,28)||'—'}</td>
+    <td class="num">${fmt(g.importe)}</td>
+  </tr>`).join('');
+}
+
+function renderTablaCompras(compras,total){
+  const tb=document.getElementById('tbl-compras');
+  const rows=compras.slice(0,12);
+  if(!rows.length){tb.innerHTML=`<tr><td colspan="7" class="empty-msg">Sin compras en el período</td></tr>`;return;}
+  tb.innerHTML=rows.map(c=>`<tr>
+    <td class="muted">${fmtF(c.fecha)}</td>
+    <td>${c.proveedor||'—'}</td>
+    <td><span class="badge badge-azul">${c.insumo||'—'}</span></td>
+    <td>${(c.descripcion||c.desc||'—').slice(0,30)}</td>
+    <td class="num">${c.cantidad||'—'}</td>
+    <td class="num muted">${c.costo_unit?fmt(c.costo_unit):'—'}</td>
+    <td class="num">${fmt(c.total)}</td>
+  </tr>`).join('');
 }
 
 // ── Charts ─────────────────────────────────────────────────
-function destroyChart(key){if(charts[key]){charts[key].destroy();charts[key]=null;}}
+function destroyChart(k){if(charts[k]){charts[k].destroy();charts[k]=null;}}
 
-function renderChartMeses() {
+function renderChartMeses(){
   destroyChart('meses');
-  const vPorMes=Array(12).fill(0), gPorMes=Array(12).fill(0);
+  const vPM=Array(12).fill(0),gPM=Array(12).fill(0);
   [...todosPedidos.filter(p=>ESTADOS_VENTA.includes(p.estado)&&new Date(p.fecha).getFullYear()===AÑO)
     .map(p=>({fecha:p.fecha,importe:p.total||0})),
    ...todasVentas.filter(v=>new Date(v.fecha).getFullYear()===AÑO)]
-    .forEach(v=>{const m=new Date(v.fecha).getMonth();vPorMes[m]+=v.importe||0;});
-  todosGastos.filter(g=>new Date(g.fecha).getFullYear()===AÑO)
-    .forEach(g=>{const m=new Date(g.fecha).getMonth();gPorMes[m]+=g.importe||0;});
+    .forEach(v=>{const m=new Date(v.fecha).getMonth();vPM[m]+=v.importe||0;});
+  [...todosGastos.filter(g=>new Date(g.fecha).getFullYear()===AÑO).map(g=>({fecha:g.fecha,importe:g.importe||0})),
+   ...todasCompras.filter(c=>new Date(c.fecha).getFullYear()===AÑO).map(c=>({fecha:c.fecha,importe:c.total||0}))]
+    .forEach(g=>{const m=new Date(g.fecha).getMonth();gPM[m]+=g.importe||0;});
   charts.meses=new Chart(document.getElementById('chart-meses').getContext('2d'),{
     type:'bar',data:{labels:MESES.map(m=>m.slice(0,3)),datasets:[
-      {label:'Ventas',data:vPorMes.map(Math.round),backgroundColor:'rgba(80,122,58,.85)',borderRadius:6,borderSkipped:false},
-      {label:'Gastos',data:gPorMes.map(Math.round),backgroundColor:'rgba(192,57,43,.7)',borderRadius:6,borderSkipped:false}
+      {label:'Ventas',data:vPM.map(Math.round),backgroundColor:'rgba(80,122,58,.85)',borderRadius:6,borderSkipped:false},
+      {label:'Gastos+Compras',data:gPM.map(Math.round),backgroundColor:'rgba(192,57,43,.7)',borderRadius:6,borderSkipped:false}
     ]},options:{responsive:true,maintainAspectRatio:true,
       plugins:{legend:{labels:{font:{family:'Montserrat',size:11},boxWidth:12,boxHeight:12}}},
       scales:{x:{grid:{display:false},ticks:{font:{family:'Montserrat',size:10}}},
@@ -619,7 +668,7 @@ function renderChartMeses() {
   });
 }
 
-function renderChartPlat(ventas) {
+function renderChartPlat(ventas){
   destroyChart('plat');
   const map={};
   ventas.forEach(v=>{const k=v.canal||'Otro';map[k]=(map[k]||0)+(v.importe||0);});
@@ -634,16 +683,17 @@ function renderChartPlat(ventas) {
   });
 }
 
-function renderChartGastos(gastos) {
+function renderChartGastos(gastos,compras){
   destroyChart('gastos');
   const map={};
   gastos.forEach(g=>{const k=g.categoria||'Otros';map[k]=(map[k]||0)+(g.importe||0);});
+  compras.forEach(c=>{const k='Mercadería';map[k]=(map[k]||0)+(c.total||0);});
   const entries=Object.entries(map).sort((a,b)=>b[1]-a[1]);
   if(!entries.length) return;
   charts.gastos=new Chart(document.getElementById('chart-gastos').getContext('2d'),{
     type:'doughnut',data:{labels:entries.map(([k])=>k),
       datasets:[{data:entries.map(([,v])=>Math.round(v)),
-        backgroundColor:['#c0392b','#e67e22','#d35400','#7c3aed','#2563eb','#16a085'],
+        backgroundColor:['#1a5276','#c0392b','#e67e22','#7c3aed','#2563eb','#16a085','#d35400'],
         borderWidth:2,borderColor:'#fff'}]},
     options:{responsive:true,maintainAspectRatio:true,
       plugins:{legend:{position:'right',labels:{font:{family:'Montserrat',size:10},boxWidth:12,padding:8}},
@@ -651,7 +701,7 @@ function renderChartGastos(gastos) {
   });
 }
 
-function renderChartStock(vars) {
+function renderChartStock(vars){
   destroyChart('stock');
   const map={};
   vars.forEach(v=>{const k=v.categoria;map[k]=(map[k]||0)+v.stock;});
@@ -668,27 +718,25 @@ function renderChartStock(vars) {
   });
 }
 
-// ── Selects productos ─────────────────────────────────────
-function llenarSelectProductos() {
-  const vars = getAllVariants();
-  const optsV = '<option value="">— Sin descontar del stock —</option>' +
+// ── Selects ────────────────────────────────────────────────
+function llenarSelectProductos(){
+  const vars=getAllVariants();
+  document.getElementById('v-producto').innerHTML=
+    '<option value="">— Sin descontar del stock —</option>'+
     vars.map(v=>`<option value="${v.id}" data-precio="${v.precio}" data-stock="${v.stock}">${v.nombre} — ${v.variante} (${v.stock} ud · $${v.precio})</option>`).join('');
-  document.getElementById('v-producto').innerHTML = optsV;
-
-  const optsC = '<option value="">— Elegí un producto —</option>' +
-    vars.map(v=>`<option value="${v.id}" data-precio="${v.precio}" data-stock="${v.stock}">${v.nombre} — ${v.variante} (en stock: ${v.stock})</option>`).join('');
-  document.getElementById('c-producto').innerHTML = optsC;
+  document.getElementById('c-producto').innerHTML=
+    '<option value="">— No vincular al stock —</option>'+
+    vars.map(v=>`<option value="${v.id}" data-stock="${v.stock}">${v.nombre} — ${v.variante} (stock: ${v.stock})</option>`).join('');
 }
 
-function onVentaProductoChange() {
+function onVentaProductoChange(){
   const sel=document.getElementById('v-producto');
-  const opt=sel.options[sel.selectedIndex];
   const grp=document.getElementById('v-cantidad-group');
   const disp=document.getElementById('v-stock-disp');
   if(!sel.value){grp.style.display='none';return;}
   grp.style.display='block';
-  const s=parseInt(opt.dataset.stock)||0;
-  const p=parseFloat(opt.dataset.precio)||0;
+  const opt=sel.options[sel.selectedIndex];
+  const s=parseInt(opt.dataset.stock)||0, p=parseFloat(opt.dataset.precio)||0;
   disp.style.display='block';
   if(s===0){disp.textContent='⚠ Sin stock disponible';disp.className='stock-disp sin';}
   else if(s<=2){disp.textContent=`⚠ Stock bajo: ${s} unidad${s>1?'es':''}`;disp.className='stock-disp bajo';}
@@ -696,7 +744,7 @@ function onVentaProductoChange() {
   if(p>0&&!document.getElementById('v-importe').value) document.getElementById('v-importe').value=p;
 }
 
-function onVentaCantidadChange() {
+function onVentaCantidadChange(){
   const sel=document.getElementById('v-producto');
   if(!sel.value) return;
   const cant=parseInt(document.getElementById('v-cantidad').value)||1;
@@ -704,62 +752,67 @@ function onVentaCantidadChange() {
   if(p>0) document.getElementById('v-importe').value=p*cant;
 }
 
-function onCompraProductoChange() {
+function onCompraProductoChange(){
   const sel=document.getElementById('c-producto');
   const disp=document.getElementById('c-stock-disp');
-  if(!sel.value){disp.textContent='';return;}
+  if(!sel.value){disp.style.display='none';return;}
   const s=parseInt(sel.options[sel.selectedIndex].dataset.stock)||0;
+  disp.style.display='block';
   disp.textContent=`Stock actual: ${s} unidades`;
   disp.className='stock-disp';
 }
 
-// ── Firebase listeners ────────────────────────────────────
-db.ref('pedidos').on('value', snap=>{
+function calcTotalCompra(){
+  const cant=parseFloat(document.getElementById('c-cantidad').value)||0;
+  const unit=parseFloat(document.getElementById('c-costo-unit').value)||0;
+  if(cant&&unit) document.getElementById('c-total').value=(cant*unit).toFixed(2);
+}
+
+// ── Firebase ───────────────────────────────────────────────
+db.ref('pedidos').on('value',snap=>{
   todosPedidos=[];snap.forEach(c=>todosPedidos.push({id:c.key,...c.val()}));renderTodo();
 });
-db.ref('ventas_manual').on('value', snap=>{
+db.ref('ventas_manual').on('value',snap=>{
   todasVentas=[];snap.forEach(c=>todasVentas.push({id:c.key,...c.val()}));renderTodo();
 });
-db.ref('gastos').on('value', snap=>{
+db.ref('gastos').on('value',snap=>{
   todosGastos=[];snap.forEach(c=>todosGastos.push({id:c.key,...c.val()}));renderTodo();
 });
-db.ref('productos').on('value', snap=>{
+db.ref('compras').on('value',snap=>{
+  todasCompras=[];snap.forEach(c=>todasCompras.push({id:c.key,...c.val()}));renderTodo();
+});
+db.ref('productos').on('value',snap=>{
   productosFirebase={};snap.forEach(c=>{productosFirebase[c.key]={id:c.key,...c.val()};});renderStockUI();
 });
-db.ref('stock').on('value', snap=>{
+db.ref('stock').on('value',snap=>{
   stockData=snap.val()||{};renderStockUI();
 });
 
 // ── Panel ─────────────────────────────────────────────────
-function abrirPanel(tipo) {
+function abrirPanel(tipo){
   ['venta','gasto','compra'].forEach(t=>document.getElementById('form-'+t).style.display='none');
   document.getElementById('form-'+tipo).style.display='block';
-  document.getElementById('panel-title').textContent={venta:'Nueva venta',gasto:'Nuevo gasto',compra:'Reposición de stock'}[tipo];
+  document.getElementById('panel-title').textContent={venta:'Nueva venta',gasto:'Nuevo gasto',compra:'Compra de mercadería'}[tipo];
   const hoy=new Date().toISOString().split('T')[0];
   if(tipo==='venta'){
     document.getElementById('v-fecha').value=hoy;
-    document.getElementById('v-importe').value='';
-    document.getElementById('v-desc').value='';
-    document.getElementById('v-producto').value='';
-    document.getElementById('v-cantidad').value=1;
+    document.getElementById('v-importe').value='';document.getElementById('v-desc').value='';
+    document.getElementById('v-producto').value='';document.getElementById('v-cantidad').value=1;
     document.getElementById('v-desc2').value='';
     document.getElementById('v-cantidad-group').style.display='none';
     document.getElementById('v-stock-disp').style.display='none';
   }
   if(tipo==='gasto'){
     document.getElementById('g-fecha').value=hoy;
-    document.getElementById('g-importe').value='';
-    document.getElementById('g-detalle').value='';
+    document.getElementById('g-importe').value='';document.getElementById('g-detalle').value='';
     document.getElementById('g-prov').value='';
   }
   if(tipo==='compra'){
     document.getElementById('c-fecha').value=hoy;
-    document.getElementById('c-importe').value='';
-    document.getElementById('c-detalle').value='';
-    document.getElementById('c-prov').value='';
-    document.getElementById('c-cantidad').value=1;
+    document.getElementById('c-desc').value='';document.getElementById('c-cantidad').value=1;
+    document.getElementById('c-costo-unit').value='';document.getElementById('c-total').value='';
     document.getElementById('c-producto').value='';
-    onCompraProductoChange();
+    document.getElementById('c-stock-disp').style.display='none';
   }
   document.getElementById('add-panel').classList.add('open');
   document.getElementById('panel-overlay').classList.add('open');
@@ -769,8 +822,8 @@ function cerrarPanel(){
   document.getElementById('panel-overlay').classList.remove('open');
 }
 
-// ── Guardar venta ─────────────────────────────────────────
-async function guardarVenta() {
+// ── Guardar ────────────────────────────────────────────────
+async function guardarVenta(){
   const fecha=document.getElementById('v-fecha').value;
   const imp=parseFloat(document.getElementById('v-importe').value);
   const desc=document.getElementById('v-desc').value.trim();
@@ -780,25 +833,14 @@ async function guardarVenta() {
   const cant=parseInt(document.getElementById('v-cantidad').value)||1;
   const desc2=parseFloat(document.getElementById('v-desc2').value)||0;
   if(!fecha||!imp){alert('Completá la fecha y el importe.');return;}
-
-  if(prodId){
-    const stockActual=getStock(prodId);
-    if(stockActual<cant){
-      if(!confirm(`⚠ Solo hay ${stockActual} unidad${stockActual!==1?'es':''} en stock. ¿Guardar igual?`)) return;
-    }
-  }
-
-  await db.ref('ventas_manual').push({
-    fecha,importe:imp,desc,canal,forma_pago:pago,descuento:desc2,tipo:'manual',
-    ...(prodId?{productoId:prodId,cantidad:cant}:{})
-  });
-
+  if(prodId&&getStock(prodId)<cant)
+    if(!confirm(`⚠ Solo hay ${getStock(prodId)} unidades. ¿Guardar igual?`)) return;
+  await db.ref('ventas_manual').push({fecha,importe:imp,desc,canal,forma_pago:pago,descuento:desc2,tipo:'manual',...(prodId?{productoId:prodId,cantidad:cant}:{})});
   if(prodId) await db.ref('stock/'+prodId).transaction(v=>(v||0)-cant);
   cerrarPanel();
 }
 
-// ── Guardar gasto ─────────────────────────────────────────
-async function guardarGasto() {
+async function guardarGasto(){
   const fecha=document.getElementById('g-fecha').value;
   const imp=parseFloat(document.getElementById('g-importe').value);
   const cat=document.getElementById('g-cat').value;
@@ -810,23 +852,19 @@ async function guardarGasto() {
   cerrarPanel();
 }
 
-// ── Guardar compra ────────────────────────────────────────
-async function guardarCompra() {
+async function guardarCompra(){
   const fecha=document.getElementById('c-fecha').value;
-  const imp=parseFloat(document.getElementById('c-importe').value)||0;
-  const prodId=document.getElementById('c-producto').value;
-  const cant=parseInt(document.getElementById('c-cantidad').value)||1;
-  const prov=document.getElementById('c-prov').value.trim();
-  const detalle=document.getElementById('c-detalle').value.trim();
+  const prov=document.getElementById('c-prov').value;
   const pago=document.getElementById('c-pago').value;
-  if(!fecha||!prodId){alert('Elegí un producto y cargá la fecha.');return;}
-
-  await db.ref('stock/'+prodId).transaction(v=>(v||0)+cant);
-  await db.ref('gastos').push({
-    fecha,importe:imp,categoria:'Mercadería',
-    detalle:detalle||(cant+' uds — '+obtenerNombreProd(prodId)),
-    proveedor:prov,forma_pago:pago,productoId:prodId,cantidad:cant,tipo:'reposicion'
-  });
+  const insumo=document.getElementById('c-insumo').value;
+  const desc=document.getElementById('c-desc').value.trim();
+  const cant=parseInt(document.getElementById('c-cantidad').value)||1;
+  const costoUnit=parseFloat(document.getElementById('c-costo-unit').value)||0;
+  const total=parseFloat(document.getElementById('c-total').value)||costoUnit*cant;
+  const prodId=document.getElementById('c-producto').value;
+  if(!fecha||!desc){alert('Completá la fecha y la descripción.');return;}
+  await db.ref('compras').push({fecha,proveedor:prov,forma_pago:pago,insumo,descripcion:desc,cantidad:cant,costo_unit:costoUnit,total,...(prodId?{productoId:prodId}:{})});
+  if(prodId) await db.ref('stock/'+prodId).transaction(v=>(v||0)+cant);
   cerrarPanel();
 }
 
@@ -850,12 +888,14 @@ async function procesarImport(file){
     try{
       const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
       const toISO=raw=>{
-        if(raw instanceof Date&&!isNaN(raw)) return raw.toISOString().split('T')[0];
+        if(raw instanceof Date&&!isNaN(raw))return raw.toISOString().split('T')[0];
         if(raw){const d=new Date(raw);if(!isNaN(d))return d.toISOString().split('T')[0];}
         return null;
       };
-      let cv=0,cg=0;
-      const shV=wb.SheetNames.find(n=>n.toUpperCase().includes('VENTA'));
+      let cv=0,cg=0,cc=0;
+
+      // Ventas
+      const shV=wb.SheetNames.find(n=>n.toUpperCase().includes('VENTA')&&!n.toUpperCase().includes('2025'));
       if(shV){
         for(const row of normRows(wb.Sheets[shV])){
           const imp=parseFloat(row['SUBTOTAL VENTAS']||row['SUBTOTAL']||0);
@@ -868,13 +908,14 @@ async function procesarImport(file){
             forma_pago:String(row['FORMA DE PAGO']||'').trim(),
             grupo:String(row['GRUPO']||'').trim(),
             comprador:String(row['COMPRADOR']||'').trim(),
-            descuento:parseFloat(row['DESCUENTOS']||0)||0,
-            tipo:'manual',importado:true
+            descuento:parseFloat(row['DESCUENTOS']||0)||0,tipo:'manual',importado:true
           });
           cv++;
-          if(cv%10===0) prog.textContent=`Importando ventas... ${cv}`;
+          if(cv%10===0)prog.textContent=`Ventas: ${cv}...`;
         }
       }
+
+      // Gastos
       const shG=wb.SheetNames.find(n=>n.toUpperCase().includes('GASTO'));
       if(shG){
         for(const row of normRows(wb.Sheets[shG])){
@@ -886,19 +927,40 @@ async function procesarImport(file){
             categoria:String(row['GRUPO']||'Varios').trim(),
             detalle:String(row['DETALLE DEL GASTO']||row['DETALLE']||'').trim(),
             proveedor:String(row['PROVEEDOR']||'').trim(),
-            forma_pago:String(row['FORMA DE PAGO']||'').trim(),
-            importado:true
+            forma_pago:String(row['FORMA DE PAGO']||'').trim(),importado:true
           });
           cg++;
         }
       }
-      prog.textContent=`✅ ¡Listo! ${cv} ventas y ${cg} gastos importados.`;
+
+      // Compra de mercadería
+      const shC=wb.SheetNames.find(n=>n.toUpperCase().includes('COMPRA'));
+      if(shC){
+        for(const row of normRows(wb.Sheets[shC])){
+          const cant=parseFloat(row['CANTIDAD']||0);
+          const fecha=toISO(row['FECHA']);
+          if(!cant||!fecha) continue;
+          const costoUnit=parseFloat(row['COSTO UNIT']||row['COSTO UNITARIO']||0);
+          const total=parseFloat(row['COSTO TOTAL']||row['TOTAL']||0)||costoUnit*cant;
+          await db.ref('compras').push({
+            fecha,
+            proveedor:String(row['PROVEEDOR']||'').trim(),
+            forma_pago:String(row['FORMA DE']||row['FORMA DE PAGO']||'').trim(),
+            insumo:String(row['INSUMO']||'').trim(),
+            descripcion:String(row['DESCRIPCIÓN']||row['DESCRIPCION']||'').trim(),
+            cantidad:cant,costo_unit:costoUnit,total,importado:true
+          });
+          cc++;
+          if(cc%10===0)prog.textContent=`Compras: ${cc}...`;
+        }
+      }
+
+      prog.textContent=`✅ Listo! ${cv} ventas, ${cg} gastos, ${cc} compras importadas.`;
     }catch(err){prog.textContent='⚠️ Error: '+err.message;}
   };
   reader.readAsArrayBuffer(file);
 }
 
-// ── Init ──────────────────────────────────────────────────
 renderPills();
 </script>
 </body>
