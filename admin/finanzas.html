@@ -10,6 +10,9 @@
   <meta name="theme-color" content="#f2ede6" />
   <title>Sendera - Finanzas</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="../firebase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -26,73 +29,100 @@
     .nav-links a { color: #7a6e62; text-decoration: none; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 500; }
     .nav-links a:hover { background: #f2ede6; color: #3a3026; }
     .nav-links a.active { background: #507a3a; color: #fff; }
-    .btn-logout { font-size: 0.72rem; color: #9a8f82; cursor: pointer; text-transform: uppercase; letter-spacing: 0.08em; background: none; border: 1px solid #ddd5c8; border-radius: 8px; padding: 7px 14px; margin-left: 8px; transition: all 0.2s; }
+    .btn-logout { font-size: 0.72rem; color: #9a8f82; cursor: pointer; text-transform: uppercase; letter-spacing: 0.08em; background: none; border: 1px solid #ddd5c8; border-radius: 8px; padding: 7px 14px; margin-left: 8px; transition: all 0.2s; font-family: 'Montserrat', sans-serif; }
     .btn-logout:hover { background: #f2ede6; color: #3a3026; }
-    .btn-logout-top { display: none; background: none; border: none; cursor: pointer; font-size: 1rem; color: #9a8f82; padding: 2px 6px; margin-left: 6px; vertical-align: middle; transition: color 0.2s; }
-    .btn-logout-top:hover { color: #3a3026; }
+    .btn-logout-top { display: none; background: none; border: none; cursor: pointer; font-size: 1rem; color: #9a8f82; padding: 2px 6px; margin-left: 6px; vertical-align: middle; }
 
-    .container { max-width: 1000px; margin: 0 auto; padding: 28px 20px 60px; }
+    .container { max-width: 960px; margin: 0 auto; padding: 28px 20px 60px; }
 
-    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+    /* HEADER */
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; gap: 12px; flex-wrap: wrap; }
     .page-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: #3a3026; }
     .page-header p { color: #9a8f82; font-size: 0.78rem; margin-top: 3px; }
+    .btn-import { background: none; border: 1.5px solid #c8d8be; border-radius: 10px; padding: 9px 18px; font-family: 'Montserrat', sans-serif; font-size: 0.72rem; color: #507a3a; cursor: pointer; transition: all 0.2s; font-weight: 500; letter-spacing: 0.04em; }
+    .btn-import:hover { background: #507a3a; color: #fff; border-color: #507a3a; }
 
-    /* UPLOAD */
-    .upload-zone {
-      display: block; border: 2.5px dashed #c8d8be; border-radius: 16px;
-      padding: 64px 20px; text-align: center; background: #f9fbf7;
-      cursor: pointer; transition: all 0.25s; max-width: 520px; margin: 0 auto;
-    }
-    .upload-zone:hover, .upload-zone.drag-over { border-color: #507a3a; background: #f0f7ea; }
-    .upload-icon { font-size: 3.2rem; margin-bottom: 16px; }
-    .upload-zone h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.7rem; color: #3a3026; margin-bottom: 8px; }
-    .upload-zone p { color: #9a8f82; font-size: 0.8rem; line-height: 1.6; }
-    .upload-zone input[type=file] { display: none; }
-    .upload-btn { margin-top: 22px; display: inline-block; background: #507a3a; color: #fff; border: none; border-radius: 10px; padding: 11px 28px; font-family: 'Montserrat', sans-serif; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; }
+    /* MES SELECTOR */
+    .mes-nav { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 22px; }
+    .mes-btn { padding: 6px 14px; border: 1.5px solid #e8dfd2; background: #fff; color: #7a6e62; font-family: 'Montserrat', sans-serif; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; border-radius: 20px; transition: all 0.2s; font-weight: 500; }
+    .mes-btn:hover { border-color: #b8dba8; color: #507a3a; }
+    .mes-btn.active { background: #507a3a; color: #fff; border-color: #507a3a; }
 
-    /* DASHBOARD */
-    .fin-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 32px; }
-    .fin-kpi { background: #fff; border-radius: 14px; border: 1.5px solid #e8dfd2; padding: 22px 18px; text-align: center; box-shadow: 0 2px 8px rgba(80,60,30,0.05); }
-    .fin-kpi .num { font-family: 'Cormorant Garamond', serif; font-size: 2rem; }
-    .fin-kpi .lbl { font-size: 0.65rem; color: #9a8f82; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 6px; }
+    /* KPIs */
+    .fin-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+    .fin-kpi { background: #fff; border-radius: 14px; border: 1.5px solid #e8dfd2; padding: 20px 16px; text-align: center; box-shadow: 0 2px 8px rgba(80,60,30,0.05); }
+    .fin-kpi .num { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-variant-numeric: tabular-nums; }
+    .fin-kpi .lbl { font-size: 0.63rem; color: #9a8f82; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 5px; }
     .fin-kpi.verde .num { color: #507a3a; }
     .fin-kpi.rojo .num { color: #e74c3c; }
+    .fin-kpi.neutro .num { color: #3a3026; }
 
-    .fin-section { margin-bottom: 32px; }
-    .fin-section h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: #3a3026; margin-bottom: 16px; border-bottom: 1.5px solid #e8dfd2; padding-bottom: 10px; }
+    /* SECCIONES */
+    .fin-section { background: #fff; border-radius: 14px; border: 1.5px solid #e8dfd2; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 6px rgba(80,60,30,0.04); }
+    .section-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1.5px solid #f0ebe3; }
+    .section-header h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; color: #3a3026; }
+    .section-total { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: #507a3a; margin-left: auto; margin-right: 16px; font-variant-numeric: tabular-nums; }
+    .btn-add { background: #507a3a; color: #fff; border: none; border-radius: 10px; padding: 8px 16px; font-family: 'Montserrat', sans-serif; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+    .btn-add:hover { background: #3d5c2c; }
 
-    .fin-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+    /* ADD FORM */
+    .add-form { background: #f9fbf7; border-bottom: 1.5px solid #e8dfd2; padding: 16px 20px; animation: slideDown 0.2s ease; }
+    @keyframes slideDown { from { opacity:0; transform: translateY(-8px); } to { opacity:1; transform: translateY(0); } }
+    .form-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 0.62rem; color: #9a8f82; text-transform: uppercase; letter-spacing: 0.08em; }
+    .form-group input, .form-group select {
+      padding: 8px 12px; border: 1.5px solid #e8dfd2; border-radius: 8px;
+      font-family: 'Montserrat', sans-serif; font-size: 0.78rem; color: #3a3026;
+      background: #fff; outline: none; transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: #507a3a; }
+    .form-group input[type=date] { width: 140px; }
+    .form-group input[type=number] { width: 120px; }
+    .form-group input[type=text] { width: 220px; }
+    .form-group select { width: 160px; }
+    .form-btns { display: flex; gap: 8px; padding-top: 2px; }
+    .btn-save { background: #507a3a; color: #fff; border: none; border-radius: 8px; padding: 8px 20px; font-family: 'Montserrat', sans-serif; font-size: 0.72rem; font-weight: 600; cursor: pointer; }
+    .btn-cancel { background: none; border: 1.5px solid #e8dfd2; border-radius: 8px; padding: 7px 14px; font-family: 'Montserrat', sans-serif; font-size: 0.72rem; color: #9a8f82; cursor: pointer; }
+    .btn-cancel:hover { border-color: #c0b0a0; }
 
-    .fin-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; background: #fff; border-radius: 12px; overflow: hidden; border: 1.5px solid #e8dfd2; }
-    .fin-table th { background: #f2ede6; color: #7a6e62; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.08em; padding: 10px 16px; text-align: left; font-weight: 600; }
-    .fin-table td { padding: 10px 16px; border-top: 1px solid #f0ebe3; color: #3a3026; }
+    /* TABLA */
+    .fin-table { width: 100%; border-collapse: collapse; }
+    .fin-table th { padding: 10px 20px; text-align: left; font-size: 0.63rem; color: #9a8f82; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; border-bottom: 1px solid #f0ebe3; background: #faf8f4; }
+    .fin-table td { padding: 11px 20px; border-bottom: 1px solid #f5f0ea; font-size: 0.8rem; color: #3a3026; }
+    .fin-table tr:last-child td { border-bottom: none; }
     .fin-table tr:hover td { background: #faf8f4; }
-    .fin-table .num-col { text-align: right; font-variant-numeric: tabular-nums; }
-    .fin-table .total-row td { background: #f0f7ea; font-weight: 700; border-top: 2px solid #c8d8be; color: #507a3a; }
+    .fin-table .num-col { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+    .fin-table .muted { color: #9a8f82; font-size: 0.72rem; }
+    .badge-auto { display: inline-block; background: #e8f4fd; color: #1a6fa0; border: 1px solid #b8d8f0; border-radius: 12px; padding: 2px 8px; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-left: 6px; vertical-align: middle; }
+    .badge-cat { display: inline-block; background: #f2ede6; color: #7a6e62; border-radius: 12px; padding: 2px 8px; font-size: 0.7rem; }
+    .btn-del { background: none; border: none; cursor: pointer; color: #ccc; font-size: 1rem; padding: 2px 6px; border-radius: 6px; transition: all 0.2s; }
+    .btn-del:hover { color: #e74c3c; background: #fde8e8; }
 
-    .bar-container { display: flex; flex-direction: column; gap: 10px; }
-    .bar-row { display: flex; align-items: center; gap: 12px; }
-    .bar-label { width: 140px; font-size: 0.7rem; color: #3a3026; flex-shrink: 0; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .bar-track { flex: 1; background: #f0ebe3; border-radius: 20px; height: 16px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 20px; background: #507a3a; transition: width 0.7s ease; }
-    .bar-fill.alt  { background: #2563eb; }
-    .bar-fill.alt2 { background: #e67e22; }
-    .bar-fill.alt3 { background: #7c3aed; }
-    .bar-fill.alt4 { background: #e74c3c; }
-    .bar-value { width: 90px; font-size: 0.7rem; color: #9a8f82; font-variant-numeric: tabular-nums; text-align: right; }
+    .empty-row td { text-align: center; color: #b0a898; font-size: 0.78rem; padding: 24px 20px; }
 
-    .empty-state { text-align: center; padding: 60px 20px; color: #9a8f82; font-size: 0.85rem; }
-
-    .btn-reset { background: none; border: 1.5px solid #e8dfd2; border-radius: 10px; padding: 8px 22px; font-family: 'Montserrat', sans-serif; font-size: 0.72rem; color: #9a8f82; cursor: pointer; transition: all 0.2s; }
-    .btn-reset:hover { border-color: #507a3a; color: #507a3a; }
+    /* IMPORT MODAL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: #fff; border-radius: 16px; padding: 28px; max-width: 440px; width: 90%; box-shadow: 0 8px 40px rgba(0,0,0,0.18); }
+    .modal-box h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: #3a3026; margin-bottom: 8px; }
+    .modal-box p { font-size: 0.78rem; color: #7a6e62; margin-bottom: 18px; line-height: 1.6; }
+    .import-drop { border: 2.5px dashed #c8d8be; border-radius: 12px; padding: 32px 20px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 16px; }
+    .import-drop:hover { border-color: #507a3a; background: #f0f7ea; }
+    .import-drop input[type=file] { display: none; }
+    .import-drop .icon { font-size: 2rem; margin-bottom: 8px; }
+    .import-drop p { margin-bottom: 0; font-size: 0.75rem; color: #9a8f82; }
+    .import-progress { font-size: 0.78rem; color: #507a3a; text-align: center; padding: 10px; }
+    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
 
     @media (max-width: 700px) {
       .nav-links, .btn-logout { display: none; }
       .btn-logout-top { display: inline-block; }
       .fin-kpis { grid-template-columns: 1fr 1fr; }
-      .fin-grid-2 { grid-template-columns: 1fr; }
-      .bar-label { width: 90px; font-size: 0.62rem; }
-      .bar-value { width: 72px; font-size: 0.62rem; }
+      .fin-kpis .fin-kpi:last-child { grid-column: span 2; }
+      .form-group input[type=text] { width: 100%; }
+      .form-row { flex-direction: column; }
+      .fin-table th, .fin-table td { padding: 10px 14px; }
     }
   </style>
 </head>
@@ -117,29 +147,153 @@
   <div class="page-header">
     <div>
       <h1>Finanzas 📊</h1>
-      <p>Subí el Excel mensual para ver ventas, gastos y balance</p>
+      <p>Ventas y gastos · <span id="año-label">2026</span></p>
     </div>
-    <div id="btn-reset-wrap" style="display:none">
-      <button class="btn-reset" onclick="resetFinanzas()">↩ Cargar otro Excel</button>
+    <button class="btn-import" onclick="abrirImport()">⬆ Importar Excel histórico</button>
+  </div>
+
+  <!-- Selector de mes -->
+  <div class="mes-nav" id="mes-nav"></div>
+
+  <!-- KPIs -->
+  <div class="fin-kpis">
+    <div class="fin-kpi verde">
+      <div class="num" id="kpi-ventas">$0</div>
+      <div class="lbl">Ventas del mes</div>
+    </div>
+    <div class="fin-kpi rojo">
+      <div class="num" id="kpi-gastos">$0</div>
+      <div class="lbl">Gastos del mes</div>
+    </div>
+    <div class="fin-kpi neutro" id="kpi-balance-card">
+      <div class="num" id="kpi-balance">$0</div>
+      <div class="lbl">Balance</div>
     </div>
   </div>
 
-  <!-- Upload -->
-  <div id="fin-upload">
-    <label for="fin-file" class="upload-zone" id="upload-zone"
-      ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
-      <div class="upload-icon">📂</div>
-      <h3>Arrastrá o elegí el Excel</h3>
-      <p>El archivo se procesa en tu navegador — ningún dato se sube a internet</p>
-      <p style="margin-top:6px;font-size:0.7rem;color:#b0c0a8">SENDERA 2026.xlsx · Hojas: Ventas 2026 / Gastos 2026</p>
-      <input type="file" id="fin-file" accept=".xlsx,.xls" onchange="procesarExcel(this.files[0])">
-      <span class="upload-btn">Elegir archivo</span>
+  <!-- VENTAS -->
+  <div class="fin-section">
+    <div class="section-header">
+      <h2>💰 Ventas</h2>
+      <span class="section-total" id="total-ventas-lbl"></span>
+      <button class="btn-add" onclick="toggleForm('venta')">+ Agregar</button>
+    </div>
+
+    <div class="add-form" id="form-venta" style="display:none">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Fecha</label>
+          <input type="date" id="v-fecha" />
+        </div>
+        <div class="form-group">
+          <label>Descripción</label>
+          <input type="text" id="v-desc" placeholder="Ej: Gorro Sendera x2" />
+        </div>
+        <div class="form-group">
+          <label>Canal</label>
+          <select id="v-canal">
+            <option value="Feria">Feria</option>
+            <option value="Físico">Físico / Local</option>
+            <option value="Instagram">Instagram</option>
+            <option value="WhatsApp">WhatsApp</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Importe $</label>
+          <input type="number" id="v-importe" placeholder="0" min="0" />
+        </div>
+        <div class="form-btns">
+          <button class="btn-save" onclick="guardarVenta()">Guardar</button>
+          <button class="btn-cancel" onclick="toggleForm('venta')">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <table class="fin-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Descripción</th>
+          <th>Canal</th>
+          <th class="num-col">Importe</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="ventas-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- GASTOS -->
+  <div class="fin-section">
+    <div class="section-header">
+      <h2>💸 Gastos</h2>
+      <span class="section-total" id="total-gastos-lbl" style="color:#e74c3c"></span>
+      <button class="btn-add" onclick="toggleForm('gasto')">+ Agregar</button>
+    </div>
+
+    <div class="add-form" id="form-gasto" style="display:none">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Fecha</label>
+          <input type="date" id="g-fecha" />
+        </div>
+        <div class="form-group">
+          <label>Categoría</label>
+          <select id="g-cat">
+            <option value="Mercadería">Mercadería</option>
+            <option value="Publicidad">Publicidad</option>
+            <option value="Packaging">Packaging</option>
+            <option value="Financieros">Financieros / Comisiones</option>
+            <option value="Envíos">Envíos</option>
+            <option value="Varios">Varios</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Detalle</label>
+          <input type="text" id="g-detalle" placeholder="Ej: Compra gorros proveedor" />
+        </div>
+        <div class="form-group">
+          <label>Importe $</label>
+          <input type="number" id="g-importe" placeholder="0" min="0" />
+        </div>
+        <div class="form-btns">
+          <button class="btn-save" onclick="guardarGasto()">Guardar</button>
+          <button class="btn-cancel" onclick="toggleForm('gasto')">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <table class="fin-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Categoría</th>
+          <th>Detalle</th>
+          <th class="num-col">Importe</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="gastos-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal importar -->
+<div class="modal-overlay" id="modal-import">
+  <div class="modal-box">
+    <h3>Importar Excel histórico</h3>
+    <p>Elegí el archivo de Sendera. Se van a importar todas las ventas y gastos que tenés en la planilla a Firebase, para que queden guardados acá.</p>
+    <label for="import-file" class="import-drop" id="import-drop">
+      <div class="icon">📂</div>
+      <p>Hacé clic o arrastrá el Excel acá</p>
+      <p style="margin-top:4px;font-size:0.68rem;color:#b0c0a8">SENDERA 2026.xlsx</p>
+      <input type="file" id="import-file" accept=".xlsx,.xls" onchange="procesarImport(this.files[0])">
     </label>
-  </div>
-
-  <!-- Dashboard -->
-  <div id="fin-dashboard" style="display:none">
-    <div id="fin-content"></div>
+    <div class="import-progress" id="import-progress" style="display:none"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="cerrarImport()">Cerrar</button>
+    </div>
   </div>
 </div>
 
@@ -147,246 +301,256 @@
   if (!localStorage.getItem('sendera_admin')) window.location.href = 'login.html';
   function logout() { localStorage.removeItem('sendera_admin'); window.location.href = 'login.html'; }
 
-  function dragOver(e) {
-    e.preventDefault();
-    document.getElementById('upload-zone').classList.add('drag-over');
-  }
-  function dragLeave() {
-    document.getElementById('upload-zone').classList.remove('drag-over');
-  }
-  function dropFile(e) {
-    e.preventDefault();
-    document.getElementById('upload-zone').classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file) procesarExcel(file);
-  }
-  function resetFinanzas() {
-    document.getElementById('fin-dashboard').style.display = 'none';
-    document.getElementById('fin-upload').style.display = 'block';
-    document.getElementById('btn-reset-wrap').style.display = 'none';
-    document.getElementById('fin-file').value = '';
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                 'Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
+  const ESTADOS_VENTA = ['confirmado','camino','entregado'];
+
+  let mesActivo = new Date().getMonth();
+  const añoActivo = new Date().getFullYear();
+
+  let todosPedidos = [];
+  let todasVentasManuales = [];
+  let todosGastos = [];
+
+  // ── Mes selector ───────────────────────────────────────────
+  function renderMesNav() {
+    const nav = document.getElementById('mes-nav');
+    nav.innerHTML = MESES.map((m, i) =>
+      `<button class="mes-btn ${i === mesActivo ? 'active' : ''}" onclick="cambiarMes(${i})">${m}</button>`
+    ).join('');
   }
 
-  function procesarExcel(file) {
+  function cambiarMes(i) {
+    mesActivo = i;
+    renderMesNav();
+    renderTodo();
+  }
+
+  function esDeMes(fechaISO) {
+    if (!fechaISO) return false;
+    const d = new Date(fechaISO);
+    return d.getMonth() === mesActivo && d.getFullYear() === añoActivo;
+  }
+
+  // ── Formato ────────────────────────────────────────────────
+  function fmt(n) { return '$' + Math.round(n || 0).toLocaleString('es-UY'); }
+  function fmtFecha(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  }
+
+  // ── Render ─────────────────────────────────────────────────
+  function renderTodo() {
+    const ventasMes = [
+      ...todosPedidos
+        .filter(p => ESTADOS_VENTA.includes(p.estado) && esDeMes(p.fecha))
+        .map(p => ({
+          id: p.id, tipo: 'auto',
+          fecha: p.fecha,
+          desc: p.cliente || 'Pedido web',
+          canal: p.origen === 'whatsapp' ? 'WhatsApp' : 'Web',
+          importe: p.total || 0
+        })),
+      ...todasVentasManuales.filter(v => esDeMes(v.fecha))
+    ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+    const gastosMes = todosGastos
+      .filter(g => esDeMes(g.fecha))
+      .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+    const totalV = ventasMes.reduce((s, v) => s + (v.importe || 0), 0);
+    const totalG = gastosMes.reduce((s, g) => s + (g.importe || 0), 0);
+    const balance = totalV - totalG;
+
+    // KPIs
+    document.getElementById('kpi-ventas').textContent = fmt(totalV);
+    document.getElementById('kpi-gastos').textContent = fmt(totalG);
+    document.getElementById('kpi-balance').textContent = fmt(balance);
+    const bc = document.getElementById('kpi-balance-card');
+    bc.className = 'fin-kpi ' + (balance >= 0 ? 'verde' : 'rojo');
+
+    document.getElementById('total-ventas-lbl').textContent = fmt(totalV);
+    document.getElementById('total-gastos-lbl').textContent = fmt(totalG);
+
+    // Tabla ventas
+    const vtbody = document.getElementById('ventas-tbody');
+    if (ventasMes.length === 0) {
+      vtbody.innerHTML = '<tr class="empty-row"><td colspan="5">Sin ventas en ' + MESES[mesActivo] + '</td></tr>';
+    } else {
+      vtbody.innerHTML = ventasMes.map(v => `
+        <tr>
+          <td class="muted">${fmtFecha(v.fecha)}</td>
+          <td>${v.desc || '—'}${v.tipo === 'auto' ? '<span class="badge-auto">Auto</span>' : ''}</td>
+          <td class="muted">${v.canal || '—'}</td>
+          <td class="num-col">${fmt(v.importe)}</td>
+          <td>${v.tipo !== 'auto' ? `<button class="btn-del" onclick="eliminarVenta('${v.id}')">🗑️</button>` : ''}</td>
+        </tr>`).join('');
+    }
+
+    // Tabla gastos
+    const gtbody = document.getElementById('gastos-tbody');
+    if (gastosMes.length === 0) {
+      gtbody.innerHTML = '<tr class="empty-row"><td colspan="5">Sin gastos en ' + MESES[mesActivo] + '</td></tr>';
+    } else {
+      gtbody.innerHTML = gastosMes.map(g => `
+        <tr>
+          <td class="muted">${fmtFecha(g.fecha)}</td>
+          <td><span class="badge-cat">${g.categoria || '—'}</span></td>
+          <td>${g.detalle || '—'}</td>
+          <td class="num-col">${fmt(g.importe)}</td>
+          <td><button class="btn-del" onclick="eliminarGasto('${g.id}')">🗑️</button></td>
+        </tr>`).join('');
+    }
+  }
+
+  // ── Firebase listeners ─────────────────────────────────────
+  db.ref('pedidos').on('value', snap => {
+    todosPedidos = [];
+    snap.forEach(c => todosPedidos.push({ id: c.key, ...c.val() }));
+    renderTodo();
+  });
+
+  db.ref('ventas_manual').on('value', snap => {
+    todasVentasManuales = [];
+    snap.forEach(c => todasVentasManuales.push({ id: c.key, ...c.val() }));
+    renderTodo();
+  });
+
+  db.ref('gastos').on('value', snap => {
+    todosGastos = [];
+    snap.forEach(c => todosGastos.push({ id: c.key, ...c.val() }));
+    renderTodo();
+  });
+
+  // ── Forms ──────────────────────────────────────────────────
+  function toggleForm(tipo) {
+    const el = document.getElementById('form-' + tipo);
+    const open = el.style.display === 'none';
+    el.style.display = open ? 'block' : 'none';
+    if (open) {
+      const hoy = new Date().toISOString().split('T')[0];
+      if (tipo === 'venta') { document.getElementById('v-fecha').value = hoy; document.getElementById('v-importe').value = ''; document.getElementById('v-desc').value = ''; }
+      if (tipo === 'gasto') { document.getElementById('g-fecha').value = hoy; document.getElementById('g-importe').value = ''; document.getElementById('g-detalle').value = ''; }
+    }
+  }
+
+  function guardarVenta() {
+    const fecha = document.getElementById('v-fecha').value;
+    const desc  = document.getElementById('v-desc').value.trim();
+    const canal = document.getElementById('v-canal').value;
+    const imp   = parseFloat(document.getElementById('v-importe').value);
+    if (!fecha || !imp) { alert('Completá al menos la fecha y el importe.'); return; }
+    db.ref('ventas_manual').push({ fecha, desc, canal, importe: imp, tipo: 'manual' });
+    toggleForm('venta');
+  }
+
+  function guardarGasto() {
+    const fecha   = document.getElementById('g-fecha').value;
+    const cat     = document.getElementById('g-cat').value;
+    const detalle = document.getElementById('g-detalle').value.trim();
+    const imp     = parseFloat(document.getElementById('g-importe').value);
+    if (!fecha || !imp) { alert('Completá al menos la fecha y el importe.'); return; }
+    db.ref('gastos').push({ fecha, categoria: cat, detalle, importe: imp });
+    toggleForm('gasto');
+  }
+
+  function eliminarVenta(id) {
+    if (!confirm('¿Eliminar esta venta?')) return;
+    db.ref('ventas_manual/' + id).remove();
+  }
+
+  function eliminarGasto(id) {
+    if (!confirm('¿Eliminar este gasto?')) return;
+    db.ref('gastos/' + id).remove();
+  }
+
+  // ── Import Excel ───────────────────────────────────────────
+  function abrirImport() { document.getElementById('modal-import').classList.add('open'); }
+  function cerrarImport() {
+    document.getElementById('modal-import').classList.remove('open');
+    document.getElementById('import-progress').style.display = 'none';
+    document.getElementById('import-file').value = '';
+  }
+
+  function normRows(sheet) {
+    return XLSX.utils.sheet_to_json(sheet, { defval: '', cellDates: true })
+      .map(row => { const n = {}; for (const k of Object.keys(row)) n[k.toString().trim().toUpperCase()] = row[k]; return n; });
+  }
+
+  async function procesarImport(file) {
     if (!file) return;
+    const prog = document.getElementById('import-progress');
+    prog.style.display = 'block';
+    prog.textContent = 'Leyendo archivo...';
+
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
       try {
         const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
-        const ventas = parsearVentas(wb);
-        const gastos  = parsearGastos(wb);
-        renderFinanzas(ventas, gastos);
-        document.getElementById('fin-upload').style.display = 'none';
-        document.getElementById('fin-dashboard').style.display = 'block';
-        document.getElementById('btn-reset-wrap').style.display = 'block';
+
+        // Ventas
+        const sheetV = wb.SheetNames.find(n => n.toUpperCase().includes('VENTA'));
+        let countV = 0;
+        if (sheetV) {
+          const rows = normRows(wb.Sheets[sheetV]);
+          for (const row of rows) {
+            const imp = parseFloat(row['SUBTOTAL VENTAS'] || row['SUBTOTAL'] || 0);
+            if (!imp) continue;
+            let fecha = '';
+            const raw = row['FECHA'];
+            if (raw instanceof Date && !isNaN(raw)) fecha = raw.toISOString().split('T')[0];
+            else if (raw) { const d = new Date(raw); if (!isNaN(d)) fecha = d.toISOString().split('T')[0]; }
+            if (!fecha) continue;
+            const entry = {
+              fecha,
+              desc: [row['ARTICULO'], row['GRUPO']].filter(Boolean).join(' — ') || 'Importado',
+              canal: String(row['PLATAFORMA DE COMPRA'] || row['PLATAFORMA'] || 'Excel').trim(),
+              importe: imp,
+              tipo: 'manual',
+              comprador: String(row['COMPRADOR'] || '').trim(),
+              importado: true
+            };
+            await db.ref('ventas_manual').push(entry);
+            countV++;
+          }
+        }
+
+        // Gastos
+        const sheetG = wb.SheetNames.find(n => n.toUpperCase().includes('GASTO'));
+        let countG = 0;
+        if (sheetG) {
+          const rows = normRows(wb.Sheets[sheetG]);
+          for (const row of rows) {
+            const imp = parseFloat(row['TOTAL'] || 0);
+            if (!imp) continue;
+            let fecha = '';
+            const raw = row['FECHA'];
+            if (raw instanceof Date && !isNaN(raw)) fecha = raw.toISOString().split('T')[0];
+            else if (raw) { const d = new Date(raw); if (!isNaN(d)) fecha = d.toISOString().split('T')[0]; }
+            if (!fecha) continue;
+            await db.ref('gastos').push({
+              fecha,
+              categoria: String(row['GRUPO'] || 'Varios').trim(),
+              detalle: String(row['DETALLE DEL GASTO'] || row['DETALLE'] || '').trim(),
+              importe: imp,
+              proveedor: String(row['PROVEEDOR'] || '').trim(),
+              importado: true
+            });
+            countG++;
+          }
+        }
+
+        prog.textContent = `✅ Importado: ${countV} ventas y ${countG} gastos. ¡Listo!`;
       } catch(err) {
-        alert('Error al leer el Excel: ' + err.message);
+        prog.textContent = '⚠️ Error: ' + err.message;
       }
     };
     reader.readAsArrayBuffer(file);
   }
 
-  function normalizarFilas(sheet) {
-    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', cellDates: true });
-    return rows.map(row => {
-      const n = {};
-      for (const k of Object.keys(row)) n[k.toString().trim().toUpperCase()] = row[k];
-      return n;
-    });
-  }
-
-  function parsearVentas(wb) {
-    const sheetName = wb.SheetNames.find(n => n.toUpperCase().includes('VENTA'));
-    if (!sheetName) return null;
-    const rows = normalizarFilas(wb.Sheets[sheetName]);
-    let totalVentas = 0, totalDescuentos = 0;
-    const porMes = {}, porPlataforma = {}, porGrupo = {};
-    const nombresMes = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                        'Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
-
-    for (const row of rows) {
-      const subtotal = parseFloat(row['SUBTOTAL VENTAS'] || row['SUBTOTAL'] || 0);
-      if (!subtotal) continue;
-      const descuento = parseFloat(row['DESCUENTOS'] || row['DESCUENTO'] || 0);
-      totalVentas += subtotal;
-      totalDescuentos += descuento;
-
-      let mes = 'Sin fecha';
-      const fecha = row['FECHA'];
-      if (fecha instanceof Date && !isNaN(fecha)) {
-        mes = nombresMes[fecha.getMonth()] + ' ' + fecha.getFullYear();
-      } else if (fecha) {
-        const d = new Date(fecha);
-        if (!isNaN(d)) mes = nombresMes[d.getMonth()] + ' ' + d.getFullYear();
-      }
-
-      const plat  = String(row['PLATAFORMA DE COMPRA'] || row['PLATAFORMA'] || 'Sin especificar').trim() || 'Sin especificar';
-      const grupo = String(row['GRUPO'] || 'Sin grupo').trim() || 'Sin grupo';
-
-      if (!porMes[mes]) porMes[mes] = { ventas: 0, count: 0 };
-      porMes[mes].ventas += subtotal;
-      porMes[mes].count++;
-      porPlataforma[plat]  = (porPlataforma[plat]  || 0) + subtotal;
-      porGrupo[grupo]      = (porGrupo[grupo]      || 0) + subtotal;
-    }
-    return { totalVentas, totalDescuentos, porMes, porPlataforma, porGrupo };
-  }
-
-  function parsearGastos(wb) {
-    const sheetName = wb.SheetNames.find(n => n.toUpperCase().includes('GASTO'));
-    if (!sheetName) return null;
-    const rows = normalizarFilas(wb.Sheets[sheetName]);
-    let totalGastos = 0;
-    const porCategoria = {};
-
-    for (const row of rows) {
-      const total = parseFloat(row['TOTAL'] || 0);
-      if (!total) continue;
-      totalGastos += total;
-      const cat = String(row['GRUPO'] || row['CATEGORIA'] || 'Sin categoría').trim() || 'Sin categoría';
-      porCategoria[cat] = (porCategoria[cat] || 0) + total;
-    }
-    return { totalGastos, porCategoria };
-  }
-
-  function fmt(n) {
-    return '$' + Math.round(n).toLocaleString('es-UY');
-  }
-
-  function sortDesc(obj) {
-    return Object.entries(obj).sort((a, b) => b[1] - a[1]);
-  }
-
-  function sortMeses(mesObj) {
-    const orden = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                   'Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
-    return Object.entries(mesObj).sort((a, b) => {
-      const keyOf = s => {
-        const y = parseInt((s.match(/\d{4}/) || ['0'])[0]);
-        const m = orden.findIndex(mo => s.startsWith(mo));
-        return y * 100 + (m >= 0 ? m : 99);
-      };
-      return keyOf(a[0]) - keyOf(b[0]);
-    });
-  }
-
-  const BAR_COLORS = ['', 'alt', 'alt2', 'alt3', 'alt4'];
-
-  function barFill(items, maxVal) {
-    return items.map(([label, val], i) => {
-      const pct = maxVal > 0 ? Math.round(val / maxVal * 100) : 0;
-      const cls = BAR_COLORS[Math.min(i, BAR_COLORS.length - 1)];
-      return `<div class="bar-row">
-        <div class="bar-label" title="${label}">${label}</div>
-        <div class="bar-track"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div>
-        <div class="bar-value">${fmt(val)}</div>
-      </div>`;
-    }).join('');
-  }
-
-  function renderFinanzas(ventas, gastos) {
-    if (!ventas && !gastos) {
-      document.getElementById('fin-content').innerHTML =
-        '<div class="empty-state"><p style="font-size:2rem">😕</p><p>No se pudo leer el archivo.<br>Verificá que sea el Excel de Sendera con las hojas Ventas 2026 y Gastos 2026.</p></div>';
-      return;
-    }
-
-    const totalV = ventas?.totalVentas || 0;
-    const totalG = gastos?.totalGastos  || 0;
-    const balance = totalV - totalG;
-
-    let html = `
-    <div class="fin-kpis">
-      <div class="fin-kpi verde">
-        <div class="num">${fmt(totalV)}</div>
-        <div class="lbl">💰 Total Ventas</div>
-      </div>
-      <div class="fin-kpi rojo">
-        <div class="num">${fmt(totalG)}</div>
-        <div class="lbl">💸 Total Gastos</div>
-      </div>
-      <div class="fin-kpi ${balance >= 0 ? 'verde' : 'rojo'}">
-        <div class="num">${fmt(balance)}</div>
-        <div class="lbl">📈 Balance</div>
-      </div>
-    </div>`;
-
-    if (ventas) {
-      const mesList  = sortMeses(ventas.porMes);
-      const platList = sortDesc(ventas.porPlataforma);
-      const maxMes  = Math.max(...mesList.map(([,v]) => v.ventas), 1);
-      const maxPlat = Math.max(...platList.map(([,v]) => v), 1);
-
-      // Ventas por mes (barras de valores del objeto {ventas, count})
-      const mesItems = mesList.map(([mes, v]) => [mes, v.ventas]);
-
-      html += `
-      <div class="fin-grid-2">
-        <div class="fin-section">
-          <h2>Ventas por mes</h2>
-          <div class="bar-container">${barFill(mesItems, maxMes)}</div>
-        </div>
-        <div class="fin-section">
-          <h2>Por plataforma</h2>
-          <div class="bar-container">${barFill(platList, maxPlat)}</div>
-        </div>
-      </div>`;
-
-      const grupoList = sortDesc(ventas.porGrupo);
-      html += `
-      <div class="fin-section">
-        <h2>Ventas por artículo</h2>
-        <table class="fin-table">
-          <thead><tr><th>Artículo / Grupo</th><th class="num-col">Ventas</th><th class="num-col">%</th></tr></thead>
-          <tbody>
-            ${grupoList.map(([g, v]) => `
-              <tr><td>${g}</td>
-                  <td class="num-col">${fmt(v)}</td>
-                  <td class="num-col">${totalV > 0 ? Math.round(v/totalV*100) : 0}%</td>
-              </tr>`).join('')}
-            <tr class="total-row">
-              <td>Total</td>
-              <td class="num-col">${fmt(totalV)}</td>
-              <td class="num-col">100%</td>
-            </tr>
-          </tbody>
-        </table>
-        ${ventas.totalDescuentos > 0
-          ? `<p style="font-size:0.72rem;color:#9a8f82;margin-top:8px">Descuentos aplicados en el período: ${fmt(ventas.totalDescuentos)}</p>`
-          : ''}
-      </div>`;
-    }
-
-    if (gastos) {
-      const catList = sortDesc(gastos.porCategoria);
-      const maxCat  = Math.max(...catList.map(([,v]) => v), 1);
-
-      html += `
-      <div class="fin-section">
-        <h2>Gastos por categoría</h2>
-        <div class="fin-grid-2">
-          <div class="bar-container">${barFill(catList, maxCat)}</div>
-          <table class="fin-table">
-            <thead><tr><th>Categoría</th><th class="num-col">Total</th><th class="num-col">%</th></tr></thead>
-            <tbody>
-              ${catList.map(([cat, v]) => `
-                <tr><td>${cat}</td>
-                    <td class="num-col">${fmt(v)}</td>
-                    <td class="num-col">${totalG > 0 ? Math.round(v/totalG*100) : 0}%</td>
-                </tr>`).join('')}
-              <tr class="total-row">
-                <td>Total</td>
-                <td class="num-col">${fmt(totalG)}</td>
-                <td class="num-col">100%</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>`;
-    }
-
-    document.getElementById('fin-content').innerHTML = html;
-  }
+  // ── Init ───────────────────────────────────────────────────
+  renderMesNav();
+  document.getElementById('año-label').textContent = añoActivo;
 </script>
 </body>
 </html>
