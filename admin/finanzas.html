@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="apple-touch-icon" href="../img/logo.png" />
+  <link rel="icon" type="image/png" href="../img/logo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Sendera Finanzas" />
+  <meta name="theme-color" content="#f2ede6" />
+  <title>Sendera - Finanzas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Montserrat', sans-serif; background: #f2ede6; color: #3a3026; min-height: 100vh; }
+
+    .navbar {
+      background: #fff; border-bottom: 2px solid #e8dfd2; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 10; height: 60px;
+      box-shadow: 0 2px 8px rgba(80,60,30,0.06);
+    }
+    .navbar .logo { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: #3a3026; letter-spacing: 0.12em; }
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-links a { color: #7a6e62; text-decoration: none; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 500; }
+    .nav-links a:hover { background: #f2ede6; color: #3a3026; }
+    .nav-links a.active { background: #507a3a; color: #fff; }
+    .btn-logout { font-size: 0.72rem; color: #9a8f82; cursor: pointer; text-transform: uppercase; letter-spacing: 0.08em; background: none; border: 1px solid #ddd5c8; border-radius: 8px; padding: 7px 14px; margin-left: 8px; transition: all 0.2s; }
+    .btn-logout:hover { background: #f2ede6; color: #3a3026; }
+    .btn-logout-top { display: none; background: none; border: none; cursor: pointer; font-size: 1rem; color: #9a8f82; padding: 2px 6px; margin-left: 6px; vertical-align: middle; transition: color 0.2s; }
+    .btn-logout-top:hover { color: #3a3026; }
+
+    .container { max-width: 1000px; margin: 0 auto; padding: 28px 20px 60px; }
+
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+    .page-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: #3a3026; }
+    .page-header p { color: #9a8f82; font-size: 0.78rem; margin-top: 3px; }
+
+    /* UPLOAD */
+    .upload-zone {
+      display: block; border: 2.5px dashed #c8d8be; border-radius: 16px;
+      padding: 64px 20px; text-align: center; background: #f9fbf7;
+      cursor: pointer; transition: all 0.25s; max-width: 520px; margin: 0 auto;
+    }
+    .upload-zone:hover, .upload-zone.drag-over { border-color: #507a3a; background: #f0f7ea; }
+    .upload-icon { font-size: 3.2rem; margin-bottom: 16px; }
+    .upload-zone h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.7rem; color: #3a3026; margin-bottom: 8px; }
+    .upload-zone p { color: #9a8f82; font-size: 0.8rem; line-height: 1.6; }
+    .upload-zone input[type=file] { display: none; }
+    .upload-btn { margin-top: 22px; display: inline-block; background: #507a3a; color: #fff; border: none; border-radius: 10px; padding: 11px 28px; font-family: 'Montserrat', sans-serif; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; }
+
+    /* DASHBOARD */
+    .fin-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 32px; }
+    .fin-kpi { background: #fff; border-radius: 14px; border: 1.5px solid #e8dfd2; padding: 22px 18px; text-align: center; box-shadow: 0 2px 8px rgba(80,60,30,0.05); }
+    .fin-kpi .num { font-family: 'Cormorant Garamond', serif; font-size: 2rem; }
+    .fin-kpi .lbl { font-size: 0.65rem; color: #9a8f82; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 6px; }
+    .fin-kpi.verde .num { color: #507a3a; }
+    .fin-kpi.rojo .num { color: #e74c3c; }
+
+    .fin-section { margin-bottom: 32px; }
+    .fin-section h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: #3a3026; margin-bottom: 16px; border-bottom: 1.5px solid #e8dfd2; padding-bottom: 10px; }
+
+    .fin-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+
+    .fin-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; background: #fff; border-radius: 12px; overflow: hidden; border: 1.5px solid #e8dfd2; }
+    .fin-table th { background: #f2ede6; color: #7a6e62; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.08em; padding: 10px 16px; text-align: left; font-weight: 600; }
+    .fin-table td { padding: 10px 16px; border-top: 1px solid #f0ebe3; color: #3a3026; }
+    .fin-table tr:hover td { background: #faf8f4; }
+    .fin-table .num-col { text-align: right; font-variant-numeric: tabular-nums; }
+    .fin-table .total-row td { background: #f0f7ea; font-weight: 700; border-top: 2px solid #c8d8be; color: #507a3a; }
+
+    .bar-container { display: flex; flex-direction: column; gap: 10px; }
+    .bar-row { display: flex; align-items: center; gap: 12px; }
+    .bar-label { width: 140px; font-size: 0.7rem; color: #3a3026; flex-shrink: 0; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar-track { flex: 1; background: #f0ebe3; border-radius: 20px; height: 16px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 20px; background: #507a3a; transition: width 0.7s ease; }
+    .bar-fill.alt  { background: #2563eb; }
+    .bar-fill.alt2 { background: #e67e22; }
+    .bar-fill.alt3 { background: #7c3aed; }
+    .bar-fill.alt4 { background: #e74c3c; }
+    .bar-value { width: 90px; font-size: 0.7rem; color: #9a8f82; font-variant-numeric: tabular-nums; text-align: right; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: #9a8f82; font-size: 0.85rem; }
+
+    .btn-reset { background: none; border: 1.5px solid #e8dfd2; border-radius: 10px; padding: 8px 22px; font-family: 'Montserrat', sans-serif; font-size: 0.72rem; color: #9a8f82; cursor: pointer; transition: all 0.2s; }
+    .btn-reset:hover { border-color: #507a3a; color: #507a3a; }
+
+    @media (max-width: 700px) {
+      .nav-links, .btn-logout { display: none; }
+      .btn-logout-top { display: inline-block; }
+      .fin-kpis { grid-template-columns: 1fr 1fr; }
+      .fin-grid-2 { grid-template-columns: 1fr; }
+      .bar-label { width: 90px; font-size: 0.62rem; }
+      .bar-value { width: 72px; font-size: 0.62rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <div class="logo">SENDERA <button class="btn-logout-top" onclick="logout()" title="Salir">↩</button></div>
+  <div class="nav-links">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="pedidos.html">Pedidos</a>
+    <a href="productos.html">Productos</a>
+    <a href="stock.html">Stock</a>
+    <a href="colecciones.html">Colecciones</a>
+    <a href="lookbook.html">Lookbook</a>
+    <a href="finanzas.html" class="active">Finanzas</a>
+    <a href="https://analytics.google.com" target="_blank">Analytics</a>
+    <button class="btn-logout" onclick="logout()">↩ Salir</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-header">
+    <div>
+      <h1>Finanzas 📊</h1>
+      <p>Subí el Excel mensual para ver ventas, gastos y balance</p>
+    </div>
+    <div id="btn-reset-wrap" style="display:none">
+      <button class="btn-reset" onclick="resetFinanzas()">↩ Cargar otro Excel</button>
+    </div>
+  </div>
+
+  <!-- Upload -->
+  <div id="fin-upload">
+    <label for="fin-file" class="upload-zone" id="upload-zone"
+      ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+      <div class="upload-icon">📂</div>
+      <h3>Arrastrá o elegí el Excel</h3>
+      <p>El archivo se procesa en tu navegador — ningún dato se sube a internet</p>
+      <p style="margin-top:6px;font-size:0.7rem;color:#b0c0a8">SENDERA 2026.xlsx · Hojas: Ventas 2026 / Gastos 2026</p>
+      <input type="file" id="fin-file" accept=".xlsx,.xls" onchange="procesarExcel(this.files[0])">
+      <span class="upload-btn">Elegir archivo</span>
+    </label>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="fin-dashboard" style="display:none">
+    <div id="fin-content"></div>
+  </div>
+</div>
+
+<script>
+  if (!localStorage.getItem('sendera_admin')) window.location.href = 'login.html';
+  function logout() { localStorage.removeItem('sendera_admin'); window.location.href = 'login.html'; }
+
+  function dragOver(e) {
+    e.preventDefault();
+    document.getElementById('upload-zone').classList.add('drag-over');
+  }
+  function dragLeave() {
+    document.getElementById('upload-zone').classList.remove('drag-over');
+  }
+  function dropFile(e) {
+    e.preventDefault();
+    document.getElementById('upload-zone').classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) procesarExcel(file);
+  }
+  function resetFinanzas() {
+    document.getElementById('fin-dashboard').style.display = 'none';
+    document.getElementById('fin-upload').style.display = 'block';
+    document.getElementById('btn-reset-wrap').style.display = 'none';
+    document.getElementById('fin-file').value = '';
+  }
+
+  function procesarExcel(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+        const ventas = parsearVentas(wb);
+        const gastos  = parsearGastos(wb);
+        renderFinanzas(ventas, gastos);
+        document.getElementById('fin-upload').style.display = 'none';
+        document.getElementById('fin-dashboard').style.display = 'block';
+        document.getElementById('btn-reset-wrap').style.display = 'block';
+      } catch(err) {
+        alert('Error al leer el Excel: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function normalizarFilas(sheet) {
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', cellDates: true });
+    return rows.map(row => {
+      const n = {};
+      for (const k of Object.keys(row)) n[k.toString().trim().toUpperCase()] = row[k];
+      return n;
+    });
+  }
+
+  function parsearVentas(wb) {
+    const sheetName = wb.SheetNames.find(n => n.toUpperCase().includes('VENTA'));
+    if (!sheetName) return null;
+    const rows = normalizarFilas(wb.Sheets[sheetName]);
+    let totalVentas = 0, totalDescuentos = 0;
+    const porMes = {}, porPlataforma = {}, porGrupo = {};
+    const nombresMes = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                        'Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
+
+    for (const row of rows) {
+      const subtotal = parseFloat(row['SUBTOTAL VENTAS'] || row['SUBTOTAL'] || 0);
+      if (!subtotal) continue;
+      const descuento = parseFloat(row['DESCUENTOS'] || row['DESCUENTO'] || 0);
+      totalVentas += subtotal;
+      totalDescuentos += descuento;
+
+      let mes = 'Sin fecha';
+      const fecha = row['FECHA'];
+      if (fecha instanceof Date && !isNaN(fecha)) {
+        mes = nombresMes[fecha.getMonth()] + ' ' + fecha.getFullYear();
+      } else if (fecha) {
+        const d = new Date(fecha);
+        if (!isNaN(d)) mes = nombresMes[d.getMonth()] + ' ' + d.getFullYear();
+      }
+
+      const plat  = String(row['PLATAFORMA DE COMPRA'] || row['PLATAFORMA'] || 'Sin especificar').trim() || 'Sin especificar';
+      const grupo = String(row['GRUPO'] || 'Sin grupo').trim() || 'Sin grupo';
+
+      if (!porMes[mes]) porMes[mes] = { ventas: 0, count: 0 };
+      porMes[mes].ventas += subtotal;
+      porMes[mes].count++;
+      porPlataforma[plat]  = (porPlataforma[plat]  || 0) + subtotal;
+      porGrupo[grupo]      = (porGrupo[grupo]      || 0) + subtotal;
+    }
+    return { totalVentas, totalDescuentos, porMes, porPlataforma, porGrupo };
+  }
+
+  function parsearGastos(wb) {
+    const sheetName = wb.SheetNames.find(n => n.toUpperCase().includes('GASTO'));
+    if (!sheetName) return null;
+    const rows = normalizarFilas(wb.Sheets[sheetName]);
+    let totalGastos = 0;
+    const porCategoria = {};
+
+    for (const row of rows) {
+      const total = parseFloat(row['TOTAL'] || 0);
+      if (!total) continue;
+      totalGastos += total;
+      const cat = String(row['GRUPO'] || row['CATEGORIA'] || 'Sin categoría').trim() || 'Sin categoría';
+      porCategoria[cat] = (porCategoria[cat] || 0) + total;
+    }
+    return { totalGastos, porCategoria };
+  }
+
+  function fmt(n) {
+    return '$' + Math.round(n).toLocaleString('es-UY');
+  }
+
+  function sortDesc(obj) {
+    return Object.entries(obj).sort((a, b) => b[1] - a[1]);
+  }
+
+  function sortMeses(mesObj) {
+    const orden = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                   'Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
+    return Object.entries(mesObj).sort((a, b) => {
+      const keyOf = s => {
+        const y = parseInt((s.match(/\d{4}/) || ['0'])[0]);
+        const m = orden.findIndex(mo => s.startsWith(mo));
+        return y * 100 + (m >= 0 ? m : 99);
+      };
+      return keyOf(a[0]) - keyOf(b[0]);
+    });
+  }
+
+  const BAR_COLORS = ['', 'alt', 'alt2', 'alt3', 'alt4'];
+
+  function barFill(items, maxVal) {
+    return items.map(([label, val], i) => {
+      const pct = maxVal > 0 ? Math.round(val / maxVal * 100) : 0;
+      const cls = BAR_COLORS[Math.min(i, BAR_COLORS.length - 1)];
+      return `<div class="bar-row">
+        <div class="bar-label" title="${label}">${label}</div>
+        <div class="bar-track"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div>
+        <div class="bar-value">${fmt(val)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderFinanzas(ventas, gastos) {
+    if (!ventas && !gastos) {
+      document.getElementById('fin-content').innerHTML =
+        '<div class="empty-state"><p style="font-size:2rem">😕</p><p>No se pudo leer el archivo.<br>Verificá que sea el Excel de Sendera con las hojas Ventas 2026 y Gastos 2026.</p></div>';
+      return;
+    }
+
+    const totalV = ventas?.totalVentas || 0;
+    const totalG = gastos?.totalGastos  || 0;
+    const balance = totalV - totalG;
+
+    let html = `
+    <div class="fin-kpis">
+      <div class="fin-kpi verde">
+        <div class="num">${fmt(totalV)}</div>
+        <div class="lbl">💰 Total Ventas</div>
+      </div>
+      <div class="fin-kpi rojo">
+        <div class="num">${fmt(totalG)}</div>
+        <div class="lbl">💸 Total Gastos</div>
+      </div>
+      <div class="fin-kpi ${balance >= 0 ? 'verde' : 'rojo'}">
+        <div class="num">${fmt(balance)}</div>
+        <div class="lbl">📈 Balance</div>
+      </div>
+    </div>`;
+
+    if (ventas) {
+      const mesList  = sortMeses(ventas.porMes);
+      const platList = sortDesc(ventas.porPlataforma);
+      const maxMes  = Math.max(...mesList.map(([,v]) => v.ventas), 1);
+      const maxPlat = Math.max(...platList.map(([,v]) => v), 1);
+
+      // Ventas por mes (barras de valores del objeto {ventas, count})
+      const mesItems = mesList.map(([mes, v]) => [mes, v.ventas]);
+
+      html += `
+      <div class="fin-grid-2">
+        <div class="fin-section">
+          <h2>Ventas por mes</h2>
+          <div class="bar-container">${barFill(mesItems, maxMes)}</div>
+        </div>
+        <div class="fin-section">
+          <h2>Por plataforma</h2>
+          <div class="bar-container">${barFill(platList, maxPlat)}</div>
+        </div>
+      </div>`;
+
+      const grupoList = sortDesc(ventas.porGrupo);
+      html += `
+      <div class="fin-section">
+        <h2>Ventas por artículo</h2>
+        <table class="fin-table">
+          <thead><tr><th>Artículo / Grupo</th><th class="num-col">Ventas</th><th class="num-col">%</th></tr></thead>
+          <tbody>
+            ${grupoList.map(([g, v]) => `
+              <tr><td>${g}</td>
+                  <td class="num-col">${fmt(v)}</td>
+                  <td class="num-col">${totalV > 0 ? Math.round(v/totalV*100) : 0}%</td>
+              </tr>`).join('')}
+            <tr class="total-row">
+              <td>Total</td>
+              <td class="num-col">${fmt(totalV)}</td>
+              <td class="num-col">100%</td>
+            </tr>
+          </tbody>
+        </table>
+        ${ventas.totalDescuentos > 0
+          ? `<p style="font-size:0.72rem;color:#9a8f82;margin-top:8px">Descuentos aplicados en el período: ${fmt(ventas.totalDescuentos)}</p>`
+          : ''}
+      </div>`;
+    }
+
+    if (gastos) {
+      const catList = sortDesc(gastos.porCategoria);
+      const maxCat  = Math.max(...catList.map(([,v]) => v), 1);
+
+      html += `
+      <div class="fin-section">
+        <h2>Gastos por categoría</h2>
+        <div class="fin-grid-2">
+          <div class="bar-container">${barFill(catList, maxCat)}</div>
+          <table class="fin-table">
+            <thead><tr><th>Categoría</th><th class="num-col">Total</th><th class="num-col">%</th></tr></thead>
+            <tbody>
+              ${catList.map(([cat, v]) => `
+                <tr><td>${cat}</td>
+                    <td class="num-col">${fmt(v)}</td>
+                    <td class="num-col">${totalG > 0 ? Math.round(v/totalG*100) : 0}%</td>
+                </tr>`).join('')}
+              <tr class="total-row">
+                <td>Total</td>
+                <td class="num-col">${fmt(totalG)}</td>
+                <td class="num-col">100%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+    }
+
+    document.getElementById('fin-content').innerHTML = html;
+  }
+</script>
+</body>
+</html>

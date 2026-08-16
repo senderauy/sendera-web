@@ -242,6 +242,7 @@
     <a href="stock.html">Stock</a>
     <a href="colecciones.html">Colecciones</a>
     <a href="lookbook.html">Lookbook</a>
+    <a href="finanzas.html">Finanzas</a>
     <a href="https://analytics.google.com" target="_blank">Analytics</a>
     <button class="btn-logout" onclick="logout()">↩ Salir</button>
   </div>
@@ -286,7 +287,6 @@
       💬 WhatsApp
       <span class="tab-badge" id="whatsapp-count" style="display:none">0</span>
     </button>
-    <button class="tab-btn" id="tab-btn-finanzas" onclick="cambiarTab('finanzas')">📊 Finanzas</button>
   </div>
 
   <!-- Panel: Pedidos -->
@@ -314,25 +314,7 @@
     <div id="whatsapp-lista"><p style="font-size:0.8rem;color:#9a8f82;padding:16px 0">Sin leads todavía.</p></div>
   </div>
 
-  <!-- Panel: Finanzas -->
-  <div class="tab-panel" id="panel-finanzas">
-    <div id="fin-upload">
-      <label for="fin-file" class="upload-zone" id="upload-zone" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
-        <div class="upload-icon">📊</div>
-        <h3>Subí el Excel de Sendera</h3>
-        <p>Arrastrá el archivo acá o hacé clic para elegirlo</p>
-        <p style="margin-top:6px;font-size:0.7rem;color:#b0c0a8">SENDERA 2026.xlsx</p>
-        <input type="file" id="fin-file" accept=".xlsx,.xls" onchange="procesarExcel(this.files[0])">
-        <span class="upload-btn">Elegir archivo</span>
-      </label>
-    </div>
-    <div id="fin-dashboard" style="display:none">
-      <div id="fin-content"></div>
-      <div style="text-align:center;margin-top:24px">
-        <button onclick="resetFinanzas()" style="background:none;border:1.5px solid #e8dfd2;border-radius:10px;padding:8px 20px;font-family:'Montserrat',sans-serif;font-size:0.72rem;color:#9a8f82;cursor:pointer">↩ Cargar otro Excel</button>
-      </div>
-    </div>
-  </div>
+
 </div>
 
 <!-- Lightbox comprobante -->
