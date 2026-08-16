@@ -473,8 +473,20 @@
 <!-- Import modal -->
 <div class="modal-overlay" id="modal-import">
   <div class="modal-box">
-    <h3>Importar Excel histórico</h3>
-    <p>Subí el Excel de Sendera. Se importan ventas, gastos <strong>y compras de mercadería</strong>.</p>
+    <h3>Importar Excel</h3>
+    <p>Elegí qué querés importar. Si ya importaste ventas y gastos, usá solo <strong>Compras</strong> para no duplicar datos.</p>
+
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+      <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid #e8dfd2;border-radius:10px;cursor:pointer;font-size:.8rem;color:#3a3026">
+        <input type="radio" name="import-tipo" value="todo" checked style="width:auto">
+        <span><strong>Todo</strong> — ventas, gastos y compras (primera vez)</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid #1a5276;border-radius:10px;cursor:pointer;font-size:.8rem;color:#1a5276;background:#f0f4fd">
+        <input type="radio" name="import-tipo" value="compras" style="width:auto">
+        <span><strong>Solo compras de mercadería</strong> — si ventas y gastos ya están importados</span>
+      </label>
+    </div>
+
     <label for="import-file" class="import-drop">
       <div style="font-size:2rem;margin-bottom:8px">📂</div>
       <p style="font-size:.8rem;color:#507a3a;font-weight:600">Hacé clic o arrastrá el archivo</p>
@@ -883,6 +895,7 @@ async function procesarImport(file){
   if(!file) return;
   const prog=document.getElementById('import-progress');
   prog.style.display='block';prog.textContent='Leyendo archivo...';
+  const soloCompras=document.querySelector('input[name="import-tipo"]:checked')?.value==='compras';
   const reader=new FileReader();
   reader.onload=async function(e){
     try{
@@ -894,46 +907,47 @@ async function procesarImport(file){
       };
       let cv=0,cg=0,cc=0;
 
-      // Ventas
-      const shV=wb.SheetNames.find(n=>n.toUpperCase().includes('VENTA')&&!n.toUpperCase().includes('2025'));
-      if(shV){
-        for(const row of normRows(wb.Sheets[shV])){
-          const imp=parseFloat(row['SUBTOTAL VENTAS']||row['SUBTOTAL']||0);
-          const fecha=toISO(row['FECHA']);
-          if(!imp||!fecha) continue;
-          await db.ref('ventas_manual').push({
-            fecha,importe:imp,
-            desc:[row['ARTICULO'],row['GRUPO']].filter(Boolean).join(' — ')||'Importado',
-            canal:String(row['PLATAFORMA DE COMPRA']||row['PLATAFORMA']||'Excel').trim(),
-            forma_pago:String(row['FORMA DE PAGO']||'').trim(),
-            grupo:String(row['GRUPO']||'').trim(),
-            comprador:String(row['COMPRADOR']||'').trim(),
-            descuento:parseFloat(row['DESCUENTOS']||0)||0,tipo:'manual',importado:true
-          });
-          cv++;
-          if(cv%10===0)prog.textContent=`Ventas: ${cv}...`;
+      if(!soloCompras){
+        // Ventas
+        const shV=wb.SheetNames.find(n=>n.toUpperCase().includes('VENTA')&&!n.toUpperCase().includes('2025'));
+        if(shV){
+          for(const row of normRows(wb.Sheets[shV])){
+            const imp=parseFloat(row['SUBTOTAL VENTAS']||row['SUBTOTAL']||0);
+            const fecha=toISO(row['FECHA']);
+            if(!imp||!fecha) continue;
+            await db.ref('ventas_manual').push({
+              fecha,importe:imp,
+              desc:[row['ARTICULO'],row['GRUPO']].filter(Boolean).join(' — ')||'Importado',
+              canal:String(row['PLATAFORMA DE COMPRA']||row['PLATAFORMA']||'Excel').trim(),
+              forma_pago:String(row['FORMA DE PAGO']||'').trim(),
+              grupo:String(row['GRUPO']||'').trim(),
+              comprador:String(row['COMPRADOR']||'').trim(),
+              descuento:parseFloat(row['DESCUENTOS']||0)||0,tipo:'manual',importado:true
+            });
+            cv++;
+            if(cv%10===0)prog.textContent=`Ventas: ${cv}...`;
+          }
+        }
+        // Gastos
+        const shG=wb.SheetNames.find(n=>n.toUpperCase().includes('GASTO'));
+        if(shG){
+          for(const row of normRows(wb.Sheets[shG])){
+            const imp=parseFloat(row['TOTAL']||0);
+            const fecha=toISO(row['FECHA']);
+            if(!imp||!fecha) continue;
+            await db.ref('gastos').push({
+              fecha,importe:imp,
+              categoria:String(row['GRUPO']||'Varios').trim(),
+              detalle:String(row['DETALLE DEL GASTO']||row['DETALLE']||'').trim(),
+              proveedor:String(row['PROVEEDOR']||'').trim(),
+              forma_pago:String(row['FORMA DE PAGO']||'').trim(),importado:true
+            });
+            cg++;
+          }
         }
       }
 
-      // Gastos
-      const shG=wb.SheetNames.find(n=>n.toUpperCase().includes('GASTO'));
-      if(shG){
-        for(const row of normRows(wb.Sheets[shG])){
-          const imp=parseFloat(row['TOTAL']||0);
-          const fecha=toISO(row['FECHA']);
-          if(!imp||!fecha) continue;
-          await db.ref('gastos').push({
-            fecha,importe:imp,
-            categoria:String(row['GRUPO']||'Varios').trim(),
-            detalle:String(row['DETALLE DEL GASTO']||row['DETALLE']||'').trim(),
-            proveedor:String(row['PROVEEDOR']||'').trim(),
-            forma_pago:String(row['FORMA DE PAGO']||'').trim(),importado:true
-          });
-          cg++;
-        }
-      }
-
-      // Compra de mercadería
+      // Compra de mercadería (siempre se puede importar)
       const shC=wb.SheetNames.find(n=>n.toUpperCase().includes('COMPRA'));
       if(shC){
         for(const row of normRows(wb.Sheets[shC])){
@@ -955,7 +969,10 @@ async function procesarImport(file){
         }
       }
 
-      prog.textContent=`✅ Listo! ${cv} ventas, ${cg} gastos, ${cc} compras importadas.`;
+      const msg=soloCompras
+        ?`✅ Listo! ${cc} compras importadas.`
+        :`✅ Listo! ${cv} ventas, ${cg} gastos, ${cc} compras importadas.`;
+      prog.textContent=msg;
     }catch(err){prog.textContent='⚠️ Error: '+err.message;}
   };
   reader.readAsArrayBuffer(file);
