@@ -929,8 +929,8 @@ nav a:hover {
   bottom: 32px;
   right: 32px;
   z-index: 200;
-  background-color: #507a3a;
-  color: #fff;
+  background-color: var(--amber);
+  color: var(--darker);
   border: none;
   width: 58px;
   height: 58px;
