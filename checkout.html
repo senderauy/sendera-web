@@ -343,6 +343,9 @@
         <button class="metodo-btn" onclick="setMetodo('mp', this)" id="btn-mp">
           <span class="icon">💳</span>MercadoPago
         </button>
+        <button class="metodo-btn" onclick="setMetodo('efectivo', this)" id="btn-efectivo" style="display:none">
+          <span class="icon">💵</span>Efectivo
+        </button>
       </div>
 
       <!-- Datos del comprador -->
@@ -418,6 +421,19 @@
 
           <button class="btn-transferi" id="btn-transferi" onclick="confirmarTransferencia()">
             ✅ Ya transferí
+          </button>
+        </div>
+      </div>
+
+      <!-- Efectivo (solo pickup) -->
+      <div id="seccion-efectivo" style="display:none">
+        <div class="transferencia-wrap">
+          <div class="banco-card" style="border-color:#d4edda;background:#f8fff8">
+            <div class="banco-card-title">💵 Pago en efectivo al retirar</div>
+            <p style="font-size:.8rem;color:#507a3a;margin-top:8px;line-height:1.5">Abonás cuando venís a buscar tu pedido al Cordón. Te avisamos por WhatsApp cuando esté listo.</p>
+          </div>
+          <button class="btn-transferi" style="background:#507a3a" onclick="confirmarEfectivo()">
+            ✅ Confirmar pedido
           </button>
         </div>
       </div>
@@ -544,6 +560,11 @@
   }
 
   renderResumen();
+
+  // Mostrar opción efectivo solo para pickup
+  if (pedidoData?.envio?.tipo === 'pickup') {
+    document.getElementById('btn-efectivo').style.display = '';
+  }
 
   // ── Registrar carrito abandonado en Firebase ──────────────
   let carritoAbandonadoId = null;
@@ -747,6 +768,7 @@
 
     let metodoTexto = '';
     if (tipo === 'transferencia') metodoTexto = '🏦 Transferencia Prex (pendiente confirmación)';
+    else if (tipo === 'efectivo') metodoTexto = '💵 Efectivo al retirar';
     else if (tipo === 'tarjeta-aprobada') metodoTexto = '💳 Tarjeta · Pago aprobado ✅';
     else if (tipo === 'tarjeta-pendiente') metodoTexto = '💳 Tarjeta · Pago en proceso ⏳';
 
@@ -787,6 +809,16 @@
     btn.classList.add('active');
     document.getElementById('seccion-transferencia').style.display = metodo === 'transferencia' ? 'block' : 'none';
     document.getElementById('seccion-mp').style.display = metodo === 'mp' ? 'block' : 'none';
+    document.getElementById('seccion-efectivo').style.display = metodo === 'efectivo' ? 'block' : 'none';
+  }
+
+  async function confirmarEfectivo() {
+    const nombre = document.getElementById('ch-nombre').value.trim();
+    const celular = document.getElementById('ch-celular').value.trim();
+    if (!nombre || !celular) { alert('Por favor completá tu nombre y celular.'); return; }
+    guardarPedidoFirebase('pendiente-efectivo', null, 'efectivo');
+    enviarWhatsApp('efectivo');
+    mostrarResultado('efectivo');
   }
 
   // ── Pagar con MercadoPago (redirect) ─────────────────────
