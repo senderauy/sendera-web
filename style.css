@@ -953,8 +953,8 @@ nav a:hover {
   position: absolute;
   top: -4px;
   right: -4px;
-  background: var(--gold);
-  color: var(--darker);
+  background: #e74c3c;
+  color: #fff;
   font-size: 0.7rem;
   font-weight: 700;
   width: 20px;
