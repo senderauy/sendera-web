@@ -432,7 +432,7 @@
               const imgHtml = fotos
                 ? `<div class="card-carousel" style="--n:${fotos.length}" data-idx="0">
                     <div class="card-carousel-track">
-                      ${fotos.map(f => `<div class="card-img-frame" style="background-image:url('${f}')"><img src="${f}" alt="${p.nombre} ${v.nombre}" loading="lazy" /></div>`).join('')}
+                      ${fotos.map(f => `<div class="card-img-frame" style="width:${100/fotos.length}%"><img src="${f}" alt="${p.nombre} ${v.nombre}" loading="lazy" /></div>`).join('')}
                     </div>
                     <button class="card-carousel-btn prev" onclick="cardCarouselBtn(this,-1);event.stopPropagation()">&#8249;</button>
                     <button class="card-carousel-btn next" onclick="cardCarouselBtn(this,1);event.stopPropagation()">&#8250;</button>
