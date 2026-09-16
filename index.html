@@ -427,13 +427,27 @@
           ${sg ? `<div class="subgrupo-titulo">${sg}</div>` : ''}
           ${data.desc ? `<div class="subgrupo-desc">${data.desc}</div>` : ''}
           <div class="productos-grid">
-            ${data.variantes.map(({ v, i, p }) => `
-              <div class="producto-card">
-                <div class="producto-img-wrap">
-                  ${v.foto
+            ${data.variantes.map(({ v, i, p }) => {
+              const fotos = v.fotos?.length > 1 ? v.fotos : null;
+              const imgHtml = fotos
+                ? `<div class="card-carousel" style="--n:${fotos.length}" data-idx="0">
+                    <div class="card-carousel-track">
+                      ${fotos.map(f => `<img src="${f}" alt="${p.nombre} ${v.nombre}" loading="lazy" />`).join('')}
+                    </div>
+                    <button class="card-carousel-btn prev" onclick="cardCarouselBtn(this,-1);event.stopPropagation()">&#8249;</button>
+                    <button class="card-carousel-btn next" onclick="cardCarouselBtn(this,1);event.stopPropagation()">&#8250;</button>
+                    <div class="card-carousel-dots">
+                      ${fotos.map((_,di) => `<span class="card-carousel-dot${di===0?' active':''}" onclick="cardCarouselDot(this,${di});event.stopPropagation()"></span>`).join('')}
+                    </div>
+                  </div>`
+                : (v.foto
                     ? `<img src="${v.foto}" alt="${p.nombre} ${v.nombre}" />`
                     : `<img src="img/logo.png" alt="${p.nombre}" style="object-fit:contain;padding:20px;background:#f2ede6;" />`
-                  }
+                  );
+              return `
+              <div class="producto-card">
+                <div class="producto-img-wrap">
+                  ${imgHtml}
                 </div>
                 <div class="producto-info">
                   <h3>${p.nombre}</h3>
@@ -447,8 +461,8 @@
                     </div>
                   </div>
                 </div>
-              </div>
-            `).join('')}
+              </div>`;
+            }).join('')}
           </div>
         `).join('');
 
@@ -463,7 +477,47 @@
       ultimosProductos = [];
       snapshot.forEach(c => { ultimosProductos.push({ id: c.key, ...c.val() }); });
       renderCategorias(ultimosProductos);
+      initCardCarousels();
     });
+
+    // ── CARRUSEL EN TARJETAS ──────────────────────────────────
+    window.cardCarouselGo = function(carousel, newIdx) {
+      const n = parseInt(getComputedStyle(carousel).getPropertyValue('--n')) || 1;
+      newIdx = ((newIdx % n) + n) % n;
+      carousel.dataset.idx = newIdx;
+      carousel.querySelector('.card-carousel-track').style.transform =
+        `translateX(calc(-${newIdx} * 100% / ${n}))`;
+      carousel.querySelectorAll('.card-carousel-dot').forEach((d, i) =>
+        d.classList.toggle('active', i === newIdx));
+    };
+
+    window.cardCarouselBtn = function(btn, dir) {
+      const c = btn.closest('.card-carousel');
+      cardCarouselGo(c, parseInt(c.dataset.idx || '0') + dir);
+    };
+
+    window.cardCarouselDot = function(dot, idx) {
+      cardCarouselGo(dot.closest('.card-carousel'), idx);
+    };
+
+    function initCardCarousels() {
+      document.querySelectorAll('.card-carousel').forEach(carousel => {
+        if (carousel._swipe) return;
+        carousel._swipe = true;
+        let sx = 0, sy = 0;
+        carousel.addEventListener('touchstart', e => {
+          sx = e.touches[0].clientX;
+          sy = e.touches[0].clientY;
+        }, { passive: true });
+        carousel.addEventListener('touchend', e => {
+          const dx = e.changedTouches[0].clientX - sx;
+          const dy = e.changedTouches[0].clientY - sy;
+          if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 28) {
+            cardCarouselGo(carousel, parseInt(carousel.dataset.idx || '0') + (dx < 0 ? 1 : -1));
+          }
+        }, { passive: true });
+      });
+    }
 
     // ── RESEÑAS ───────────────────────────────────────────────
     let resenaStars = 0;
