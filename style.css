@@ -784,8 +784,7 @@ nav a:hover {
   width: calc(100% / var(--n));
   height: 100%;
   flex-shrink: 0;
-  object-fit: contain;
-  background: #f7f3ee;
+  object-fit: cover;
   transition: transform 0.4s;
 }
 .producto-card:hover .card-carousel-track img { transform: scale(1.04); }
