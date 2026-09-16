@@ -613,38 +613,21 @@
   function agregarFotoVar(varId, url = '') {
     const cont = document.getElementById(`var-fotos-${varId}`);
     const fid = _fotoRowCount++;
-    const isFirst = cont.children.length === 0;
     const div = document.createElement('div');
     div.className = 'foto-preview-wrap';
     div.id = `foto-row-${fid}`;
     div.style.marginBottom = '8px';
     div.innerHTML = `
       <div class="foto-input-row" style="align-items:center;gap:6px;">
-        ${isFirst ? '<span style="font-size:0.65rem;color:#9a8f82;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;">Portada</span>' : '<button type="button" onclick="subirFotoVar(this)" title="Mover arriba" style="background:none;border:1px solid #e8dfd2;border-radius:5px;padding:3px 7px;cursor:pointer;font-size:0.75rem;color:#7a6e62;">↑</button>'}
         <input type="url" class="foto-input" id="foto-url-${fid}" placeholder="URL de imagen..." value="${url.startsWith('data:') ? '' : url}" oninput="previewFotoVar(${fid})" />
         <button type="button" class="btn-examinar" onclick="document.getElementById('foto-file-${fid}').click()">📁</button>
         <input type="file" class="file-input-hidden" id="foto-file-${fid}" accept="image/*" onchange="cargarFotoVar(${fid}, this)" />
-        ${!isFirst ? `<button type="button" onclick="document.getElementById('foto-row-${fid}').remove()" style="background:none;border:1px solid #fca5a5;color:#b91c1c;border-radius:6px;padding:3px 8px;font-size:0.72rem;cursor:pointer;">✕</button>` : ''}
+        <button type="button" onclick="document.getElementById('foto-row-${fid}').remove()" style="background:none;border:1px solid #fca5a5;color:#b91c1c;border-radius:6px;padding:3px 8px;font-size:0.72rem;cursor:pointer;">✕</button>
       </div>
       <img class="foto-preview ${url ? 'visible' : ''}" id="foto-preview-${fid}" src="${url.startsWith('data:') ? url : (url || '')}" alt="preview" />
     `;
-    // Store base64 if needed
     if (url.startsWith('data:')) div.querySelector('input[type="url"]').dataset.base64 = url;
     cont.appendChild(div);
-  }
-
-  function subirFotoVar(btn) {
-    const row = btn.closest('.foto-preview-wrap');
-    if (row && row.previousElementSibling) {
-      row.parentNode.insertBefore(row, row.previousElementSibling);
-      // Rebuild first-row label
-      Array.from(row.parentNode.children).forEach((r, i) => {
-        const firstEl = r.querySelector('.foto-input-row > span, .foto-input-row > button:first-child');
-        if (!firstEl) return;
-        if (i === 0) firstEl.outerHTML = '<span style="font-size:0.65rem;color:#9a8f82;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;">Portada</span>';
-        else if (firstEl.tagName === 'SPAN') firstEl.outerHTML = '<button type="button" onclick="subirFotoVar(this)" title="Mover arriba" style="background:none;border:1px solid #e8dfd2;border-radius:5px;padding:3px 7px;cursor:pointer;font-size:0.75rem;color:#7a6e62;">↑</button>';
-      });
-    }
   }
 
   function previewFotoVar(fid) {
