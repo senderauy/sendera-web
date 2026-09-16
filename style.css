@@ -789,7 +789,7 @@ nav a:hover {
 .card-img-frame img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   transition: transform 0.4s;
 }
 .producto-card:hover .card-img-frame img { transform: scale(1.04); }
