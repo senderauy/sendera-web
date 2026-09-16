@@ -137,6 +137,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      margin-bottom: 48px;
     }
 
     .product-main-img {
@@ -148,6 +149,42 @@
     }
 
     .product-main-img.fading { opacity: 0; }
+
+    /* Carrusel de fotos */
+    .carousel-nav {
+      position: absolute;
+      bottom: -36px;
+      left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .carousel-btn {
+      background: rgba(255,255,255,0.85);
+      border: 1.5px solid rgba(80,60,30,0.15);
+      border-radius: 50%;
+      width: 30px; height: 30px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #3a3026;
+      transition: background 0.2s;
+      line-height: 1;
+    }
+    .carousel-btn:hover { background: #fff; }
+    .carousel-dots { display: flex; gap: 6px; align-items: center; }
+    .carousel-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: rgba(80,60,30,0.25);
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .carousel-dot.active {
+      background: #3a3026;
+      transform: scale(1.25);
+    }
 
     /* ── PANEL DERECHO — info ───────────────────────────────────── */
     .product-right {
@@ -579,6 +616,52 @@
     // ── ESTADO ─────────────────────────────────────────────────────
     let productoActual = null;
     let variantActual = 0;
+    let fotoIdx = 0;
+
+    function getFotos(v) {
+      if (v?.fotos?.length) return v.fotos;
+      return v?.foto ? [v.foto] : ['img/logo.png'];
+    }
+
+    function initCarousel(v) {
+      fotoIdx = 0;
+      const fotos = getFotos(v);
+      const nav = document.getElementById('carousel-nav');
+      const dotsEl = document.getElementById('carousel-dots');
+      if (!nav || !dotsEl) return;
+      if (fotos.length <= 1) { nav.style.display = 'none'; return; }
+      nav.style.display = 'flex';
+      dotsEl.innerHTML = fotos.map((_, i) =>
+        `<span class="carousel-dot ${i===0?'active':''}" onclick="irFoto(${i})"></span>`
+      ).join('');
+    }
+
+    function cambiarFoto(dir) {
+      const v = productoActual?.variantes[variantActual];
+      const fotos = getFotos(v);
+      if (fotos.length <= 1) return;
+      fotoIdx = (fotoIdx + dir + fotos.length) % fotos.length;
+      actualizarFotoCarrusel(fotos);
+    }
+
+    function irFoto(idx) {
+      const v = productoActual?.variantes[variantActual];
+      const fotos = getFotos(v);
+      fotoIdx = idx;
+      actualizarFotoCarrusel(fotos);
+    }
+
+    function actualizarFotoCarrusel(fotos) {
+      const img = document.getElementById('product-main-img');
+      if (img) {
+        img.classList.add('fading');
+        setTimeout(() => {
+          img.src = fotos[fotoIdx] || 'img/logo.png';
+          img.classList.remove('fading');
+        }, 280);
+      }
+      document.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === fotoIdx));
+    }
 
     const params = new URLSearchParams(window.location.search);
     const productId = params.get('id');
@@ -617,8 +700,13 @@
           </div>
           <div class="product-img-container">
             <img class="product-main-img" id="product-main-img"
-                 src="${variantes[variantActual]?.foto||'img/logo.png'}"
+                 src="${getFotos(variantes[variantActual])[0]||'img/logo.png'}"
                  alt="${prod.nombre} ${variantes[variantActual]?.nombre||''}" />
+            <div class="carousel-nav" id="carousel-nav" style="display:none">
+              <button class="carousel-btn" onclick="cambiarFoto(-1)">‹</button>
+              <div class="carousel-dots" id="carousel-dots"></div>
+              <button class="carousel-btn" onclick="cambiarFoto(1)">›</button>
+            </div>
           </div>
         </div>
 
@@ -657,6 +745,7 @@
 
       document.title = `${prod.nombre} | Sendera`;
       actualizarFondo(prod, variantActual);
+      initCarousel(variantes[variantActual]);
     }
 
     // ── FONDO (avatar desenfocado o color) ─────────────────────────
@@ -689,16 +778,19 @@
       variantActual = idx;
       const v = productoActual.variantes[idx];
 
-      // Imagen con fade
+      // Imagen con fade + reiniciar carrusel
+      fotoIdx = 0;
+      const fotos = getFotos(v);
       const img = document.getElementById('product-main-img');
       if (img) {
         img.classList.add('fading');
         setTimeout(() => {
-          img.src = v.foto || 'img/logo.png';
+          img.src = fotos[0] || 'img/logo.png';
           img.alt = productoActual.nombre + ' ' + v.nombre;
           img.classList.remove('fading');
         }, 280);
       }
+      initCarousel(v);
 
       // Labels
       const cn = document.getElementById('color-name');
