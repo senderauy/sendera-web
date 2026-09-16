@@ -783,7 +783,7 @@ nav a:hover {
 .card-img-frame {
   height: 100%;
   flex-shrink: 0;
-  background: #f5f0e8;
+  background: #fff;
   overflow: hidden;
 }
 .card-img-frame img {
