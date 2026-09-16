@@ -781,10 +781,10 @@ nav a:hover {
   will-change: transform;
 }
 .card-img-frame {
-  width: calc(100% / var(--n));
   height: 100%;
   flex-shrink: 0;
   background: #fff;
+  overflow: hidden;
 }
 .card-img-frame img {
   width: 100%;
