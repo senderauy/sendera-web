@@ -2548,6 +2548,31 @@ nav a:hover::after {
   color: #222;
 }
 .login-input:focus { border-color: #2d5a2d; }
+
+.login-password-wrap {
+  position: relative;
+}
+.login-password-wrap .login-input {
+  width: 100%;
+  padding-right: 44px;
+  box-sizing: border-box;
+}
+.login-eye-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #8a7f72;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.login-eye-btn:hover { color: #3d6e2a; }
 .login-error {
   font-size: 0.84rem;
   padding: 9px 13px;
