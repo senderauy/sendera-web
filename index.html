@@ -34,8 +34,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Sendera" />
   <meta name="theme-color" content="#1a1510" />
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=7" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
 
@@ -45,22 +45,55 @@
       <div class="logo-wrap">
         <img src="img/logo.png" alt="Sendera Logo" class="logo" />
       </div>
-      <nav>
+      <nav class="nav-right">
         <a href="#inicio">Inicio</a>
         <a href="#nosotros">Quiénes somos</a>
-        <a href="#productos">Productos</a>
         <a href="#contacto">Contacto</a>
+        <a href="#productos" class="nav-icon-btn" title="Tienda" aria-label="Tienda">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        </a>
+        <div class="user-menu-wrap">
+          <button type="button" class="nav-icon-btn nav-user-btn" id="nav-user-btn" onclick="toggleUserMenu()" title="Mi cuenta" aria-label="Mi cuenta">
+            <span class="user-avatar-circle" id="user-avatar-circle"></span>
+            <span class="user-icon-default" id="user-icon-default">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            </span>
+          </button>
+          <div id="user-dropdown" class="user-dropdown">
+            <div id="user-dropdown-info" class="user-dropdown-info"></div>
+            <button type="button" class="user-dropdown-item" onclick="abrirMisPedidos()">📦 Mis pedidos</button>
+            <button type="button" class="user-dropdown-item user-dropdown-salir" onclick="cerrarSesion()">Salir</button>
+          </div>
+        </div>
       </nav>
+      <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Abrir menú">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
+    <nav id="main-nav">
+      <a href="#inicio">Inicio</a>
+      <a href="#nosotros">Quiénes somos</a>
+      <a href="#contacto">Contacto</a>
+      <a href="#productos" class="nav-cta">Tienda</a>
+      <div class="mobile-user-section" id="mobile-user-section">
+        <a href="javascript:void(0)" id="mobile-login-link" onclick="handleMobileUser()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px;opacity:0.85"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Ingresar</a>
+      </div>
+    </nav>
   </header>
 
   <!-- HERO -->
   <section class="hero" id="inicio">
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <h1>DONDE EMPIEZA<br>LA <span class="hero-accent">AVENTURA.</span></h1>
+      <h1><span class="hero-line1">Donde empieza</span><em class="hero-line2">la aventura.</em></h1>
       <p>Equipamiento para running, trekking, trail y aventuras outdoor.</p>
-      <a href="#productos" class="btn-primary">Ver productos</a>
+      <div class="hero-btns">
+        <a href="#nosotros" class="btn-primary">Ver más</a>
+        <a href="#productos" class="btn-hero-ghost">Comprar</a>
+      </div>
     </div>
   </section>
 
@@ -68,7 +101,8 @@
   <section class="nosotros" id="nosotros">
     <div class="nosotros-inner">
       <div class="nosotros-left">
-        <h2 class="nosotros-headline">¿QUIÉNES<br><span class="accent">SOMOS?</span></h2>
+        <p class="nosotros-label">Sobre nosotros</p>
+        <h2 class="nosotros-headline">¿Quiénes<br><span class="accent">somos?</span></h2>
         <p class="nosotros-tagline">Sendera no es solo equipamiento,<br>es parte del camino.</p>
       </div>
       <div class="nosotros-body">
@@ -94,12 +128,19 @@
 
   <!-- COLECCIONES -->
   <section class="colecciones-section" id="colecciones">
-    <div class="colecciones-container">
-      <p class="colecciones-label">Explorá por categoría</p>
-      <h2 class="colecciones-title">Colecciones</h2>
-      <div class="colecciones-grid" id="colecciones-grid">
+    <div class="colecciones-header">
+      <div class="colecciones-header-left">
+        <p class="colecciones-label">Explorá por categoría</p>
+        <h2 class="colecciones-title">Nuestra <span class="colecciones-title-accent">colección</span></h2>
+      </div>
+      <p class="colecciones-subtitle">Encontrá rápido lo que buscás.</p>
+    </div>
+    <div class="colecciones-carousel-wrap">
+      <button type="button" class="colecciones-nav colecciones-prev" id="col-prev" aria-label="Anterior">&#8249;</button>
+      <div class="colecciones-track" id="colecciones-grid">
         <!-- Poblado dinámicamente desde Firebase -->
       </div>
+      <button type="button" class="colecciones-nav colecciones-next" id="col-next" aria-label="Siguiente">&#8250;</button>
     </div>
   </section>
 
@@ -112,30 +153,43 @@
   </section>
 
   <!-- POR QUE ELEGIRNOS -->
-  <section class="section porque dark-section">
-    <div class="container">
-      <h2>¿Por qué elegirnos?</h2>
-      <div class="features-grid">
-        <div class="feature">
-          <span>🛒</span>
-          <h4>100% Online</h4>
-          <p>Comprá desde donde estés, de forma simple y segura.</p>
+  <section class="porque-section">
+    <div class="porque-header">
+      <p class="porque-label">¿Por qué elegirnos?</p>
+      <h2 class="porque-title">Equipamiento para <span class="porque-accent">los que van.</span></h2>
+    </div>
+    <div class="porque-grid">
+      <div class="porque-item">
+        <div class="porque-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         </div>
-        <div class="feature">
-          <span>⭐</span>
-          <h4>Productos seleccionados</h4>
-          <p>Cada producto pasa por un criterio de calidad, funcionalidad y estilo.</p>
+        <span class="porque-num">01</span>
+        <h4 class="porque-item-title">100% Online</h4>
+        <p class="porque-item-desc">Comprá desde donde estés, de forma simple y segura.</p>
+      </div>
+      <div class="porque-item">
+        <div class="porque-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         </div>
-        <div class="feature">
-          <span>🌄</span>
-          <h4>Pasión por el outdoor</h4>
-          <p>Somos parte de la comunidad que amamos.</p>
+        <span class="porque-num">02</span>
+        <h4 class="porque-item-title">Productos seleccionados</h4>
+        <p class="porque-item-desc">Cada producto pasa por un criterio de calidad, funcionalidad y estilo.</p>
+      </div>
+      <div class="porque-item">
+        <div class="porque-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l4-8 4 5 3-3 4 6H3z"/><circle cx="18" cy="6" r="2"/></svg>
         </div>
-        <div class="feature">
-          <span>🚚</span>
-          <h4>Envíos a todo el país</h4>
-          <p>Llevamos tu equipamiento hasta la puerta de tu casa.</p>
+        <span class="porque-num">03</span>
+        <h4 class="porque-item-title">Pasión por el outdoor</h4>
+        <p class="porque-item-desc">Somos parte de la comunidad que amamos.</p>
+      </div>
+      <div class="porque-item">
+        <div class="porque-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
         </div>
+        <span class="porque-num">04</span>
+        <h4 class="porque-item-title">Envíos a todo Uruguay</h4>
+        <p class="porque-item-desc">Llevamos tu equipamiento hasta la puerta de tu casa.</p>
       </div>
     </div>
   </section>
@@ -183,13 +237,22 @@
       <p class="subtitle">Seguinos en nuestras redes y escribinos por cualquier consulta.</p>
       <div class="social-links">
         <a href="https://www.instagram.com/sendera.uy" target="_blank" class="social-btn instagram">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          <span class="social-btn-circle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          </span>
+          Instagram
         </a>
         <a href="https://www.facebook.com/sendera.uy" target="_blank" class="social-btn facebook">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          <span class="social-btn-circle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </span>
+          Facebook
         </a>
         <a href="https://www.tiktok.com/@sendera.uy" target="_blank" class="social-btn tiktok">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/></svg>
+          <span class="social-btn-circle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.75a4.85 4.85 0 01-1.01-.06z"/></svg>
+          </span>
+          TikTok
         </a>
       </div>
     </div>
@@ -204,16 +267,16 @@
 
 
   <!-- CARRITO FLOTANTE -->
-  <button id="cart-btn" onclick="toggleCart()">
+  <button type="button" id="cart-btn" onclick="toggleCart()">
     🛒
     <span id="cart-count">0</span>
   </button>
 
   <!-- MODAL CARRITO -->
-  <div id="cart-modal">
+  <div id="cart-modal" onclick="event.stopPropagation()">
     <div class="cart-header">
       <h3>Tu pedido</h3>
-      <button onclick="closeCart()" class="cart-close">✕</button>
+      <button type="button" onclick="closeCart()" class="cart-close">✕</button>
     </div>
     <div id="cart-items"></div>
     <div class="cart-footer">
@@ -279,13 +342,25 @@
         <span id="cart-total">$0</span>
       </div>
 
-      <button class="btn-mp" onclick="pagarMP()">💳 Ir a pagar</button>
+      <button type="button" class="btn-mp" onclick="pagarMP()">💳 Ir a pagar</button>
       <p class="cart-note">Te contactaremos para coordinar el envío.</p>
+    </div>
+  </div>
+
+  <!-- MODAL MIS PEDIDOS -->
+  <div id="mis-pedidos-overlay" class="mis-pedidos-overlay" onclick="cerrarMisPedidos()">
+    <div class="mis-pedidos-modal" onclick="event.stopPropagation()">
+      <div class="mis-pedidos-header">
+        <h3>Mis pedidos</h3>
+        <button type="button" class="mis-pedidos-close" onclick="cerrarMisPedidos()">✕</button>
+      </div>
+      <div id="mis-pedidos-lista" class="mis-pedidos-lista"></div>
     </div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="firebase-config.js"></script>
   <script src="cart.js"></script>
   <script>
@@ -313,6 +388,43 @@
       if (ultimosProductos.length) renderCategorias(ultimosProductos);
     });
 
+    function setupColeccionesCarousel() {
+      const track = document.getElementById('colecciones-grid');
+      const prev = document.getElementById('col-prev');
+      const next = document.getElementById('col-next');
+      if (!track || !prev || !next) return;
+      prev.onclick = null; next.onclick = null;
+
+      if (window.innerWidth > 768) {
+        // Desktop: scroll nativo
+        function scrollDir(dir) {
+          const card = track.querySelector('.coleccion-card');
+          if (!card) return;
+          track.scrollBy({ left: dir * (card.offsetWidth + 20), behavior: 'smooth' });
+        }
+        prev.addEventListener('click', () => scrollDir(-1));
+        next.addEventListener('click', () => scrollDir(1));
+        return;
+      }
+
+      // Mobile: transform controlado por flechas
+      let idx = 0;
+      const cards = Array.from(track.querySelectorAll('.coleccion-card'));
+      const total = cards.length;
+
+      function goTo(i) {
+        idx = Math.max(0, Math.min(total - 1, i));
+        const cardW = (cards[0] ? cards[0].offsetWidth : 0) + 12;
+        track.style.transform = 'translateX(' + (-idx * cardW) + 'px)';
+        prev.style.opacity = idx === 0 ? '0.35' : '1';
+        next.style.opacity = idx === total - 1 ? '0.35' : '1';
+      }
+
+      prev.addEventListener('click', () => goTo(idx - 1));
+      next.addEventListener('click', () => goTo(idx + 1));
+      goTo(0);
+    }
+
     function irAColeccion(cat) {
       const bloque = document.querySelector('.bloque-categoria[data-cat="' + cat + '"]');
       if (bloque) {
@@ -335,23 +447,22 @@
       grid.innerHTML = todasCats.map(([cat, prods], idx) => {
         const foto = fotosColecciones[cat] || (prods || []).flatMap(p => (p.variantes || []).map(v => v.foto).filter(Boolean))[0];
         const pos = posicionesColecciones[cat] || '50% 50%';
-        const orientacion = orientacionesColecciones[cat] || '';
-        const alturaStyle = orientacion === 'vertical' ? 'aspect-ratio:3/4;' : orientacion === 'horizontal' ? 'aspect-ratio:16/9;' : '';
         const solidBg = COLECCION_BG_FALLBACK[idx % COLECCION_BG_FALLBACK.length];
         const catSlug = cat.replace(/'/g, "\\'");
         return `
           <a class="coleccion-card" href="#productos"
              onclick="event.preventDefault();irAColeccion('${catSlug}');"
-             style="${foto ? '' : 'background:' + solidBg + ';'}${alturaStyle}">
+             style="${foto ? '' : 'background:' + solidBg + ';'}">
             ${foto ? `<img class="coleccion-bg" src="${foto}" alt="${cat}" style="object-position:${pos}" />` : ''}
             <div class="coleccion-overlay"></div>
             <div class="coleccion-card-content">
-              <div class="coleccion-nombre">${cat}</div>
-              <div class="coleccion-btn">Ver colección →</div>
+              <span class="coleccion-nombre">${cat}</span>
             </div>
           </a>
         `;
       }).join('');
+      grid.scrollLeft = 0;
+      setupColeccionesCarousel();
     }
 
     function renderCategorias(productos) {
@@ -434,8 +545,8 @@
                     <div class="card-carousel-track">
                       ${fotos.map(f => `<div class="card-img-frame" style="width:${100/fotos.length}%"><img src="${f}" alt="${p.nombre} ${v.nombre}" loading="lazy" /></div>`).join('')}
                     </div>
-                    <button class="card-carousel-btn prev" onclick="cardCarouselBtn(this,-1);event.stopPropagation()">&#8249;</button>
-                    <button class="card-carousel-btn next" onclick="cardCarouselBtn(this,1);event.stopPropagation()">&#8250;</button>
+                    <button type="button" class="card-carousel-btn prev" onclick="cardCarouselBtn(this,-1);event.stopPropagation()">&#8249;</button>
+                    <button type="button" class="card-carousel-btn next" onclick="cardCarouselBtn(this,1);event.stopPropagation()">&#8250;</button>
                     <div class="card-carousel-dots">
                       ${fotos.map((_,di) => `<span class="card-carousel-dot${di===0?' active':''}" onclick="cardCarouselDot(this,${di});event.stopPropagation()"></span>`).join('')}
                     </div>
@@ -446,20 +557,20 @@
                   );
               return `
               <div class="producto-card">
-                <div class="producto-img-wrap">
-                  ${imgHtml}
-                </div>
-                <div class="producto-info">
-                  <h3>${p.nombre}</h3>
-                  <p class="producto-colores">${v.nombre}</p>
-                  <div class="producto-footer">
-                    <span class="precio">$${(v.precio || 0).toLocaleString()}</span>
-                    <div class="qty-control">
-                      <button class="qty-btn qty-minus" onclick="cardChangeQty(this, -1)" style="display:none">−</button>
-                      <span class="qty-num" style="display:none">0</span>
-                      <button class="qty-btn qty-plus" onclick="cardChangeQty(this, 1)">+</button>
-                    </div>
+                <a class="producto-card-link" href="producto.html?id=${p.id}&v=${i}">
+                  <div class="producto-img-wrap">
+                    ${imgHtml}
                   </div>
+                  <div class="producto-info">
+                    <h3>${p.nombre}</h3>
+                    <p class="producto-colores">${v.nombre}</p>
+                    <span class="precio">$${(v.precio || 0).toLocaleString()}</span>
+                  </div>
+                </a>
+                <div class="qty-control">
+                  <button type="button" class="qty-btn qty-minus" onclick="cardChangeQty(this,-1);" style="display:none">−</button>
+                  <span class="qty-num" style="display:none">0</span>
+                  <button type="button" class="qty-plus btn-agregar" onclick="cardChangeQty(this,1);">Agregar al carrito</button>
                 </div>
               </div>`;
             }).join('')}
@@ -471,6 +582,20 @@
 
       // Revisar stock de los nuevos productos
       checkStockOnLoad();
+
+      // Restaurar scroll si el usuario volvió desde una página de producto
+      const savedScroll = sessionStorage.getItem('sendera_scroll');
+      if (savedScroll !== null) {
+        sessionStorage.removeItem('sendera_scroll');
+        const targetY = parseInt(savedScroll);
+        let tries = 0;
+        (function restoreScroll() {
+          window.scrollTo(0, targetY);
+          if (++tries < 10 && Math.abs(window.scrollY - targetY) > 30) {
+            setTimeout(restoreScroll, 150);
+          }
+        })();
+      }
     }
 
     db.ref('productos').on('value', snapshot => {
@@ -616,5 +741,160 @@
     <span>Consultar</span>
   </a>
 
+  <script>
+    (function() {
+      const navbar = document.querySelector('.navbar');
+      function updateNav() {
+        navbar.classList.toggle('scrolled', window.scrollY > 60);
+      }
+      window.addEventListener('scroll', updateNav, { passive: true });
+      updateNav();
+
+      const toggle = document.getElementById('menu-toggle');
+      const nav = document.getElementById('main-nav');
+      if (toggle && nav) {
+        toggle.addEventListener('click', () => {
+          const isOpen = toggle.classList.toggle('open');
+          nav.classList.toggle('open', isOpen);
+          document.body.style.overflow = isOpen ? 'hidden' : '';
+        });
+        nav.querySelectorAll('a').forEach(link => {
+          link.addEventListener('click', () => {
+            toggle.classList.remove('open');
+            nav.classList.remove('open');
+            document.body.style.overflow = '';
+          });
+        });
+      }
+    })();
+  </script>
+
+  <!-- AUTH LOGIC -->
+  <script>
+    const auth = firebase.auth();
+
+    // ── Estado de autenticación ───────────────────────────────
+    auth.onAuthStateChanged(function(user) {
+      const avatarCircle = document.getElementById('user-avatar-circle');
+      const iconDefault = document.getElementById('user-icon-default');
+      const mobileLink = document.getElementById('mobile-login-link');
+      const dropdownInfo = document.getElementById('user-dropdown-info');
+
+      if (user) {
+        const firstName = (user.displayName || user.email || 'Usuario').split(' ')[0];
+        const initial = firstName[0].toUpperCase();
+        avatarCircle.textContent = initial;
+        avatarCircle.style.display = 'inline-flex';
+        iconDefault.style.display = 'none';
+        dropdownInfo.innerHTML = '<span class="user-dropdown-name">' + (user.displayName || user.email) + '</span><span class="user-dropdown-email">' + user.email + '</span>';
+        if (mobileLink) mobileLink.innerHTML = '👤 ' + firstName;
+      } else {
+        avatarCircle.style.display = 'none';
+        avatarCircle.textContent = '';
+        iconDefault.style.display = 'inline-flex';
+        dropdownInfo.innerHTML = '';
+        if (mobileLink) mobileLink.innerHTML = '👤 Ingresar';
+      }
+    });
+
+    function loginConGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        auth.signInWithRedirect(provider);
+        return;
+      }
+      auth.signInWithPopup(provider).catch(function(err) {
+        if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+          auth.signInWithRedirect(provider);
+        }
+      });
+    }
+
+    function toggleUserMenu() {
+      const user = auth.currentUser;
+      if (!user) {
+        loginConGoogle();
+        return;
+      }
+      const dropdown = document.getElementById('user-dropdown');
+      dropdown.classList.toggle('open');
+    }
+
+    function handleMobileUser() {
+      const nav = document.getElementById('main-nav');
+      const toggle = document.getElementById('menu-toggle');
+      toggle.classList.remove('open');
+      nav.classList.remove('open');
+      document.body.style.overflow = '';
+
+      const user = auth.currentUser;
+      if (!user) {
+        loginConGoogle();
+      } else {
+        abrirMisPedidos();
+      }
+    }
+
+    // Procesar resultado del redirect de Google
+    auth.getRedirectResult().catch(function(err) {
+      console.error('Redirect result error:', err);
+    });
+
+    function cerrarSesion() {
+      auth.signOut();
+      document.getElementById('user-dropdown').classList.remove('open');
+    }
+
+    // Cerrar dropdown al click fuera
+    document.addEventListener('click', function(e) {
+      const dropdown = document.getElementById('user-dropdown');
+      const btn = document.getElementById('nav-user-btn');
+      if (dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+        dropdown.classList.remove('open');
+      }
+    });
+
+    // ── Mis Pedidos ───────────────────────────────────────────
+    function abrirMisPedidos() {
+      document.getElementById('user-dropdown').classList.remove('open');
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const overlay = document.getElementById('mis-pedidos-overlay');
+      const lista = document.getElementById('mis-pedidos-lista');
+      lista.innerHTML = '<p style="color:#9a8f82;padding:24px;text-align:center">Cargando...</p>';
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      db.ref('users/' + user.uid + '/pedidos').orderByChild('fecha').limitToLast(30).once('value', function(snap) {
+        const pedidos = [];
+        snap.forEach(function(child) { pedidos.unshift(Object.assign({ _id: child.key }, child.val())); });
+
+        if (pedidos.length === 0) {
+          lista.innerHTML = '<div style="padding:40px;text-align:center;color:#9a8f82"><div style="font-size:2.5rem;margin-bottom:12px">📦</div><p>Todavía no tenés pedidos.</p></div>';
+          return;
+        }
+
+        lista.innerHTML = pedidos.map(function(p) {
+          const fecha = new Date(p.fecha).toLocaleDateString('es-UY', { day: 'numeric', month: 'short', year: 'numeric' });
+          const prods = (p.productos || []).map(function(i) { return i.nombre + ' ' + i.variante + ' x' + i.qty; }).join('<br>');
+          const estadoLabel = { aprobado: 'Aprobado', confirmado: 'Confirmado', pendiente: 'Pendiente', 'pendiente-transferencia': 'Transferencia pendiente' }[p.estado] || p.estado || 'Pendiente';
+          const estadoColor = (p.estado === 'aprobado' || p.estado === 'confirmado') ? '#507a3a' : p.estado === 'error' ? '#c0392b' : '#c8861a';
+          return '<div class="pedido-card">' +
+            '<div class="pedido-card-top"><span class="pedido-fecha">' + fecha + '</span>' +
+            '<span class="pedido-estado" style="color:' + estadoColor + '">' + estadoLabel + '</span></div>' +
+            '<div class="pedido-prods">' + prods + '</div>' +
+            '<div class="pedido-bottom"><span class="pedido-envio">' + (p.envio || '') + '</span>' +
+            '<span class="pedido-total">$' + (p.total || 0).toLocaleString() + '</span></div>' +
+            '</div>';
+        }).join('');
+      });
+    }
+
+    function cerrarMisPedidos() {
+      document.getElementById('mis-pedidos-overlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  </script>
 </body>
 </html>

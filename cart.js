@@ -22,6 +22,7 @@ const STOCK_MAP = {
 
 // Cache de stock en memoria (se llena desde Firebase)
 const stockCache = {};
+let stockLoaded = false;
 
 function getStock(id) {
   return stockCache[id] !== undefined ? stockCache[id] : 999;
@@ -31,12 +32,21 @@ function getStock(id) {
 if (typeof db !== 'undefined') {
   db.ref('stock').on('value', snapshot => {
     const data = snapshot.val() || {};
+    // IDs conocidos arrancan en 0; Firebase los actualiza si existen
+    Object.values(STOCK_MAP).forEach(id => { stockCache[id] = 0; });
     Object.keys(data).forEach(id => { stockCache[id] = data[id]; });
+    stockLoaded = true;
     checkStockOnLoad();
   });
 }
 
-let cart = [];
+let cart = (function() {
+  try { return JSON.parse(localStorage.getItem('sendera_cart') || '[]'); } catch(e) { return []; }
+})();
+
+function saveCart() {
+  try { localStorage.setItem('sendera_cart', JSON.stringify(cart)); } catch(e) {}
+}
 
 function cardChangeQty(btn, delta) {
   const card = btn.closest('.producto-card');
@@ -83,11 +93,20 @@ function cardChangeQty(btn, delta) {
     qtyNum.textContent = qty;
     qtyNum.style.display = 'inline';
     minusBtn.style.display = 'inline-flex';
+    if (plusBtn && plusBtn.classList.contains('btn-agregar')) {
+      plusBtn.textContent = '+';
+      plusBtn.classList.add('btn-agregar--compact');
+    }
   } else {
     qtyNum.style.display = 'none';
     minusBtn.style.display = 'none';
+    if (plusBtn && plusBtn.classList.contains('btn-agregar')) {
+      plusBtn.textContent = 'Agregar al carrito';
+      plusBtn.classList.remove('btn-agregar--compact');
+    }
   }
 
+  saveCart();
   updateCartUI();
   if (delta > 0) showCartNotification();
 }
@@ -104,6 +123,7 @@ function removeFromCart(index) {
     qtyEl.style.display = 'none';
   }
   cart.splice(index, 1);
+  saveCart();
   updateCartUI();
 }
 
@@ -117,6 +137,7 @@ function changeQty(index, delta) {
       qtyEl.textContent = cart[index].qty;
       qtyEl.style.display = 'flex';
     }
+    saveCart();
     updateCartUI();
   }
 }
@@ -175,6 +196,41 @@ document.addEventListener('change', function(e) {
   if (e.target.name === 'interior-tipo') toggleDomicilioInterior();
 });
 
+function syncCardsWithCart() {
+  document.querySelectorAll('.producto-card').forEach(card => {
+    const info = card.querySelector('.producto-info');
+    if (!info) return;
+    const name = (info.querySelector('h3') || {}).textContent?.trim();
+    const variant = (info.querySelector('.producto-colores') || {}).textContent?.trim();
+    if (!name || !variant) return;
+
+    const qtyControl = card.querySelector('.qty-control');
+    if (!qtyControl) return;
+    const minusBtn = qtyControl.querySelector('.qty-minus');
+    const plusBtn = qtyControl.querySelector('.qty-plus');
+    const qtyNum = qtyControl.querySelector('.qty-num');
+
+    const item = cart.find(i => i.name === name && i.variant === variant);
+    const qty = item ? item.qty : 0;
+
+    if (qty > 0) {
+      if (qtyNum) { qtyNum.textContent = qty; qtyNum.style.display = 'inline'; }
+      if (minusBtn) minusBtn.style.display = 'inline-flex';
+      if (plusBtn && plusBtn.classList.contains('btn-agregar')) {
+        plusBtn.textContent = '+';
+        plusBtn.classList.add('btn-agregar--compact');
+      }
+    } else {
+      if (qtyNum) qtyNum.style.display = 'none';
+      if (minusBtn) minusBtn.style.display = 'none';
+      if (plusBtn && plusBtn.classList.contains('btn-agregar')) {
+        plusBtn.textContent = 'Agregar al carrito';
+        plusBtn.classList.remove('btn-agregar--compact');
+      }
+    }
+  });
+}
+
 function updateCartUI() {
   const count = cart.reduce((sum, i) => sum + i.qty, 0);
   document.getElementById('cart-count').textContent = count;
@@ -191,12 +247,12 @@ function updateCartUI() {
           <span class="cart-item-variant">${item.variant}</span>
         </div>
         <div class="cart-item-controls">
-          <button onclick="changeQty(${i}, -1)">−</button>
+          <button type="button" onclick="changeQty(${i}, -1)">−</button>
           <span>${item.qty}</span>
-          <button onclick="changeQty(${i}, 1)">+</button>
+          <button type="button" onclick="changeQty(${i}, 1)">+</button>
         </div>
         <div class="cart-item-price">$${(item.price * item.qty).toLocaleString()}</div>
-        <button class="cart-item-remove" onclick="removeFromCart(${i})">✕</button>
+        <button type="button" class="cart-item-remove" onclick="removeFromCart(${i})">✕</button>
       </div>
     `).join('');
   }
@@ -205,10 +261,13 @@ function updateCartUI() {
   const envio = getEnvio();
   document.getElementById('cart-subtotal').textContent = '$' + subtotal.toLocaleString();
   document.getElementById('cart-total').textContent = '$' + (subtotal + envio.costo).toLocaleString();
+
+  syncCardsWithCart();
 }
 
 function showCartNotification() {
   const btn = document.getElementById('cart-btn');
+  if (!btn) return;
   btn.classList.add('cart-bounce');
   setTimeout(() => btn.classList.remove('cart-bounce'), 400);
 }
@@ -302,6 +361,7 @@ function sendOrder() {
 
   // Reset
   cart = [];
+  saveCart();
   updateCartUI();
   document.getElementById('customer-name').value = '';
   document.getElementById('customer-phone').value = '';
@@ -323,7 +383,7 @@ function checkStockOnLoad() {
       const qtyControl = card.querySelector('.qty-control');
       if (plusBtn) plusBtn.disabled = true;
       if (qtyControl) {
-        qtyControl.innerHTML = '<span style="font-size:0.72rem;color:#e74c3c;letter-spacing:0.08em;text-transform:uppercase;padding:8px 6px;">Sin stock</span>';
+        qtyControl.innerHTML = '<span class="sin-stock-label">Sin stock</span>';
       }
       const grid = card.closest('.productos-grid');
       if (grid) grid.appendChild(card);
@@ -370,10 +430,16 @@ async function pagarMP() {
 document.addEventListener('click', function(e) {
   const modal = document.getElementById('cart-modal');
   const btn = document.getElementById('cart-btn');
-  if (modal.classList.contains('open') && !modal.contains(e.target) && !btn.contains(e.target)) {
+  const navBtn = document.querySelector('.cart-nav-btn');
+  if (modal.classList.contains('open') && !modal.contains(e.target) && (!btn || !btn.contains(e.target)) && (!navBtn || !navBtn.contains(e.target))) {
     closeCart();
   }
 });
+
+function irAProducto(productId, variantIdx) {
+  sessionStorage.setItem('sendera_scroll', window.scrollY);
+  window.location.href = `producto.html?id=${productId}&v=${variantIdx}`;
+}
 
 updateCartUI();
 window.addEventListener('load', checkStockOnLoad);

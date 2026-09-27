@@ -453,8 +453,11 @@
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
+  const auth = firebase.auth();
+
   // ── Leer datos del carrito desde localStorage ───────────
   const PUBLIC_KEY = 'APP_USR-c46e63e4-b1f6-49f1-8a57-b5f45b227516';
   let pedidoData = null;
@@ -559,6 +562,21 @@
   if (pedidoData?.envio?.tipo === 'pickup') {
     document.getElementById('btn-efectivo').style.display = '';
   }
+
+  // ── Pre-llenar datos si el usuario está logueado ──────────
+  auth.onAuthStateChanged(function(user) {
+    if (!user) return;
+    db.ref('users/' + user.uid + '/profile').once('value', function(snap) {
+      const profile = snap.val();
+      if (!profile) return;
+      const nombreEl = document.getElementById('ch-nombre');
+      const celularEl = document.getElementById('ch-celular');
+      const emailEl = document.getElementById('ch-email');
+      if (nombreEl && profile.nombre && !nombreEl.value) nombreEl.value = profile.nombre;
+      if (celularEl && profile.celular && !celularEl.value) celularEl.value = profile.celular;
+      if (emailEl && (profile.email || user.email) && !emailEl.value) emailEl.value = profile.email || user.email;
+    });
+  });
 
   // ── Registrar carrito abandonado en Firebase ──────────────
   let carritoAbandonadoId = null;
@@ -867,6 +885,14 @@
     };
     if (comprobanteBase64) pedido.comprobante = comprobanteBase64;
     db.ref('pedidos').push(pedido);
+    // Guardar en historial del usuario si está logueado
+    const user = auth.currentUser;
+    if (user) {
+      const pedidoSinComprobante = Object.assign({}, pedido);
+      delete pedidoSinComprobante.comprobante;
+      db.ref('users/' + user.uid + '/pedidos').push(pedidoSinComprobante);
+      db.ref('users/' + user.uid + '/profile').set({ nombre: nombre, celular: celular, email: email });
+    }
     localStorage.removeItem('sendera_checkout');
     eliminarCarritoAbandonado();
     // Enviar email al cliente si lo proporcionó
