@@ -66,23 +66,28 @@
           </div>
         </div>
       </nav>
-      <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Abrir menú">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-    </div>
-    <nav id="main-nav">
-      <a href="#inicio">Inicio</a>
-      <a href="#nosotros">Quiénes somos</a>
-      <a href="#contacto">Contacto</a>
-      <a href="#productos" class="nav-cta">Tienda</a>
-      <div class="mobile-user-section" id="mobile-user-section">
-        <a href="javascript:void(0)" id="mobile-login-link" onclick="handleMobileUser()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px;opacity:0.85"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Ingresar</a>
-        <a href="javascript:void(0)" id="mobile-salir-link" onclick="cerrarSesionMobile()" style="display:none">Salir</a>
+      <div class="mobile-controls">
+        <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Abrir menú">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <button type="button" class="mobile-header-user" id="mobile-header-user" onclick="document.getElementById('menu-toggle').click()" aria-label="Mi cuenta" style="display:none"><span id="mobile-header-avatar"></span></button>
       </div>
-    </nav>
+    </div>
   </header>
+  <nav id="main-nav">
+    <a href="#inicio">Inicio</a>
+    <a href="#nosotros">Quiénes somos</a>
+    <a href="#contacto">Contacto</a>
+    <a href="#productos" class="nav-cta">Tienda</a>
+    <div class="mobile-user-section" id="mobile-user-section">
+      <a href="javascript:void(0)" id="mobile-login-link" onclick="handleMobileUser()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px;opacity:0.85"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Ingresar</a>
+      <a href="javascript:void(0)" id="mobile-salir-link" onclick="cerrarSesionMobile()" style="display:none" aria-label="Cerrar sesión"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Salir</a>
+    </div>
+  </nav>
+  <div class="nav-backdrop" id="nav-backdrop"></div>
+
 
   <!-- HERO -->
   <section class="hero" id="inicio">
@@ -347,6 +352,19 @@
     </div>
   </div>
 
+  <!-- MODAL CONFIRMAR SALIDA -->
+  <div id="confirm-salida-overlay" class="confirm-salida-overlay" onclick="cerrarConfirmSalida()">
+    <div class="confirm-salida-modal" onclick="event.stopPropagation()">
+      <div class="confirm-salida-icon">📦</div>
+      <p class="confirm-salida-titulo">Tené&#x301;s una compra pendiente</p>
+      <p class="confirm-salida-sub">¿Quer&#xe9;s salir de todas formas?</p>
+      <div class="confirm-salida-btns">
+        <button type="button" class="confirm-salida-quedar" onclick="cerrarConfirmSalida()">Quedarme</button>
+        <button type="button" class="confirm-salida-salir" id="confirm-salida-si">Salir igual</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL MIS PEDIDOS -->
   <div id="mis-pedidos-overlay" class="mis-pedidos-overlay" onclick="cerrarMisPedidos()">
     <div class="mis-pedidos-modal" onclick="event.stopPropagation()">
@@ -385,7 +403,7 @@
         if (data && data.orientacion) orientacionesColecciones[cat] = data.orientacion;
       });
       catsExtraColecciones = Object.keys(val);
-      if (ultimosProductos.length) renderCategorias(ultimosProductos);
+      if (ultimosProductos.length) { renderCategorias(ultimosProductos); initCardCarousels(); }
     });
 
     function setupColeccionesCarousel() {
@@ -545,8 +563,8 @@
                     <div class="card-carousel-track">
                       ${fotos.map(f => `<div class="card-img-frame" style="width:${100/fotos.length}%"><img src="${f}" alt="${p.nombre} ${v.nombre}" loading="lazy" /></div>`).join('')}
                     </div>
-                    <button type="button" class="card-carousel-btn prev" onclick="cardCarouselBtn(this,-1);event.stopPropagation()">&#8249;</button>
-                    <button type="button" class="card-carousel-btn next" onclick="cardCarouselBtn(this,1);event.stopPropagation()">&#8250;</button>
+                    <button type="button" class="card-carousel-btn prev" ontouchend="cardCarouselBtn(this,-1);event.stopPropagation();event.preventDefault()" onclick="cardCarouselBtn(this,-1);event.stopPropagation()">&#8249;</button>
+                    <button type="button" class="card-carousel-btn next" ontouchend="cardCarouselBtn(this,1);event.stopPropagation();event.preventDefault()" onclick="cardCarouselBtn(this,1);event.stopPropagation()">&#8250;</button>
                     <div class="card-carousel-dots">
                       ${fotos.map((_,di) => `<span class="card-carousel-dot${di===0?' active':''}" onclick="cardCarouselDot(this,${di});event.stopPropagation()"></span>`).join('')}
                     </div>
@@ -650,6 +668,11 @@
             cardCarouselGo(carousel, parseInt(carousel.dataset.idx || '0') + (dx < 0 ? 1 : -1));
           }
         }, { passive: true });
+        // Bloquea cualquier click en el carousel para que no abra el producto
+        carousel.addEventListener('click', e => {
+          e.stopPropagation();
+          e.preventDefault();
+        }, false);
       });
     }
 
@@ -753,18 +776,23 @@
       const toggle = document.getElementById('menu-toggle');
       const nav = document.getElementById('main-nav');
       if (toggle && nav) {
+        const backdrop = document.getElementById('nav-backdrop');
+        function closeMenu() {
+          toggle.classList.remove('open');
+          nav.classList.remove('open');
+          if (backdrop) backdrop.classList.remove('open');
+          document.body.style.overflow = '';
+        }
         toggle.addEventListener('click', () => {
           const isOpen = toggle.classList.toggle('open');
           nav.classList.toggle('open', isOpen);
+          if (backdrop) backdrop.classList.toggle('open', isOpen);
           document.body.style.overflow = isOpen ? 'hidden' : '';
         });
         nav.querySelectorAll('a').forEach(link => {
-          link.addEventListener('click', () => {
-            toggle.classList.remove('open');
-            nav.classList.remove('open');
-            document.body.style.overflow = '';
-          });
+          link.addEventListener('click', closeMenu);
         });
+        if (backdrop) backdrop.addEventListener('click', closeMenu);
       }
     })();
   </script>
@@ -781,6 +809,8 @@
       const dropdownInfo = document.getElementById('user-dropdown-info');
 
       const mobileSalir = document.getElementById('mobile-salir-link');
+      const mobileHeaderUser = document.getElementById('mobile-header-user');
+      const mobileHeaderAvatar = document.getElementById('mobile-header-avatar');
 
       if (user) {
         const firstName = (user.displayName || user.email || 'Usuario').split(' ')[0];
@@ -791,6 +821,8 @@
         dropdownInfo.innerHTML = '<span class="user-dropdown-name">' + (user.displayName || user.email) + '</span><span class="user-dropdown-email">' + user.email + '</span>';
         if (mobileLink) mobileLink.innerHTML = '<span class="mobile-avatar-circle" style="display:inline-flex">' + initial + '</span> ' + firstName;
         if (mobileSalir) mobileSalir.style.display = '';
+        if (mobileHeaderUser) mobileHeaderUser.style.display = 'flex';
+        if (mobileHeaderAvatar) mobileHeaderAvatar.textContent = initial;
       } else {
         avatarCircle.style.display = 'none';
         avatarCircle.textContent = '';
@@ -798,19 +830,24 @@
         dropdownInfo.innerHTML = '';
         if (mobileLink) mobileLink.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px;opacity:0.85"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Ingresar';
         if (mobileSalir) mobileSalir.style.display = 'none';
-        }
+        if (mobileHeaderUser) mobileHeaderUser.style.display = 'none';
+        if (mobileHeaderAvatar) mobileHeaderAvatar.textContent = '';
       }
     });
 
     function loginConGoogle() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      // Intentar popup primero (funciona en iOS 14.5+ con gesto del usuario)
-      // Solo si falla por popup bloqueado, usar redirect
-      auth.signInWithPopup(provider).catch(function(err) {
-        if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
-          auth.signInWithRedirect(provider);
-        }
-      });
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider).catch(function(err) {
+          if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+            auth.signInWithRedirect(provider);
+          } else if (err.code !== 'auth/popup-closed-by-user') {
+            alert('Error login: ' + (err.code || err.message));
+          }
+        });
+      } catch(e) {
+        alert('Error login: ' + e.message);
+      }
     }
 
     function toggleUserMenu() {
@@ -826,8 +863,10 @@
     function handleMobileUser() {
       const nav = document.getElementById('main-nav');
       const toggle = document.getElementById('menu-toggle');
+      const bd = document.getElementById('nav-backdrop');
       toggle.classList.remove('open');
       nav.classList.remove('open');
+      if (bd) bd.classList.remove('open');
       document.body.style.overflow = '';
 
       const user = auth.currentUser;
@@ -847,18 +886,49 @@
       console.error('Redirect result error:', err);
     });
 
+    var _confirmSalidaCallback = null;
+    function confirmarSalida(onConfirm) {
+      const user = auth.currentUser;
+      if (!user) { onConfirm(); return; }
+      db.ref('users/' + user.uid + '/pedidos').once('value', function(snap) {
+        let hasPending = false;
+        snap.forEach(function(child) {
+          const estado = (child.val().estado || 'pendiente').toLowerCase();
+          if (estado !== 'aprobado' && estado !== 'confirmado' && estado !== 'cancelado' && estado !== 'entregado') {
+            hasPending = true;
+          }
+        });
+        if (hasPending) {
+          _confirmSalidaCallback = onConfirm;
+          document.getElementById('confirm-salida-si').onclick = function() { cerrarConfirmSalida(); onConfirm(); };
+          document.getElementById('confirm-salida-overlay').classList.add('open');
+        } else {
+          onConfirm();
+        }
+      });
+    }
+    function cerrarConfirmSalida() {
+      document.getElementById('confirm-salida-overlay').classList.remove('open');
+    }
+
     function cerrarSesion() {
-      auth.signOut();
       document.getElementById('user-dropdown').classList.remove('open');
+      confirmarSalida(function() {
+        auth.signOut();
+      });
     }
 
     function cerrarSesionMobile() {
       const nav = document.getElementById('main-nav');
       const toggle = document.getElementById('menu-toggle');
+      const bd = document.getElementById('nav-backdrop');
       if (toggle) toggle.classList.remove('open');
       if (nav) nav.classList.remove('open');
+      if (bd) bd.classList.remove('open');
       document.body.style.overflow = '';
-      auth.signOut();
+      confirmarSalida(function() {
+        auth.signOut();
+      });
     }
 
     // Cerrar dropdown al click fuera
