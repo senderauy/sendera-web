@@ -81,6 +81,7 @@
         <a href="javascript:void(0)" id="mobile-login-link" onclick="handleMobileUser()">
           <span class="mobile-avatar-circle" id="mobile-avatar-circle" style="display:none"></span>
           <svg id="mobile-user-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px;opacity:0.85"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Ingresar</a>
+        <a href="javascript:void(0)" id="mobile-salir-link" onclick="cerrarSesionMobile()" style="display:none">Salir</a>
       </div>
     </nav>
   </header>
@@ -783,6 +784,7 @@
 
       const mobileAvatar = document.getElementById('mobile-avatar-circle');
       const mobileSvg = document.getElementById('mobile-user-svg');
+      const mobileSalir = document.getElementById('mobile-salir-link');
 
       if (user) {
         const firstName = (user.displayName || user.email || 'Usuario').split(' ')[0];
@@ -796,6 +798,7 @@
           if (mobileAvatar) { mobileAvatar.textContent = initial; mobileAvatar.style.display = 'inline-flex'; }
           if (mobileSvg) mobileSvg.style.display = 'none';
         }
+        if (mobileSalir) mobileSalir.style.display = '';
       } else {
         avatarCircle.style.display = 'none';
         avatarCircle.textContent = '';
@@ -805,6 +808,8 @@
           mobileLink.childNodes[mobileLink.childNodes.length - 1].textContent = 'Ingresar';
           if (mobileAvatar) { mobileAvatar.style.display = 'none'; mobileAvatar.textContent = ''; }
           if (mobileSvg) mobileSvg.style.display = '';
+        }
+        if (mobileSalir) mobileSalir.style.display = 'none';
         }
       }
     });
@@ -857,6 +862,15 @@
     function cerrarSesion() {
       auth.signOut();
       document.getElementById('user-dropdown').classList.remove('open');
+    }
+
+    function cerrarSesionMobile() {
+      const nav = document.getElementById('main-nav');
+      const toggle = document.getElementById('menu-toggle');
+      if (toggle) toggle.classList.remove('open');
+      if (nav) nav.classList.remove('open');
+      document.body.style.overflow = '';
+      auth.signOut();
     }
 
     // Cerrar dropdown al click fuera

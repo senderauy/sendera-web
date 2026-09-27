@@ -2186,6 +2186,18 @@ nav a:hover::after {
   flex-shrink: 0;
 }
 
+#mobile-salir-link {
+  display: block;
+  color: rgba(255,255,255,0.45);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
 /* ── MIS PEDIDOS MODAL ───────────────────────────────────── */
 .mis-pedidos-overlay {
   position: fixed;
