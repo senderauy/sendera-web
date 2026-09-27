@@ -2271,19 +2271,18 @@ nav a:hover::after {
 #mobile-salir-link {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: rgba(255,255,255,0.35);
-  padding: 8px;
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 6px;
+  gap: 6px;
+  color: rgba(255,255,255,0.38);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   text-decoration: none;
   flex-shrink: 0;
-  transition: color 0.2s, border-color 0.2s;
+  transition: color 0.2s;
 }
 
 #mobile-salir-link:hover, #mobile-salir-link:active {
   color: rgba(255,255,255,0.65);
-  border-color: rgba(255,255,255,0.28);
 }
 
 /* ── MIS PEDIDOS MODAL ───────────────────────────────────── */
