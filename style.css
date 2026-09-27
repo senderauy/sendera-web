@@ -58,17 +58,15 @@ body {
 
 .logo-wrap {
   height: 58px;
-  overflow: hidden;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-start;
   padding: 0;
 }
 
 .logo {
-  height: 120px;
+  height: 54px;
   width: auto;
-  margin-top: -21px;
   filter: brightness(0) invert(1);
 }
 
@@ -1893,14 +1891,13 @@ nav a:hover::after {
 
   .logo-wrap {
     height: 44px;
-    overflow: hidden;
     padding: 0;
     justify-content: flex-start;
   }
 
   .logo {
-    height: 92px;
-    margin-top: -16px;
+    height: 40px;
+    margin-top: 0;
   }
 
   .mobile-controls {
