@@ -72,7 +72,7 @@
           <span></span>
           <span></span>
         </button>
-        <button type="button" class="mobile-header-user" id="mobile-header-user" onclick="document.getElementById('menu-toggle').click()" aria-label="Mi cuenta" style="display:none"><span id="mobile-header-avatar"></span></button>
+        <button type="button" class="mobile-header-user" id="mobile-header-user" onclick="toggleUserMenu()" aria-label="Mi cuenta" style="display:none"><span id="mobile-header-avatar"></span></button>
       </div>
     </div>
   </header>
@@ -379,7 +379,13 @@
           <input type="text" id="login-name" placeholder="Tu nombre" class="login-input" autocomplete="name" />
         </div>
         <input type="email" id="login-email" placeholder="Correo electrónico" class="login-input" autocomplete="email" />
-        <input type="password" id="login-password" placeholder="Contraseña" class="login-input" autocomplete="current-password" />
+        <div class="login-password-wrap">
+          <input type="password" id="login-password" placeholder="Contraseña" class="login-input" autocomplete="current-password" />
+          <button type="button" class="login-eye-btn" onclick="togglePasswordVisibility()" tabindex="-1" aria-label="Mostrar contraseña">
+            <svg id="eye-icon-show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg id="eye-icon-hide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
         <div id="login-error" class="login-error"></div>
         <button type="submit" class="login-submit" id="login-submit-btn">Ingresar</button>
       </form>
@@ -851,7 +857,7 @@
         dropdownInfo.innerHTML = '<span class="user-dropdown-name">' + (user.displayName || user.email) + '</span><span class="user-dropdown-email">' + user.email + '</span>';
         if (mobileLink) mobileLink.innerHTML = '<span class="mobile-avatar-circle" style="display:inline-flex">' + initial + '</span> ' + firstName;
         if (mobileSalir) mobileSalir.style.display = '';
-        if (mobileHeaderUser) mobileHeaderUser.style.display = 'flex';
+        if (mobileHeaderUser) mobileHeaderUser.style.display = window.innerWidth <= 640 ? 'flex' : 'none';
         if (mobileHeaderAvatar) mobileHeaderAvatar.textContent = initial;
       } else {
         avatarCircle.style.display = 'none';
@@ -879,6 +885,9 @@
       document.body.style.overflow = '';
       document.getElementById('login-form').reset();
       _setLoginError('');
+      var btn = document.getElementById('login-submit-btn');
+      btn.disabled = false;
+      btn.textContent = _loginTab === 'registrar' ? 'Crear cuenta' : 'Ingresar';
     }
 
     function switchLoginTab(tab) {
@@ -951,6 +960,21 @@
           _setLoginError('Error con Google. Intentá con email.');
         }
       });
+    }
+
+    function togglePasswordVisibility() {
+      var input = document.getElementById('login-password');
+      var show = document.getElementById('eye-icon-show');
+      var hide = document.getElementById('eye-icon-hide');
+      if (input.type === 'password') {
+        input.type = 'text';
+        show.style.display = 'none';
+        hide.style.display = 'block';
+      } else {
+        input.type = 'password';
+        show.style.display = 'block';
+        hide.style.display = 'none';
+      }
     }
 
     function resetPassword() {
