@@ -1,7 +1,7 @@
 // Configuración Firebase - Sendera
 const firebaseConfig = {
   apiKey: "AIzaSyBp7XddXbOGYTzZD8qusj5MXH-LNdox5gc",
-  authDomain: "sendera-34791.firebaseapp.com",
+  authDomain: "www.senderauy.com",
   databaseURL: "https://sendera-34791-default-rtdb.firebaseio.com",
   projectId: "sendera-34791",
   storageBucket: "sendera-34791.firebasestorage.app",
