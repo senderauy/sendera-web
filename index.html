@@ -790,6 +790,7 @@
           document.body.style.overflow = isOpen ? 'hidden' : '';
         });
         nav.querySelectorAll('a').forEach(link => {
+          if (link.id === 'mobile-login-link' || link.id === 'mobile-salir-link') return;
           link.addEventListener('click', closeMenu);
         });
         if (backdrop) backdrop.addEventListener('click', closeMenu);
@@ -912,21 +913,21 @@
     }
 
     function cerrarSesion() {
+      document.getElementById('user-dropdown').classList.remove('open');
       confirmarSalida(function() {
         auth.signOut();
-        document.getElementById('user-dropdown').classList.remove('open');
       });
     }
 
     function cerrarSesionMobile() {
+      const nav = document.getElementById('main-nav');
+      const toggle = document.getElementById('menu-toggle');
+      const bd = document.getElementById('nav-backdrop');
+      if (toggle) toggle.classList.remove('open');
+      if (nav) nav.classList.remove('open');
+      if (bd) bd.classList.remove('open');
+      document.body.style.overflow = '';
       confirmarSalida(function() {
-        const nav = document.getElementById('main-nav');
-        const toggle = document.getElementById('menu-toggle');
-        const bd = document.getElementById('nav-backdrop');
-        if (toggle) toggle.classList.remove('open');
-        if (nav) nav.classList.remove('open');
-        if (bd) bd.classList.remove('open');
-        document.body.style.overflow = '';
         auth.signOut();
       });
     }
