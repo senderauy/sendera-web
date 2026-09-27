@@ -809,18 +809,13 @@
     function loginConGoogle() {
       try {
         const provider = new firebase.auth.GoogleAuthProvider();
-        const esMovil = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        if (esMovil) {
-          auth.signInWithRedirect(provider).catch(function(err) {
-            alert('Error redirect: ' + (err.code || err.message));
-          });
-        } else {
-          auth.signInWithPopup(provider).catch(function(err) {
-            if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
-              auth.signInWithRedirect(provider);
-            }
-          });
-        }
+        auth.signInWithPopup(provider).catch(function(err) {
+          if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+            auth.signInWithRedirect(provider);
+          } else if (err.code !== 'auth/popup-closed-by-user') {
+            alert('Error login: ' + (err.code || err.message));
+          }
+        });
       } catch(e) {
         alert('Error login: ' + e.message);
       }
