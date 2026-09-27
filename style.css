@@ -58,15 +58,17 @@ body {
 
 .logo-wrap {
   height: 58px;
+  overflow: hidden;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-start;
   padding: 0;
 }
 
 .logo {
-  height: 54px;
+  height: 120px;
   width: auto;
+  margin-top: -21px;
   filter: brightness(0) invert(1);
 }
 
@@ -1896,8 +1898,8 @@ nav a:hover::after {
   }
 
   .logo {
-    height: 40px;
-    margin-top: 0;
+    height: 92px;
+    margin-top: -16px;
   }
 
   .mobile-controls {
@@ -2501,10 +2503,11 @@ nav a:hover::after {
 }
 .login-brand {
   text-align: center;
-  font-size: 1.25rem;
-  color: #1c3a1c;
   margin-bottom: 22px;
-  letter-spacing: 0.04em;
+}
+.login-brand-logo {
+  height: 70px;
+  width: auto;
 }
 .login-tabs {
   display: flex;
