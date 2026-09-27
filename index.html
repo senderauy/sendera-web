@@ -790,6 +790,7 @@
           document.body.style.overflow = isOpen ? 'hidden' : '';
         });
         nav.querySelectorAll('a').forEach(link => {
+          if (link.id === 'mobile-login-link' || link.id === 'mobile-salir-link') return;
           link.addEventListener('click', closeMenu);
         });
         if (backdrop) backdrop.addEventListener('click', closeMenu);
