@@ -34,7 +34,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Sendera" />
   <meta name="theme-color" content="#1a1510" />
-  <link rel="stylesheet" href="style.css?v=7" />
+  <link rel="stylesheet" href="style.css?v=8" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
@@ -78,9 +78,7 @@
       <a href="#contacto">Contacto</a>
       <a href="#productos" class="nav-cta">Tienda</a>
       <div class="mobile-user-section" id="mobile-user-section">
-        <a href="javascript:void(0)" id="mobile-login-link" onclick="handleMobileUser()">
-          <span class="mobile-avatar-circle" id="mobile-avatar-circle" style="display:none"></span>
-          <svg id="mobile-user-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px;opacity:0.85"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Ingresar</a>
+        <a href="javascript:void(0)" id="mobile-login-link" onclick="handleMobileUser()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px;opacity:0.85"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Ingresar</a>
         <a href="javascript:void(0)" id="mobile-salir-link" onclick="cerrarSesionMobile()" style="display:none">Salir</a>
       </div>
     </nav>
@@ -782,8 +780,6 @@
       const mobileLink = document.getElementById('mobile-login-link');
       const dropdownInfo = document.getElementById('user-dropdown-info');
 
-      const mobileAvatar = document.getElementById('mobile-avatar-circle');
-      const mobileSvg = document.getElementById('mobile-user-svg');
       const mobileSalir = document.getElementById('mobile-salir-link');
 
       if (user) {
@@ -793,22 +789,14 @@
         avatarCircle.style.display = 'inline-flex';
         iconDefault.style.display = 'none';
         dropdownInfo.innerHTML = '<span class="user-dropdown-name">' + (user.displayName || user.email) + '</span><span class="user-dropdown-email">' + user.email + '</span>';
-        if (mobileLink) {
-          mobileLink.childNodes[mobileLink.childNodes.length - 1].textContent = ' ' + firstName;
-          if (mobileAvatar) { mobileAvatar.textContent = initial; mobileAvatar.style.display = 'inline-flex'; }
-          if (mobileSvg) mobileSvg.style.display = 'none';
-        }
+        if (mobileLink) mobileLink.innerHTML = '<span class="mobile-avatar-circle" style="display:inline-flex">' + initial + '</span> ' + firstName;
         if (mobileSalir) mobileSalir.style.display = '';
       } else {
         avatarCircle.style.display = 'none';
         avatarCircle.textContent = '';
         iconDefault.style.display = 'inline-flex';
         dropdownInfo.innerHTML = '';
-        if (mobileLink) {
-          mobileLink.childNodes[mobileLink.childNodes.length - 1].textContent = 'Ingresar';
-          if (mobileAvatar) { mobileAvatar.style.display = 'none'; mobileAvatar.textContent = ''; }
-          if (mobileSvg) mobileSvg.style.display = '';
-        }
+        if (mobileLink) mobileLink.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px;opacity:0.85"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Ingresar';
         if (mobileSalir) mobileSalir.style.display = 'none';
         }
       }
