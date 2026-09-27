@@ -2170,6 +2170,22 @@ nav a:hover::after {
   padding-top: 8px;
 }
 
+.mobile-avatar-circle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--green, #507a3a);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  vertical-align: middle;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
 /* ── MIS PEDIDOS MODAL ───────────────────────────────────── */
 .mis-pedidos-overlay {
   position: fixed;
