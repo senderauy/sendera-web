@@ -1877,6 +1877,13 @@ nav a:hover::after {
 
   .nav-left, .nav-right { display: none; }
 
+  .user-dropdown {
+    position: fixed;
+    top: 64px;
+    right: 16px;
+    left: auto;
+  }
+
   .navbar-inner {
     display: flex;
     justify-content: space-between;
