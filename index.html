@@ -838,16 +838,12 @@
 
     function loginConGoogle() {
       const provider = new firebase.auth.GoogleAuthProvider();
-      const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      if (isMobile) {
-        auth.signInWithRedirect(provider);
-      } else {
-        auth.signInWithPopup(provider).catch(function(err) {
-          if (err.code !== 'auth/popup-closed-by-user') {
-            auth.signInWithRedirect(provider);
-          }
-        });
-      }
+      auth.signInWithPopup(provider).catch(function(err) {
+        if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
+        if (err.code === 'auth/popup-blocked') {
+          auth.signInWithRedirect(provider);
+        }
+      });
     }
 
     function toggleUserMenu() {
