@@ -879,6 +879,9 @@
       document.body.style.overflow = '';
       document.getElementById('login-form').reset();
       _setLoginError('');
+      var btn = document.getElementById('login-submit-btn');
+      btn.disabled = false;
+      btn.textContent = _loginTab === 'registrar' ? 'Crear cuenta' : 'Ingresar';
     }
 
     function switchLoginTab(tab) {
