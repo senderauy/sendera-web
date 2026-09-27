@@ -1961,12 +1961,12 @@ nav a:hover::after {
   }
 
   #main-nav > a {
-    font-size: 0.92rem;
-    font-weight: 500;
-    letter-spacing: 0.16em;
-    color: rgba(226,196,122,0.85);
+    font-size: 0.8rem;
+    font-weight: 300;
+    letter-spacing: 0.22em;
+    color: rgba(226,196,122,0.8);
     text-transform: uppercase;
-    padding: 20px 28px;
+    padding: 22px 28px;
     margin: 0;
     width: 100%;
     border-bottom: 1px solid rgba(255,255,255,0.07);
@@ -2001,8 +2001,8 @@ nav a:hover::after {
     padding: 20px 28px !important;
     width: 100% !important;
     text-align: left !important;
-    font-size: 0.92rem !important;
-    letter-spacing: 0.16em !important;
+    font-size: 0.8rem !important;
+    letter-spacing: 0.22em !important;
   }
   #main-nav .nav-cta::after { display: none !important; }
 
@@ -2226,18 +2226,15 @@ nav a:hover::after {
 
 /* Mobile nav user */
 .mobile-user-section {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 18px 24px;
+  padding: 18px 24px 110px;
   border-top: 1px solid rgba(255,255,255,0.08);
-  background: rgba(0,0,0,0.18);
+  background: transparent;
   opacity: 0;
   transition: opacity 0.35s 0.22s ease;
+  margin-top: auto;
 }
 
 #main-nav.open .mobile-user-section {
