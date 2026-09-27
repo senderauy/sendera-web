@@ -2376,3 +2376,79 @@ nav a:hover::after {
 }
 .pedido-envio { font-size: 0.72rem; color: #9a8f82; }
 .pedido-total { font-size: 0.88rem; font-weight: 700; color: #507a3a; }
+
+/* ── CONFIRMAR SALIDA MODAL ─────────────────────────────── */
+.confirm-salida-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 1100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s;
+}
+.confirm-salida-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.confirm-salida-modal {
+  background: #fff;
+  border-radius: 18px 18px 0 0;
+  padding: 32px 28px 40px;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+  transform: translateY(30px);
+  transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+.confirm-salida-overlay.open .confirm-salida-modal {
+  transform: translateY(0);
+}
+.confirm-salida-icon {
+  font-size: 2rem;
+  margin-bottom: 14px;
+}
+.confirm-salida-titulo {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 8px;
+}
+.confirm-salida-sub {
+  font-size: 0.88rem;
+  color: #7a7060;
+  margin: 0 0 28px;
+}
+.confirm-salida-btns {
+  display: flex;
+  gap: 12px;
+}
+.confirm-salida-quedar {
+  flex: 1;
+  padding: 14px;
+  border: 1.5px solid #d8d2c8;
+  border-radius: 10px;
+  background: #fff;
+  color: #3a3228;
+  font-size: 0.92rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.confirm-salida-quedar:hover { background: #f5f0e8; }
+.confirm-salida-salir {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: #3d6e2a;
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.confirm-salida-salir:hover { background: #2d5218; }

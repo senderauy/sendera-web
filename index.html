@@ -352,6 +352,19 @@
     </div>
   </div>
 
+  <!-- MODAL CONFIRMAR SALIDA -->
+  <div id="confirm-salida-overlay" class="confirm-salida-overlay" onclick="cerrarConfirmSalida()">
+    <div class="confirm-salida-modal" onclick="event.stopPropagation()">
+      <div class="confirm-salida-icon">📦</div>
+      <p class="confirm-salida-titulo">Tené&#x301;s una compra pendiente</p>
+      <p class="confirm-salida-sub">¿Quer&#xe9;s salir de todas formas?</p>
+      <div class="confirm-salida-btns">
+        <button type="button" class="confirm-salida-quedar" onclick="cerrarConfirmSalida()">Quedarme</button>
+        <button type="button" class="confirm-salida-salir" id="confirm-salida-si">Salir igual</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL MIS PEDIDOS -->
   <div id="mis-pedidos-overlay" class="mis-pedidos-overlay" onclick="cerrarMisPedidos()">
     <div class="mis-pedidos-modal" onclick="event.stopPropagation()">
@@ -873,20 +886,49 @@
       console.error('Redirect result error:', err);
     });
 
+    var _confirmSalidaCallback = null;
+    function confirmarSalida(onConfirm) {
+      const user = auth.currentUser;
+      if (!user) { onConfirm(); return; }
+      db.ref('users/' + user.uid + '/pedidos').once('value', function(snap) {
+        let hasPending = false;
+        snap.forEach(function(child) {
+          const estado = (child.val().estado || 'pendiente').toLowerCase();
+          if (estado !== 'aprobado' && estado !== 'confirmado' && estado !== 'cancelado' && estado !== 'entregado') {
+            hasPending = true;
+          }
+        });
+        if (hasPending) {
+          _confirmSalidaCallback = onConfirm;
+          document.getElementById('confirm-salida-si').onclick = function() { cerrarConfirmSalida(); onConfirm(); };
+          document.getElementById('confirm-salida-overlay').classList.add('open');
+        } else {
+          onConfirm();
+        }
+      });
+    }
+    function cerrarConfirmSalida() {
+      document.getElementById('confirm-salida-overlay').classList.remove('open');
+    }
+
     function cerrarSesion() {
-      auth.signOut();
-      document.getElementById('user-dropdown').classList.remove('open');
+      confirmarSalida(function() {
+        auth.signOut();
+        document.getElementById('user-dropdown').classList.remove('open');
+      });
     }
 
     function cerrarSesionMobile() {
-      const nav = document.getElementById('main-nav');
-      const toggle = document.getElementById('menu-toggle');
-      const bd = document.getElementById('nav-backdrop');
-      if (toggle) toggle.classList.remove('open');
-      if (nav) nav.classList.remove('open');
-      if (bd) bd.classList.remove('open');
-      document.body.style.overflow = '';
-      auth.signOut();
+      confirmarSalida(function() {
+        const nav = document.getElementById('main-nav');
+        const toggle = document.getElementById('menu-toggle');
+        const bd = document.getElementById('nav-backdrop');
+        if (toggle) toggle.classList.remove('open');
+        if (nav) nav.classList.remove('open');
+        if (bd) bd.classList.remove('open');
+        document.body.style.overflow = '';
+        auth.signOut();
+      });
     }
 
     // Cerrar dropdown al click fuera
