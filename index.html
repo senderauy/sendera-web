@@ -816,10 +816,7 @@
       const provider = new firebase.auth.GoogleAuthProvider();
       const esMovil = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       if (esMovil) {
-        // En mobile usar redirect. SESSION persistence evita problemas de ITP en Safari.
-        auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).then(function() {
-          return auth.signInWithRedirect(provider);
-        });
+        auth.signInWithRedirect(provider);
       } else {
         auth.signInWithPopup(provider).catch(function(err) {
           if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
