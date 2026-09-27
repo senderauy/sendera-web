@@ -365,6 +365,35 @@
     </div>
   </div>
 
+  <!-- MODAL LOGIN -->
+  <div id="login-overlay" class="login-overlay" onclick="cerrarLoginModal()">
+    <div class="login-modal" onclick="event.stopPropagation()">
+      <button type="button" class="login-close" onclick="cerrarLoginModal()">✕</button>
+      <div class="login-brand">⛰️ <strong>Sendera</strong></div>
+      <div class="login-tabs">
+        <button type="button" class="login-tab active" id="tab-ingresar" onclick="switchLoginTab('ingresar')">Ingresar</button>
+        <button type="button" class="login-tab" id="tab-registrar" onclick="switchLoginTab('registrar')">Crear cuenta</button>
+      </div>
+      <form id="login-form" onsubmit="submitLoginForm(event)" novalidate>
+        <div id="login-name-wrap" style="display:none">
+          <input type="text" id="login-name" placeholder="Tu nombre" class="login-input" autocomplete="name" />
+        </div>
+        <input type="email" id="login-email" placeholder="Correo electrónico" class="login-input" autocomplete="email" />
+        <input type="password" id="login-password" placeholder="Contraseña" class="login-input" autocomplete="current-password" />
+        <div id="login-error" class="login-error"></div>
+        <button type="submit" class="login-submit" id="login-submit-btn">Ingresar</button>
+      </form>
+      <div class="login-divider"><span>o</span></div>
+      <button type="button" class="login-google-btn" onclick="loginConGoogleModal()">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6A7.8 7.8 0 0016.66 9.1c0-.57-.05-.66-.15-1.1z"/><path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 01-7.18-2.54H1.83v2.07A8 8 0 008.98 17z"/><path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 010-3.04V5.41H1.83a8 8 0 000 7.18l2.67-2.07z"/><path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 001.83 5.4L4.5 7.49a4.77 4.77 0 014.48-3.31z"/></svg>
+        Continuar con Google
+      </button>
+      <div id="login-forgot-wrap" class="login-forgot">
+        <button type="button" onclick="resetPassword()">¿Olvidaste tu contraseña?</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL MIS PEDIDOS -->
   <div id="mis-pedidos-overlay" class="mis-pedidos-overlay" onclick="cerrarMisPedidos()">
     <div class="mis-pedidos-modal" onclick="event.stopPropagation()">
@@ -836,14 +865,104 @@
       }
     });
 
-    function loginConGoogle() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider).catch(function(err) {
+    // ── Modal de login ────────────────────────────────────────
+    var _loginTab = 'ingresar';
+
+    function abrirLoginModal() {
+      document.getElementById('login-overlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+      setTimeout(function() { document.getElementById('login-email').focus(); }, 120);
+    }
+
+    function cerrarLoginModal() {
+      document.getElementById('login-overlay').classList.remove('open');
+      document.body.style.overflow = '';
+      document.getElementById('login-form').reset();
+      _setLoginError('');
+    }
+
+    function switchLoginTab(tab) {
+      _loginTab = tab;
+      document.getElementById('tab-ingresar').classList.toggle('active', tab === 'ingresar');
+      document.getElementById('tab-registrar').classList.toggle('active', tab === 'registrar');
+      document.getElementById('login-name-wrap').style.display = tab === 'registrar' ? 'block' : 'none';
+      document.getElementById('login-submit-btn').textContent = tab === 'ingresar' ? 'Ingresar' : 'Crear cuenta';
+      document.getElementById('login-forgot-wrap').style.display = tab === 'ingresar' ? 'block' : 'none';
+      document.getElementById('login-password').autocomplete = tab === 'ingresar' ? 'current-password' : 'new-password';
+      _setLoginError('');
+    }
+
+    function _setLoginError(msg, isOk) {
+      var el = document.getElementById('login-error');
+      el.textContent = msg;
+      el.className = 'login-error' + (msg ? ' visible' : '') + (isOk ? ' ok' : '');
+    }
+
+    function submitLoginForm(e) {
+      e.preventDefault();
+      var email = document.getElementById('login-email').value.trim();
+      var password = document.getElementById('login-password').value;
+      var btn = document.getElementById('login-submit-btn');
+      btn.disabled = true;
+      var origText = btn.textContent;
+      btn.textContent = '...';
+      _setLoginError('');
+
+      var msgs = {
+        'auth/user-not-found': 'No existe una cuenta con ese email.',
+        'auth/wrong-password': 'Contraseña incorrecta.',
+        'auth/invalid-credential': 'Email o contraseña incorrectos.',
+        'auth/email-already-in-use': 'Ya existe una cuenta con ese email.',
+        'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+        'auth/invalid-email': 'Email inválido.',
+        'auth/too-many-requests': 'Demasiados intentos. Intentá más tarde.',
+      };
+
+      var promise;
+      if (_loginTab === 'ingresar') {
+        promise = auth.signInWithEmailAndPassword(email, password);
+      } else {
+        var name = (document.getElementById('login-name').value || '').trim();
+        promise = auth.createUserWithEmailAndPassword(email, password).then(function(result) {
+          if (name && result.user) return result.user.updateProfile({ displayName: name });
+        });
+      }
+      promise.then(function() {
+        cerrarLoginModal();
+      }).catch(function(err) {
+        _setLoginError(msgs[err.code] || 'Error al ingresar. Intentá de nuevo.');
+        btn.disabled = false;
+        btn.textContent = origText;
+      });
+    }
+
+    function loginConGoogleModal() {
+      _setLoginError('');
+      var provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).then(function() {
+        cerrarLoginModal();
+      }).catch(function(err) {
         if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
         if (err.code === 'auth/popup-blocked') {
           auth.signInWithRedirect(provider);
+        } else {
+          _setLoginError('Error con Google. Intentá con email.');
         }
       });
+    }
+
+    function resetPassword() {
+      var email = document.getElementById('login-email').value.trim();
+      if (!email) { _setLoginError('Ingresá tu email primero.'); return; }
+      auth.sendPasswordResetEmail(email).then(function() {
+        _setLoginError('✓ Te enviamos un email para restablecer tu contraseña.', true);
+      }).catch(function() {
+        _setLoginError('No se pudo enviar el email. Verificá que sea correcto.');
+      });
+    }
+
+    function loginConGoogle() {
+      abrirLoginModal();
     }
 
     function toggleUserMenu() {
