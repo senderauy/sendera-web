@@ -799,10 +799,8 @@
 
     function loginConGoogle() {
       const provider = new firebase.auth.GoogleAuthProvider();
-      if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        auth.signInWithRedirect(provider);
-        return;
-      }
+      // Intentar popup primero (funciona en iOS 14.5+ con gesto del usuario)
+      // Solo si falla por popup bloqueado, usar redirect
       auth.signInWithPopup(provider).catch(function(err) {
         if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
           auth.signInWithRedirect(provider);
@@ -835,8 +833,12 @@
       }
     }
 
-    // Procesar resultado del redirect de Google
-    auth.getRedirectResult().catch(function(err) {
+    // Procesar resultado del redirect (fallback para cuando popup fue bloqueado)
+    auth.getRedirectResult().then(function(result) {
+      if (result && result.user) {
+        // onAuthStateChanged se encarga de actualizar la UI
+      }
+    }).catch(function(err) {
       console.error('Redirect result error:', err);
     });
 
