@@ -648,18 +648,13 @@
           const dy = e.changedTouches[0].clientY - sy;
           if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 28) {
             cardCarouselGo(carousel, parseInt(carousel.dataset.idx || '0') + (dx < 0 ? 1 : -1));
-            carousel._blockClick = true;
-            setTimeout(() => { carousel._blockClick = false; }, 400);
           }
         }, { passive: true });
-        // Bloquea el click que dispara el browser después de un swipe
+        // Bloquea cualquier click en el carousel para que no abra el producto
         carousel.addEventListener('click', e => {
-          if (carousel._blockClick) {
-            e.preventDefault();
-            e.stopPropagation();
-            carousel._blockClick = false;
-          }
-        }, true);
+          e.stopPropagation();
+          e.preventDefault();
+        }, false);
       });
     }
 
@@ -813,16 +808,22 @@
     });
 
     function loginConGoogle() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      const esMovil = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      if (esMovil) {
-        auth.signInWithRedirect(provider);
-      } else {
-        auth.signInWithPopup(provider).catch(function(err) {
-          if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
-            auth.signInWithRedirect(provider);
-          }
-        });
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        const esMovil = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (esMovil) {
+          auth.signInWithRedirect(provider).catch(function(err) {
+            alert('Error redirect: ' + (err.code || err.message));
+          });
+        } else {
+          auth.signInWithPopup(provider).catch(function(err) {
+            if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+              auth.signInWithRedirect(provider);
+            }
+          });
+        }
+      } catch(e) {
+        alert('Error login: ' + e.message);
       }
     }
 
