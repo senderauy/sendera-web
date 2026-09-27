@@ -85,6 +85,7 @@
         <a href="javascript:void(0)" id="mobile-salir-link" onclick="cerrarSesionMobile()" style="display:none" aria-label="Cerrar sesión"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
       </div>
     </nav>
+    <div class="nav-backdrop" id="nav-backdrop"></div>
   </header>
 
   <!-- HERO -->
@@ -761,18 +762,23 @@
       const toggle = document.getElementById('menu-toggle');
       const nav = document.getElementById('main-nav');
       if (toggle && nav) {
+        const backdrop = document.getElementById('nav-backdrop');
+        function closeMenu() {
+          toggle.classList.remove('open');
+          nav.classList.remove('open');
+          if (backdrop) backdrop.classList.remove('open');
+          document.body.style.overflow = '';
+        }
         toggle.addEventListener('click', () => {
           const isOpen = toggle.classList.toggle('open');
           nav.classList.toggle('open', isOpen);
+          if (backdrop) backdrop.classList.toggle('open', isOpen);
           document.body.style.overflow = isOpen ? 'hidden' : '';
         });
         nav.querySelectorAll('a').forEach(link => {
-          link.addEventListener('click', () => {
-            toggle.classList.remove('open');
-            nav.classList.remove('open');
-            document.body.style.overflow = '';
-          });
+          link.addEventListener('click', closeMenu);
         });
+        if (backdrop) backdrop.addEventListener('click', closeMenu);
       }
     })();
   </script>
