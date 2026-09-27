@@ -851,7 +851,7 @@
         dropdownInfo.innerHTML = '<span class="user-dropdown-name">' + (user.displayName || user.email) + '</span><span class="user-dropdown-email">' + user.email + '</span>';
         if (mobileLink) mobileLink.innerHTML = '<span class="mobile-avatar-circle" style="display:inline-flex">' + initial + '</span> ' + firstName;
         if (mobileSalir) mobileSalir.style.display = '';
-        if (mobileHeaderUser) mobileHeaderUser.style.display = 'flex';
+        if (mobileHeaderUser) mobileHeaderUser.style.display = window.innerWidth <= 640 ? 'flex' : 'none';
         if (mobileHeaderAvatar) mobileHeaderAvatar.textContent = initial;
       } else {
         avatarCircle.style.display = 'none';
