@@ -837,17 +837,16 @@
     });
 
     function loginConGoogle() {
-      try {
-        const provider = new firebase.auth.GoogleAuthProvider();
+      const provider = new firebase.auth.GoogleAuthProvider();
+      const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isMobile) {
+        auth.signInWithRedirect(provider);
+      } else {
         auth.signInWithPopup(provider).catch(function(err) {
-          if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+          if (err.code !== 'auth/popup-closed-by-user') {
             auth.signInWithRedirect(provider);
-          } else if (err.code !== 'auth/popup-closed-by-user') {
-            alert('Error login: ' + (err.code || err.message));
           }
         });
-      } catch(e) {
-        alert('Error login: ' + e.message);
       }
     }
 
@@ -910,6 +909,13 @@
     }
     function cerrarConfirmSalida() {
       document.getElementById('confirm-salida-overlay').classList.remove('open');
+      var t = document.getElementById('menu-toggle');
+      var n = document.getElementById('main-nav');
+      var b = document.getElementById('nav-backdrop');
+      if (t) t.classList.remove('open');
+      if (n) n.classList.remove('open');
+      if (b) b.classList.remove('open');
+      document.body.style.overflow = '';
     }
 
     function cerrarSesion() {
