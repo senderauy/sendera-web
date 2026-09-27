@@ -59,7 +59,7 @@ function cardChangeQty(btn, delta) {
     const stockDisponible = stockId ? getStock(stockId) : 999;
     const enCarrito = existing ? existing.qty : 0;
     if (enCarrito >= stockDisponible) {
-      alert('No hay más unidades disponibles de este producto.');
+      showCartError('No hay más unidades disponibles de este producto.');
       return;
     }
     if (existing) {
@@ -213,6 +213,20 @@ function showCartNotification() {
   setTimeout(() => btn.classList.remove('cart-bounce'), 400);
 }
 
+function showCartError(msg) {
+  let toast = document.getElementById('cart-error-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'cart-error-toast';
+    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#c0392b;color:#fff;padding:12px 20px;border-radius:8px;font-size:0.88rem;z-index:9999;text-align:center;max-width:85vw;box-shadow:0 4px 16px rgba(0,0,0,.3);pointer-events:none;opacity:0;transition:opacity .25s';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 2800);
+}
+
 function toggleCart() {
   const modal = document.getElementById('cart-modal');
   modal.classList.toggle('open');
@@ -227,18 +241,18 @@ function sendOrder() {
   const phone = document.getElementById('customer-phone').value.trim();
 
   if (!name || !phone) {
-    alert('Por favor completá tu nombre y celular.');
+    showCartError('Por favor completá tu nombre y celular.');
     return;
   }
 
   if (cart.length === 0) {
-    alert('Tu carrito está vacío.');
+    showCartError('Tu carrito está vacío.');
     return;
   }
 
   const envio = getEnvio();
   if (!envio.tipo) {
-    alert('Por favor seleccioná un método de envío.');
+    showCartError('Por favor seleccioná un método de envío.');
     return;
   }
 
@@ -246,18 +260,18 @@ function sendOrder() {
   let envioDetalle = '';
   if (envio.tipo === 'montevideo') {
     const dir = document.getElementById('envio-direccion').value.trim();
-    if (!dir) { alert('Por favor ingresá tu dirección de entrega.'); return; }
+    if (!dir) { showCartError('Por favor ingresá tu dirección de entrega.'); return; }
     envioDetalle = `📍 Montevideo · $200\nDirección: ${dir}`;
   } else if (envio.tipo === 'interior') {
     const ciudad = document.getElementById('envio-ciudad').value.trim();
-    if (!ciudad) { alert('Por favor ingresá tu ciudad o localidad.'); return; }
+    if (!ciudad) { showCartError('Por favor ingresá tu ciudad o localidad.'); return; }
     const interiorTipo = document.querySelector('input[name="interior-tipo"]:checked');
-    if (!interiorTipo) { alert('Por favor indicá si retirás en agencia o necesitás entrega a domicilio.'); return; }
+    if (!interiorTipo) { showCartError('Por favor indicá si retirás en agencia o necesitás entrega a domicilio.'); return; }
     if (interiorTipo.value === 'agencia') {
       envioDetalle = `🚛 Interior · ${ciudad} · Retiro en agencia`;
     } else {
       const domicilio = document.getElementById('envio-domicilio-interior').value.trim();
-      if (!domicilio) { alert('Por favor ingresá tu dirección de entrega.'); return; }
+      if (!domicilio) { showCartError('Por favor ingresá tu dirección de entrega.'); return; }
       envioDetalle = `🚛 Interior · ${ciudad} · Entrega a domicilio: ${domicilio}`;
     }
   } else if (envio.tipo === 'pickup') {
