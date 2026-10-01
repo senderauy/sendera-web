@@ -1112,7 +1112,7 @@
         lista.innerHTML = pedidos.map(function(p) {
           const fecha = new Date(p.fecha).toLocaleDateString('es-UY', { day: 'numeric', month: 'short', year: 'numeric' });
           const prods = (p.productos || []).map(function(i) { return i.nombre + ' ' + i.variante + ' x' + i.qty; }).join('<br>');
-          const estadoLabel = { aprobado: 'Aprobado', confirmado: 'Confirmado', pendiente: 'Pendiente', 'pendiente-transferencia': 'Transferencia pendiente' }[p.estado] || p.estado || 'Pendiente';
+          const estadoLabel = { aprobado: 'Aprobado', confirmado: 'Confirmado', pendiente: 'Pendiente', 'pendiente-transferencia': 'Transferencia pendiente', 'pendiente-efectivo': 'Efectivo al retirar' }[p.estado] || p.estado || 'Pendiente';
           const estadoColor = (p.estado === 'aprobado' || p.estado === 'confirmado') ? '#507a3a' : p.estado === 'error' ? '#c0392b' : '#c8861a';
           return '<div class="pedido-card">' +
             '<div class="pedido-card-top"><span class="pedido-fecha">' + fecha + '</span>' +
