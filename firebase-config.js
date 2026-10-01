@@ -10,4 +10,6 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+// Auth antes que database: así la base espera la sesión guardada y no arranca sin permisos
+if (firebase.auth) firebase.auth();
 const db = firebase.database();

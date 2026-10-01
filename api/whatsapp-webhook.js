@@ -1,11 +1,43 @@
+import { GoogleAuth } from 'google-auth-library';
+
 const PHONE_NUMBER_ID = '1159269003943325';
 const FIREBASE_URL = 'https://sendera-34791-default-rtdb.firebaseio.com';
 const MAX_HISTORY = 10;
 const OWNER_PHONE = '59895290959';
 
+let tokenCache = null;
+
+function getFirebaseToken() {
+  if (!tokenCache || tokenCache.vence < Date.now()) {
+    const promesa = (async () => {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      const auth = new GoogleAuth({
+        credentials: serviceAccount,
+        scopes: [
+          'https://www.googleapis.com/auth/firebase.database',
+          'https://www.googleapis.com/auth/userinfo.email'
+        ]
+      });
+      const client = await auth.getClient();
+      const { token } = await client.getAccessToken();
+      return token;
+    })().catch(e => { tokenCache = null; throw e; });
+    tokenCache = { promesa, vence: Date.now() + 50 * 60 * 1000 };
+  }
+  return tokenCache.promesa;
+}
+
+async function fbFetch(path, options = {}) {
+  const token = await getFirebaseToken();
+  return fetch(`${FIREBASE_URL}/${path}.json`, {
+    ...options,
+    headers: { ...options.headers, 'Authorization': `Bearer ${token}` }
+  });
+}
+
 async function getProductos() {
   try {
-    const res = await fetch(`${FIREBASE_URL}/productos.json`);
+    const res = await fbFetch(`productos`);
     const data = await res.json();
     if (!data) return '';
     const lines = [];
@@ -28,7 +60,7 @@ async function getProductos() {
 
 async function getHistorial(from) {
   try {
-    const res = await fetch(`${FIREBASE_URL}/conversaciones/${from}.json`);
+    const res = await fbFetch(`conversaciones/${from}`);
     const data = await res.json();
     if (!data || !Array.isArray(data)) return [];
     return data.slice(-MAX_HISTORY);
@@ -62,7 +94,7 @@ async function extractOrderFromConversation(historial) {
 
 async function saveHistorial(from, historial) {
   try {
-    await fetch(`${FIREBASE_URL}/conversaciones/${from}.json`, {
+    await fbFetch(`conversaciones/${from}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(historial.slice(-MAX_HISTORY)),
@@ -260,7 +292,7 @@ export default async function handler(req, res) {
           const buffer = await imgRes.arrayBuffer();
           const base64 = Buffer.from(buffer).toString('base64');
           const dataUri = `data:${mimeType};base64,${base64}`;
-          await fetch(`${FIREBASE_URL}/leads_whatsapp/${from}.json`, {
+          await fbFetch(`leads_whatsapp/${from}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ phone: from, comprobante: dataUri, tipo: 'comprobante', fechaComprobante: new Date().toISOString() }),
@@ -270,7 +302,7 @@ export default async function handler(req, res) {
           if (historialComprobante.length > 0) {
             const orderData = await extractOrderFromConversation(historialComprobante);
             if (orderData && !orderData.sinDatos && orderData.productos?.length > 0) {
-              await fetch(`${FIREBASE_URL}/pedidos.json`, {
+              await fbFetch(`pedidos`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -283,10 +315,10 @@ export default async function handler(req, res) {
                 }),
               }).catch(() => {});
               // Mover de WhatsApp leads a Pedidos: eliminar el lead
-              await fetch(`${FIREBASE_URL}/leads_whatsapp/${from}.json`, { method: 'DELETE' }).catch(() => {});
+              await fbFetch(`leads_whatsapp/${from}`, { method: 'DELETE' }).catch(() => {});
               // Notificación push igual que los pedidos normales
               try {
-                const subsRes = await fetch(`${FIREBASE_URL}/push_subscriptions.json`);
+                const subsRes = await fbFetch(`push_subscriptions`);
                 const subsData = await subsRes.json();
                 const subList = subsData ? Object.values(subsData) : [];
                 if (subList.length > 0) {
@@ -328,7 +360,7 @@ export default async function handler(req, res) {
       await sendWhatsAppReply(from, bienvenida);
       await saveHistorial(from, [{ role: 'user', content: text }, { role: 'assistant', content: bienvenida }]);
       // Guardar como lead desde el primer mensaje (clave = número, sin duplicados)
-      await fetch(`${FIREBASE_URL}/leads_whatsapp/${from}.json`, {
+      await fbFetch(`leads_whatsapp/${from}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: from, fecha: new Date().toISOString(), tipo: 'nuevo_contacto', primerMensaje: text }),
@@ -340,7 +372,7 @@ export default async function handler(req, res) {
         await sendWhatsAppReply(from, reply);
         // Si el bot dio datos de pago, actualizar el lead existente
         if (reply.includes('19467638') || reply.toLowerCase().includes('mercadopago')) {
-          await fetch(`${FIREBASE_URL}/leads_whatsapp/${from}.json`, {
+          await fbFetch(`leads_whatsapp/${from}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ phone: from, tipo: reply.includes('19467638') ? 'transferencia' : 'mercadopago' }),

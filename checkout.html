@@ -911,20 +911,15 @@
       }).catch(() => {});
     }
     // Enviar notificación push
-    db.ref('push_subscriptions').once('value', snap => {
-      const subscriptions = Object.values(snap.val() || {});
-      if (subscriptions.length === 0) return;
-      fetch('/api/notify-pedido', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cliente: pedido.cliente,
-          total: pedido.total.toLocaleString(),
-          envio: pedido.envio,
-          subscriptions
-        })
-      }).catch(() => {});
-    });
+    fetch('/api/notify-pedido', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cliente: pedido.cliente,
+        total: pedido.total.toLocaleString(),
+        envio: pedido.envio
+      })
+    }).catch(() => {});
     // Enviar WhatsApp y email al cliente (solo para transferencia — MP lo maneja el webhook)
     if (metodoPago === 'transferencia') {
       const productosMsg = pedidoData.items.map(i => `• ${i.name} - ${i.variant} x${i.qty}`).join('\n');

@@ -10,6 +10,10 @@
   <meta name="theme-color" content="#f2ede6" />
   <title>Sendera Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="../firebase-config.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -140,18 +144,33 @@
     }
 
     .btn-login:active { transform: translateY(0); }
+    .btn-login:disabled { opacity: 0.7; cursor: default; transform: none; box-shadow: none; }
 
-    .error {
+    .btn-link {
+      display: block;
+      width: 100%;
+      margin-top: 16px;
+      background: none;
+      border: none;
+      color: #7a6e62;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.72rem;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .msg {
       display: none;
-      background: #fff5f5;
-      border: 1px solid #fca5a5;
       border-radius: 8px;
-      color: #b91c1c;
       font-size: 0.78rem;
+      line-height: 1.5;
       padding: 10px 14px;
       margin-top: 14px;
       text-align: center;
+      overflow-wrap: anywhere;
     }
+    .msg.error { background: #fff5f5; border: 1px solid #fca5a5; color: #b91c1c; }
+    .msg.info { background: #f0faf4; border: 1px solid #b8dba8; color: #2d6a4f; }
 
     .login-footer {
       text-align: center;
@@ -181,44 +200,125 @@
     <div class="login-card">
       <div class="card-title">Panel de administración</div>
 
-      <div class="form-group">
-        <label>👤 Usuario</label>
-        <input type="text" id="usuario" placeholder="Tu usuario" autocomplete="username" />
-      </div>
-      <div class="form-group">
-        <label>🔒 Contraseña</label>
-        <input type="password" id="password" placeholder="Tu contraseña" autocomplete="current-password" />
-      </div>
+      <form onsubmit="event.preventDefault(); enviar();">
+        <div class="form-group">
+          <label for="email">✉️ Email</label>
+          <input type="email" id="email" placeholder="Tu email" autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label for="password">🔒 Contraseña</label>
+          <input type="password" id="password" placeholder="Tu contraseña" autocomplete="current-password" />
+        </div>
 
-      <button class="btn-login" onclick="login()">
-        🌿 Ingresar al panel
-      </button>
-      <div class="error" id="error-msg">⚠️ Usuario o contraseña incorrectos.</div>
+        <button type="submit" class="btn-login" id="btn-login">🌿 Ingresar al panel</button>
+        <button type="button" class="btn-link" id="btn-olvide" onclick="recuperar()">¿Olvidaste tu contraseña?</button>
+        <button type="button" class="btn-link" id="btn-modo" onclick="cambiarModo()">¿Primera vez? Creá tu contraseña</button>
+      </form>
+      <div class="msg" id="login-msg" role="alert"></div>
     </div>
 
     <div class="login-footer">sendera · admin v2.0</div>
   </div>
 
   <script>
-    const USUARIOS = [
-      { user: 'senderauy', pass: 'Lapaz2080' }
-    ];
+    const btn = document.getElementById('btn-login');
+    const msg = document.getElementById('login-msg');
+    const TEXTO_INGRESAR = '🌿 Ingresar al panel';
+    const TEXTO_CREAR = '🌿 Crear contraseña';
+    let modoCrear = false;
 
-    function login() {
-      const user = document.getElementById('usuario').value.trim().toLowerCase();
-      const pass = document.getElementById('password').value.trim();
-      const valido = USUARIOS.find(u => u.user === user && u.pass === pass);
-      if (valido) {
-        localStorage.setItem('sendera_admin', user);
-        window.location.href = 'dashboard.html';
-      } else {
-        document.getElementById('error-msg').style.display = 'block';
+    firebase.auth().languageCode = 'es';
+
+    function mostrarMensaje(texto, tipo = 'error') {
+      msg.textContent = texto;
+      msg.className = 'msg ' + tipo;
+      msg.style.display = 'block';
+    }
+
+    function textoError(e) {
+      const textos = {
+        'auth/invalid-email': 'Ese email no es válido.',
+        'auth/email-already-in-use': 'Ese mail ya tiene contraseña. Entrá con ella o tocá "¿Olvidaste tu contraseña?".',
+        'auth/too-many-requests': 'Demasiados intentos. Esperá unos minutos y probá de nuevo.',
+        'auth/network-request-failed': 'No hay conexión. Revisá internet y probá de nuevo.'
+      };
+      return textos[e.code] || (modoCrear ? 'No se pudo crear la contraseña. Probá de nuevo.' : 'Email o contraseña incorrectos.');
+    }
+
+    // Las claves de la base no admiten puntos, por eso el mail se guarda con comas
+    function claveAdmin(email) {
+      return (email || '').toLowerCase().replace(/\./g, ',');
+    }
+
+    // Por REST con el token del usuario: justo después de ingresar, la conexión de la base puede no tener la sesión todavía
+    async function esAdmin(user) {
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch(`${firebaseConfig.databaseURL}/admins/${encodeURIComponent(claveAdmin(user.email))}.json?auth=${token}`);
+        return res.ok && (await res.json()) === true;
+      } catch {
+        return false;
       }
     }
 
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Enter') login();
+    const dejarDeEscuchar = firebase.auth().onAuthStateChanged(async user => {
+      dejarDeEscuchar();
+      if (user && user.emailVerified && await esAdmin(user)) location.replace('dashboard.html');
     });
+
+    function cambiarModo() {
+      modoCrear = !modoCrear;
+      btn.textContent = modoCrear ? TEXTO_CREAR : TEXTO_INGRESAR;
+      document.getElementById('btn-modo').textContent = modoCrear ? 'Ya tengo contraseña' : '¿Primera vez? Creá tu contraseña';
+      document.getElementById('btn-olvide').style.display = modoCrear ? 'none' : '';
+      const pass = document.getElementById('password');
+      pass.placeholder = modoCrear ? 'Contraseña nueva (mínimo 8 caracteres)' : 'Tu contraseña';
+      pass.autocomplete = modoCrear ? 'new-password' : 'current-password';
+      msg.style.display = 'none';
+    }
+
+    async function enviar() {
+      const email = document.getElementById('email').value.trim();
+      const pass = document.getElementById('password').value;
+      if (!email || !pass) return mostrarMensaje('Completá el email y la contraseña.');
+      if (modoCrear && pass.length < 8) return mostrarMensaje('Usá una contraseña de al menos 8 caracteres.');
+      btn.disabled = true;
+      btn.textContent = modoCrear ? 'Creando…' : 'Ingresando…';
+      try {
+        const { user } = modoCrear
+          ? await firebase.auth().createUserWithEmailAndPassword(email, pass)
+          : await firebase.auth().signInWithEmailAndPassword(email, pass);
+        if (!(await esAdmin(user))) {
+          await firebase.auth().signOut();
+          mostrarMensaje('Esta cuenta no tiene acceso al panel.');
+        } else if (!user.emailVerified) {
+          await user.sendEmailVerification();
+          await firebase.auth().signOut();
+          if (modoCrear) cambiarModo();
+          mostrarMensaje('Te mandamos un mail a ' + user.email + ' para confirmar que la cuenta es tuya. Tocá el link y después entrá acá con tu mail y tu contraseña.', 'info');
+        } else {
+          return location.replace('dashboard.html');
+        }
+      } catch (e) {
+        const mensaje = textoError(e);
+        if (e.code === 'auth/email-already-in-use') cambiarModo();
+        mostrarMensaje(mensaje);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = modoCrear ? TEXTO_CREAR : TEXTO_INGRESAR;
+      }
+    }
+
+    async function recuperar() {
+      const email = document.getElementById('email').value.trim();
+      if (!email) return mostrarMensaje('Escribí tu email arriba y volvé a tocar "¿Olvidaste tu contraseña?".');
+      try {
+        await firebase.auth().sendPasswordResetEmail(email);
+        mostrarMensaje('Si ese email tiene cuenta, te llegó un correo para crear una contraseña nueva.', 'info');
+      } catch (e) {
+        mostrarMensaje(e.code === 'auth/invalid-email' ? 'Ese email no es válido.' : 'No se pudo enviar el correo. Probá de nuevo.');
+      }
+    }
   </script>
 </body>
 </html>

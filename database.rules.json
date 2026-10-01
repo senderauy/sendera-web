@@ -1,0 +1,84 @@
+{
+  "rules": {
+    "admins": {
+      "$email": {
+        ".read": "auth != null && auth.token.email.toLowerCase().replace('.', ',') === $email"
+      }
+    },
+
+    "productos": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true"
+    },
+    "stock": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true"
+    },
+    "colecciones": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true"
+    },
+    "lookbook": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true"
+    },
+    "resenas": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true"
+    },
+
+    "resenas_pendientes": {
+      ".read": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+      "$id": {
+        ".write": "(auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true) || (!data.exists() && newData.exists())"
+      }
+    },
+    "codigos_descuento": {
+      ".read": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+      ".write": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+      "$codigo": {
+        ".read": true
+      }
+    },
+    "pedidos": {
+      ".read": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+      "$id": {
+        ".write": "(auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true) || (!data.exists() && newData.exists())",
+        ".validate": "newData.hasChildren(['fecha', 'productos', 'total', 'estado'])"
+      }
+    },
+    "carritos_abandonados": {
+      ".read": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+      "$id": {
+        ".write": "(auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true) || !data.exists() || !newData.exists()"
+      }
+    },
+
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "pedidos": {
+          ".indexOn": ["fecha"]
+        }
+      }
+    },
+
+    "leads_whatsapp": {
+      ".read": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+      ".write": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true"
+    },
+    "ventas_manual": {
+      ".read": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+      ".write": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true"
+    },
+    "gastos": {
+      ".read": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+      ".write": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true"
+    },
+    "compras": {
+      ".read": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+      ".write": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true"
+    }
+  }
+}
