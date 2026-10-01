@@ -37,19 +37,20 @@ async function fbFetch(path, options = {}) {
 
 async function getProductos() {
   try {
-    const res = await fbFetch(`productos`);
+    const [res, resStock] = await Promise.all([fbFetch(`productos`), fbFetch(`stock`)]);
     const data = await res.json();
     if (!data) return '';
+    // Mismo criterio que la tienda: el stock está en /stock y si falta la variante cuenta como 0
+    const stock = resStock.ok ? ((await resStock.json()) || {}) : null;
     const lines = [];
-    for (const prod of Object.values(data)) {
+    for (const [prodId, prod] of Object.entries(data)) {
       const nombre = prod.nombre || '';
-      const variantes = prod.variantes || [];
-      for (const v of variantes) {
+      for (const [i, v] of Object.entries(prod.variantes || {})) {
         if (!v || typeof v !== 'object') continue;
         const color = v.color || v.nombre || '';
         const precio = v.precio ? `$${v.precio}` : '';
-        const stock = v.stock === 0 ? ' [SIN STOCK]' : '';
-        lines.push(`- ${nombre}${color ? ' ' + color : ''}${precio ? ' — ' + precio : ''}${stock}`);
+        const sinStock = stock && (stock[v.stockId || `${prodId}-${i}`] ?? 0) <= 0 ? ' [SIN STOCK]' : '';
+        lines.push(`- ${nombre}${color ? ' ' + color : ''}${precio ? ' — ' + precio : ''}${sinStock}`);
       }
     }
     return lines.join('\n');
@@ -157,7 +158,7 @@ Portacelular de brazo:
 - NO afirmes que sirve para todos los celulares ni que es impermeable
 
 Medallero RUN:
-- 35 cm, color negro, para exhibir medallas de carreras y desafíos
+- 30 cm, color negro, para exhibir medallas de carreras y desafíos
 - Los tornillos para instalarlo NO están incluidos
 - NO describas el acabado como mate ni indiques capacidad máxima de medallas
 
