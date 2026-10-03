@@ -855,8 +855,16 @@
       mp_id: mpId || '',
       metodo_pago: metodoPago
     };
+    if (email) pedido.email = email.slice(0, 120);
     if (comprobanteBase64) pedido.comprobante = comprobanteBase64;
-    db.ref('pedidos').push(pedido);
+    const refPedido = db.ref('pedidos').push(pedido);
+    // Cuando el pedido quedó guardado, el servidor lo lee y manda (una sola vez) la notificación a los admins
+    // y al cliente el WhatsApp automático y el email. El navegador ya no manda mensajes directamente.
+    refPedido.then(() => fetch('/api/confirmar-pedido', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pedidoId: refPedido.key })
+    })).catch(() => {});
     // Guardar en historial del usuario si está logueado
     const user = auth.currentUser;
     if (user) {
@@ -869,51 +877,6 @@
     // Compra registrada: se vacía el carrito para que no siga armado al volver a la tienda
     localStorage.removeItem('sendera_cart');
     eliminarCarritoAbandonado();
-    // Enviar notificación push
-    fetch('/api/notify-pedido', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        cliente: pedido.cliente,
-        total: pedido.total.toLocaleString(),
-        envio: pedido.envio
-      })
-    }).catch(() => {});
-    // WhatsApp automático y email de confirmación al cliente, una sola vez, en efectivo, transferencia y tarjeta.
-    // Mercado Pago (redirect) no: esos los manda el webhook cuando se aprueba el pago.
-    // Tarjeta "en proceso" tampoco: todavía no está confirmada.
-    const enviarConfirmacion = metodoPago !== 'mercadopago' && estado !== 'pendiente';
-    if (enviarConfirmacion) {
-      const productosMsg = pedidoData.items.map(i => `• ${i.name} - ${i.variant} x${i.qty}`).join('\n');
-      const envioLabel = pedidoData.envio?.label || '—';
-      if (celular) {
-        fetch('/api/send-whatsapp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: celular,
-            template: 'confirmacion_pedido',
-            cliente: nombre,
-            productos: productosMsg,
-            total: pedido.total.toLocaleString(),
-            envio: envioLabel
-          })
-        }).catch(() => {});
-      }
-      if (email) {
-        fetch('/api/send-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: email,
-            cliente: nombre,
-            productos: productosMsg,
-            total: pedido.total.toLocaleString(),
-            envio: envioLabel
-          })
-        }).catch(() => {});
-      }
-    }
   }
 
   // ── Mostrar resultado ─────────────────────────────────────

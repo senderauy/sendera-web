@@ -394,9 +394,14 @@
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
       });
+      // El servidor solo acepta suscripciones de un admin con sesión iniciada
+      const usuario = firebase.auth().currentUser || await new Promise(resolve => {
+        const corte = firebase.auth().onAuthStateChanged(u => { if (u) { corte(); resolve(u); } });
+      });
+      const idToken = await usuario.getIdToken();
       const saveRes = await fetch('/api/save-push-subscription', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
         body: JSON.stringify(subscription)
       });
       if (!saveRes.ok) throw new Error('Error guardando suscripción');

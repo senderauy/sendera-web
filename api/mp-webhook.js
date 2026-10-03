@@ -1,4 +1,5 @@
 import { GoogleAuth } from 'google-auth-library';
+import { notificarAdmins, enviarWhatsAppConfirmacion, enviarEmailConfirmacion, lineasProductos } from './_notificaciones.js';
 
 const DB_URL = 'https://sendera-34791-default-rtdb.firebaseio.com';
 
@@ -127,62 +128,23 @@ export default async function handler(req, res) {
       await fbDelete(`carritos_abandonados/${orderTemp.carritoId}`, fbToken);
     }
 
-    // Enviar notificación push
-    try {
-      const subs = await fbGet('push_subscriptions', fbToken);
-      const subList = subs ? Object.values(subs) : [];
-      if (subList.length > 0) {
-        await fetch('https://www.senderauy.com/api/notify-pedido', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            cliente: pedido.cliente,
-            total: pedido.total.toLocaleString(),
-            envio: pedido.envio,
-            subscriptions: subList
-          })
-        });
-      }
-    } catch (e) {
-      console.error('Error enviando notificación push:', e);
-    }
+    // Notificación a los admins y confirmación al cliente, directo desde el servidor (sin endpoints públicos)
+    const totalTxt = esperado.toLocaleString('es-UY');
+    const envioTxt = orderTemp.envio || '—';
+    await notificarAdmins({ cliente: pedido.cliente, total: totalTxt, envio: envioTxt }, fbToken)
+      .catch(e => console.error('Error enviando notificación push:', e.message));
 
-    // Enviar WhatsApp y email al cliente
-    const productosMsg = (orderTemp.productos || []).map(p => `• ${p.nombre} - ${p.variante} x${p.qty}`).join('\n');
-    try {
+    // Al cliente solo se le confirma si pagó lo que correspondía; si no, el pedido queda para revisar
+    if (montoOk) {
+      const productosMsg = lineasProductos(orderTemp.productos);
       if (orderTemp.celular) {
-        await fetch('https://www.senderauy.com/api/send-whatsapp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: orderTemp.celular,
-            template: 'confirmacion_pedido',
-            cliente: orderTemp.cliente,
-            productos: productosMsg,
-            total: orderTemp.total.toLocaleString(),
-            envio: orderTemp.envio || '—'
-          })
-        });
+        await enviarWhatsAppConfirmacion({ celular: orderTemp.celular, cliente: orderTemp.cliente, productos: productosMsg, total: totalTxt, envio: envioTxt })
+          .catch(e => console.error('Error enviando WhatsApp:', e.message));
       }
-    } catch (e) {
-      console.error('Error enviando WhatsApp:', e);
-    }
-    try {
       if (orderTemp.email) {
-        await fetch('https://www.senderauy.com/api/send-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: orderTemp.email,
-            cliente: orderTemp.cliente,
-            productos: productosMsg,
-            total: orderTemp.total.toLocaleString(),
-            envio: orderTemp.envio || '—'
-          })
-        });
+        await enviarEmailConfirmacion({ email: orderTemp.email, cliente: orderTemp.cliente, productos: productosMsg, total: totalTxt, envio: envioTxt })
+          .catch(e => console.error('Error enviando email:', e.message));
       }
-    } catch (e) {
-      console.error('Error enviando email:', e);
     }
 
     return res.status(200).json({ ok: true });

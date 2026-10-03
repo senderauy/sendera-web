@@ -1,5 +1,6 @@
 import { GoogleAuth } from 'google-auth-library';
 import { createHmac, timingSafeEqual } from 'crypto';
+import { notificarAdmins } from './_notificaciones.js';
 
 const PHONE_NUMBER_ID = '1159269003943325';
 const FIREBASE_URL = 'https://sendera-34791-default-rtdb.firebaseio.com';
@@ -331,23 +332,13 @@ async function handler(req, res) {
               await fbFetch(`leads_whatsapp/${from}`, { method: 'DELETE' }).catch(() => {});
               // Notificación push igual que los pedidos normales
               try {
-                const subsRes = await fbFetch(`push_subscriptions`);
-                const subsData = await subsRes.json();
-                const subList = subsData ? Object.values(subsData) : [];
-                if (subList.length > 0) {
-                  await fetch('https://www.senderauy.com/api/notify-pedido', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      cliente: `💬 WhatsApp · ${orderData.cliente || from.replace(/^598/, '0')}`,
-                      total: (orderData.total || 0).toLocaleString(),
-                      envio: orderData.envio || '—',
-                      subscriptions: subList,
-                    }),
-                  });
-                }
+                await notificarAdmins({
+                  cliente: `💬 WhatsApp · ${orderData.cliente || from.replace(/^598/, '0')}`,
+                  total: (Number(orderData.total) || 0).toLocaleString('es-UY'),
+                  envio: orderData.envio || '—',
+                }, await getFirebaseToken());
               } catch (e) {
-                console.error('Error enviando notificación push WhatsApp:', e);
+                console.error('Error enviando notificación push WhatsApp:', e.message);
               }
             }
           }
