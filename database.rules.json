@@ -30,7 +30,8 @@
     "resenas_pendientes": {
       ".read": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
       "$id": {
-        ".write": "(auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true) || (!data.exists() && newData.exists())"
+        ".write": "(auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true) || (!data.exists() && newData.exists())",
+        ".validate": "newData.hasChildren(['nombre', 'texto']) && newData.child('nombre').isString() && newData.child('nombre').val().length <= 40 && newData.child('texto').isString() && newData.child('texto').val().length <= 300 && (!newData.child('ciudad').exists() || (newData.child('ciudad').isString() && newData.child('ciudad').val().length <= 40)) && (!newData.child('estrellas').exists() || (newData.child('estrellas').isNumber() && newData.child('estrellas').val() >= 1 && newData.child('estrellas').val() <= 5))"
       }
     },
     "codigos_descuento": {
@@ -44,7 +45,7 @@
       ".read": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
       "$id": {
         ".write": "(auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true) || (!data.exists() && newData.exists())",
-        ".validate": "newData.hasChildren(['fecha', 'productos', 'total', 'estado'])"
+        ".validate": "newData.hasChildren(['fecha', 'productos', 'total', 'estado']) && newData.child('total').isNumber() && (!newData.child('cliente').exists() || (newData.child('cliente').isString() && newData.child('cliente').val().length <= 80)) && (!newData.child('celular').exists() || (newData.child('celular').isString() && newData.child('celular').val().length <= 30)) && (!newData.child('envio').exists() || (newData.child('envio').isString() && newData.child('envio').val().length <= 200)) && (!newData.child('comprobante').exists() || (newData.child('comprobante').isString() && newData.child('comprobante').val().length <= 3000000))"
       }
     },
     "carritos_abandonados": {

@@ -1,20 +1,29 @@
+import { getFirebaseToken, calcularPedido, PedidoInvalido } from './_pedido.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
-  const body = req.body;
+  const body = req.body || {};
 
-  // Calcular monto total
-  const total = body.items.reduce((sum, i) => sum + (i.precio * i.qty), 0)
-    + (body.envio?.costo || 0);
+  // El monto a cobrar se calcula en el servidor con los precios reales (no con los que manda el navegador)
+  let pedido;
+  try {
+    const fbToken = await getFirebaseToken();
+    pedido = await calcularPedido(body, fbToken);
+  } catch (e) {
+    if (e instanceof PedidoInvalido) return res.status(400).json({ status: 'rejected', error: e.message });
+    console.error('process-payment: error calculando el pedido:', e);
+    return res.status(500).json({ status: 'error', error: 'No se pudo procesar el pago. Intentá de nuevo.' });
+  }
 
   const payment = {
-    transaction_amount: total,
+    transaction_amount: pedido.total,
     token: body.token,
-    description: body.items.map(i => `${i.nombre} x${i.qty}`).join(', '),
-    installments: body.installments || 1,
+    description: pedido.items.map(i => `${i.nombre} x${i.qty}`).join(', ').slice(0, 250),
+    installments: parseInt(body.installments, 10) || 1,
     payment_method_id: body.payment_method_id,
     issuer_id: body.issuer_id,
     payer: {
@@ -25,15 +34,15 @@ export default async function handler(req, res) {
       }
     },
     additional_info: {
-      items: body.items.map(i => ({
+      items: pedido.items.map(i => ({
         id: i.nombre,
         title: `${i.nombre} - ${i.variante}`,
         quantity: i.qty,
         unit_price: i.precio
       })),
       payer: {
-        first_name: body.cliente,
-        phone: { number: body.celular }
+        first_name: String(body.cliente || '').slice(0, 80),
+        phone: { number: String(body.celular || '').slice(0, 30) }
       }
     },
     statement_descriptor: 'SENDERA',
@@ -56,6 +65,7 @@ export default async function handler(req, res) {
     status: data.status,
     status_detail: data.status_detail,
     id: data.id,
+    total: pedido.total,
     error: data.message || null
   });
 }

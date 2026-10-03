@@ -1,4 +1,5 @@
 import { GoogleAuth } from 'google-auth-library';
+import { createHmac, timingSafeEqual } from 'crypto';
 
 const PHONE_NUMBER_ID = '1159269003943325';
 const FIREBASE_URL = 'https://sendera-34791-default-rtdb.firebaseio.com';
@@ -256,7 +257,7 @@ async function sendWhatsAppReply(to, text) {
   }
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method === 'GET') {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
@@ -276,19 +277,30 @@ export default async function handler(req, res) {
     const message = value.messages?.[0];
     if (!message) return res.status(200).end();
 
-    const from = message.from;
+    // El número se usa para armar rutas de la base (conversaciones/<número>): solo se aceptan dígitos
+    const from = String(message.from || '');
+    if (!/^\d{8,15}$/.test(from)) {
+      console.error('whatsapp-webhook: número de origen inválido, mensaje descartado');
+      return res.status(200).end();
+    }
 
     // Si el cliente manda una imagen, guardar como comprobante en Firebase
     if (message.type === 'image' || message.type === 'document') {
-      const mediaId = message.image?.id || message.document?.id;
+      const mediaId = String(message.image?.id || message.document?.id || '');
       const mimeType = message.image?.mime_type || message.document?.mime_type || 'image/jpeg';
-      if (mediaId) {
+      // El id de un archivo de WhatsApp es numérico; cualquier otra cosa se ignora
+      if (/^\d{5,30}$/.test(mediaId)) {
         try {
           const token = process.env.WHATSAPP_TOKEN;
           const infoRes = await fetch(`https://graph.facebook.com/v21.0/${mediaId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           const info = await infoRes.json();
+          // El token de WhatsApp solo se manda a servidores de Meta
+          const hostMedia = (() => { try { return new URL(info.url).hostname; } catch { return ''; } })();
+          if (!/(^|\.)(fbsbx\.com|fbcdn\.net|whatsapp\.net|facebook\.com)$/.test(hostMedia)) {
+            throw new Error('URL de archivo fuera de Meta, descartada');
+          }
           const imgRes = await fetch(info.url, { headers: { 'Authorization': `Bearer ${token}` } });
           const buffer = await imgRes.arrayBuffer();
           const base64 = Buffer.from(buffer).toString('base64');
@@ -386,4 +398,52 @@ export default async function handler(req, res) {
   }
 
   return res.status(200).end();
+}
+
+// ── Verificación de firma de Meta ───────────────────────────────
+// Meta firma cada aviso con el "App Secret" de la app (cabecera X-Hub-Signature-256).
+// Sin firma válida no se procesa nada: así nadie puede mandar mensajes inventados.
+export function firmaValida(cuerpoCrudo, cabecera, secreto) {
+  if (!secreto || !cabecera || !cabecera.startsWith('sha256=')) return false;
+  const esperada = Buffer.from('sha256=' + createHmac('sha256', secreto).update(cuerpoCrudo).digest('hex'));
+  const recibida = Buffer.from(cabecera);
+  return esperada.length === recibida.length && timingSafeEqual(esperada, recibida);
+}
+
+// Adaptador: Vercel entrega el pedido "crudo" (hace falta para verificar la firma)
+// y se lo pasamos al handler de siempre con la misma forma req/res.
+function respuesta() {
+  let status = 200, cuerpo = '';
+  const res = {
+    status(c) { status = c; return res; },
+    end() { return res; },
+    send(b) { cuerpo = String(b ?? ''); return res; },
+    json(o) { cuerpo = JSON.stringify(o); return res; },
+    aResponse() { return new Response(cuerpo, { status }); }
+  };
+  return res;
+}
+
+export async function GET(request) {
+  const url = new URL(request.url);
+  const res = respuesta();
+  await handler({ method: 'GET', query: Object.fromEntries(url.searchParams) }, res);
+  return res.aResponse();
+}
+
+export async function POST(request) {
+  const cuerpoCrudo = await request.text();
+  const secreto = process.env.WHATSAPP_APP_SECRET;
+  if (!secreto) {
+    console.error('whatsapp-webhook: falta WHATSAPP_APP_SECRET; no se procesan mensajes hasta configurarlo');
+    return new Response('', { status: 401 });
+  }
+  if (!firmaValida(cuerpoCrudo, request.headers.get('x-hub-signature-256'), secreto)) {
+    return new Response('', { status: 401 });
+  }
+  let body;
+  try { body = JSON.parse(cuerpoCrudo); } catch { return new Response('', { status: 400 }); }
+  const res = respuesta();
+  await handler({ method: 'POST', body }, res);
+  return res.aResponse();
 }

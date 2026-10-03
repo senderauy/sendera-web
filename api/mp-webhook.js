@@ -89,6 +89,15 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, msg: 'pago ya procesado' });
     }
 
+    // El total de pedidos_temp lo calculó el servidor con los precios reales.
+    // Si lo pagado es menor, el pedido no se confirma: queda para revisar a mano.
+    const pagado = Number(payment.transaction_amount) || 0;
+    const esperado = Number(orderTemp.total) || 0;
+    const montoOk = pagado + 1 >= esperado;
+    if (!montoOk) {
+      console.error(`mp-webhook: monto pagado menor al esperado en ${externalRef} (pagado ${pagado}, esperado ${esperado})`);
+    }
+
     // Guardar pedido confirmado
     const pedido = {
       fecha: orderTemp.fecha || new Date().toISOString(),
@@ -96,8 +105,9 @@ export default async function handler(req, res) {
       celular: orderTemp.celular,
       productos: orderTemp.productos,
       envio: orderTemp.envio,
-      total: orderTemp.total,
-      estado: 'confirmado',
+      total: esperado,
+      pagado,
+      estado: montoOk ? 'confirmado' : 'revisar-monto',
       mp_id: String(data.id),
       metodo_pago: 'mercadopago'
     };

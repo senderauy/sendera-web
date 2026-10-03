@@ -117,6 +117,7 @@
     .estado-pendiente-efectivo { border-color: #0f766e; color: #0f766e; }
     .estado-pendiente { border-color: #c2692b; color: #c2692b; }
     .estado-confirmado { border-color: #2563eb; color: #2563eb; }
+    .estado-revisar-monto { border-color: #b91c1c; color: #b91c1c; background: #fef2f2; }
     .estado-camino { border-color: #7c3aed; color: #7c3aed; }
     .estado-entregado { border-color: #507a3a; color: #507a3a; }
 
@@ -433,6 +434,7 @@
       'pendiente-efectivo': 'estado-pendiente-efectivo',
       'pendiente': 'estado-pendiente',
       'confirmado': 'estado-confirmado',
+      'revisar-monto': 'estado-revisar-monto',
       'camino': 'estado-camino',
       'entregado': 'estado-entregado'
     };
@@ -449,6 +451,16 @@
     document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     renderPedidos();
+  }
+
+  // Abre WhatsApp con los datos del pedido (se buscan por id para no meter texto del cliente en el HTML)
+  function abrirWAPedido(id) {
+    const p = todosPedidos.find(x => x.id === id);
+    if (!p || !p.celular) return;
+    const prods = (p.productos || []).map(pr =>
+      `• ${pr.nombre} ${pr.variante} x${pr.qty} — $${(num(pr.precio) * num(pr.qty)).toLocaleString()}`
+    ).join('\n');
+    abrirWA(String(p.celular), String(p.cliente || ''), prods, num(p.total).toLocaleString(), String(p.envio || ''));
   }
 
   function abrirWA(celular, cliente, productos, total, envio) {
@@ -493,7 +505,7 @@
 
     const ingresoHoy = todosPedidos
       .filter(p => new Date(p.fecha).toDateString() === hoy && p.estado !== 'pendiente-transferencia' && p.estado !== 'pendiente-efectivo')
-      .reduce((s, p) => s + (p.total || 0), 0);
+      .reduce((s, p) => s + num(p.total), 0);
     document.getElementById('r-hoy').textContent = '$' + ingresoHoy.toLocaleString();
 
     // Filtrar
@@ -515,54 +527,54 @@
         ? `<span class="badge badge-efectivo">💵 Efectivo</span>`
         : '';
 
-      const prods = (p.productos || []).map(pr =>
-        `• ${pr.nombre} ${pr.variante} x${pr.qty} — $${(pr.precio * pr.qty).toLocaleString()}`
-      ).join('\n');
-
       const waBtn = p.celular
-        ? `<button class="badge-wa" onclick="abrirWA('${p.celular}', '${p.cliente}', \`${prods}\`, '${(p.total||0).toLocaleString()}', '${p.envio||''}')">💬 WhatsApp</button>`
+        ? `<button class="badge-wa" onclick="abrirWAPedido(${jsArg(p.id)})">💬 WhatsApp</button>`
         : '';
+      const comprobanteImg = imgSegura(p.comprobante);
 
       return `
       <div class="pedido-card ${esTransfPend ? 'transferencia-pendiente' : esEfectivoPend ? 'efectivo-pendiente' : ''}">
         <div class="pedido-header">
           <div>
-            <div class="pedido-cliente">${p.cliente}</div>
+            <div class="pedido-cliente">${esc(p.cliente)}</div>
             <div class="pedido-meta">
               ${metodo}
-              <span style="font-size:0.75rem;color:#507a3a;font-weight:500">📱 ${p.celular || '—'}</span>
+              <span style="font-size:0.75rem;color:#507a3a;font-weight:500">📱 ${esc(p.celular || '—')}</span>
               ${waBtn}
             </div>
-            <div class="pedido-fecha">${formatFecha(p.fecha)}</div>
+            <div class="pedido-fecha">${esc(formatFecha(p.fecha))}</div>
           </div>
-          <select class="estado-select ${estadoClass(p.estado)}" onchange="cambiarEstado('${p.id}', this.value, this)">
+          <select class="estado-select ${estadoClass(p.estado)}" onchange="cambiarEstado(${jsArg(p.id)}, this.value, this)">
             <option value="pendiente-transferencia" ${p.estado==='pendiente-transferencia'?'selected':''}>🏦 Transf. pendiente</option>
             <option value="pendiente-efectivo" ${p.estado==='pendiente-efectivo'?'selected':''}>💵 Efectivo pendiente</option>
             <option value="pendiente" ${p.estado==='pendiente'?'selected':''}>⏳ Pendiente</option>
+            <option value="revisar-monto" ${p.estado==='revisar-monto'?'selected':''}>⚠️ Revisar monto pagado</option>
             <option value="confirmado" ${p.estado==='confirmado'?'selected':''}>✅ Confirmado</option>
             <option value="camino" ${p.estado==='camino'?'selected':''}>🚛 En camino</option>
             <option value="entregado" ${p.estado==='entregado'?'selected':''}>🏠 Entregado</option>
           </select>
         </div>
         <div class="pedido-productos">
-          ${(p.productos || []).map(pr => `<div class="pedido-producto">• ${pr.nombre} ${pr.variante} x${pr.qty} — $${(pr.precio * pr.qty).toLocaleString()}</div>`).join('')}
+          ${(p.productos || []).map(pr => `<div class="pedido-producto">• ${esc(pr.nombre)} ${esc(pr.variante)} x${num(pr.qty)} — $${(num(pr.precio) * num(pr.qty)).toLocaleString()}</div>`).join('')}
         </div>
         ${p.comprobante ? `
         <div class="comprobante-wrap">
           <div class="comprobante-lbl">📎 Comprobante de transferencia</div>
-          ${p.comprobante.startsWith('data:application/pdf')
-            ? `<button onclick="abrirPDF('${p.id}')" style="font-size:0.8rem;color:#2d6a4f;font-weight:600;cursor:pointer;background:#f0faf4;border:1.5px solid #b8dba8;border-radius:8px;padding:6px 14px;font-family:inherit">📄 Ver PDF</button>`
-            : `<img class="comprobante-thumb" src="${p.comprobante}" alt="Comprobante" onclick="abrirLightbox('${p.id}')" />`
+          ${String(p.comprobante).startsWith('data:application/pdf')
+            ? `<button onclick="abrirPDF(${jsArg(p.id)})" style="font-size:0.8rem;color:#2d6a4f;font-weight:600;cursor:pointer;background:#f0faf4;border:1.5px solid #b8dba8;border-radius:8px;padding:6px 14px;font-family:inherit">📄 Ver PDF</button>`
+            : comprobanteImg
+              ? `<img class="comprobante-thumb" src="${esc(comprobanteImg)}" alt="Comprobante" onclick="abrirLightbox(${jsArg(p.id)})" />`
+              : `<div class="comprobante-lbl" style="color:#e67e22">⚠️ Comprobante con formato no válido</div>`
           }
         </div>` : (p.metodo_pago === 'transferencia' ? `
         <div class="comprobante-wrap">
           <div class="comprobante-lbl" style="color:#e67e22">⚠️ Sin comprobante adjunto</div>
         </div>` : '')}
         <div class="pedido-footer">
-          <div class="pedido-envio">📦 ${p.envio || '—'}</div>
+          <div class="pedido-envio">📦 ${esc(p.envio || '—')}</div>
           <div style="display:flex;align-items:center;gap:12px">
-            <div class="pedido-total">$${(p.total || 0).toLocaleString()}</div>
-            <button class="btn-eliminar" onclick="eliminarPedido('${p.id}')">🗑️</button>
+            <div class="pedido-total">$${num(p.total).toLocaleString()}</div>
+            <button class="btn-eliminar" onclick="eliminarPedido(${jsArg(p.id)})">🗑️</button>
           </div>
         </div>
       </div>`;
@@ -595,7 +607,9 @@
   function abrirLightbox(pedidoId) {
     const pedido = todosPedidos.find(p => p.id === pedidoId);
     if (!pedido || !pedido.comprobante) return;
-    document.getElementById('lightbox-img').src = pedido.comprobante;
+    const img = imgSegura(pedido.comprobante);
+    if (!img) return;
+    document.getElementById('lightbox-img').src = img;
     document.getElementById('lightbox').classList.add('open');
   }
 
@@ -622,11 +636,11 @@
     badgeAbandonados.style.display = 'inline';
     badgeAbandonados.textContent = countAbandonados;
     listaAbandonados.querySelector('p') && (listaAbandonados.innerHTML = '');
-    const prods = (c.productos || []).map(p => `• ${p.nombre} ${p.variante} x${p.qty}`).join('\n');
+    const prods = (c.productos || []).map(p => `• ${p.nombre} ${p.variante} x${num(p.qty)}`).join('\n');
     const waMsg = encodeURIComponent(
       `Hola ${c.cliente}! 👋 Te escribimos de *Sendera*.\n\n` +
       `Vimos que estabas por completar tu pedido pero no terminaste la compra.\n\n` +
-      `${prods}\n*Total: $${(c.total||0).toLocaleString()}*\n\n` +
+      `${prods}\n*Total: $${num(c.total).toLocaleString()}*\n\n` +
       `¿Te podemos ayudar con algo? Entrá a senderauy.com 🏔️`
     );
     const waUrl = `https://wa.me/598${(c.celular||'').replace(/\D/g,'')}?text=${waMsg}`;
@@ -637,21 +651,21 @@
     div.innerHTML = `
       <div class="pedido-header">
         <div>
-          <div class="pedido-cliente">${c.cliente || 'Sin nombre'}</div>
+          <div class="pedido-cliente">${esc(c.cliente || 'Sin nombre')}</div>
           <div class="pedido-meta">
-            <span style="font-size:0.75rem;color:#507a3a;font-weight:500">📱 ${c.celular || '—'}</span>
-            ${c.celular ? `<button class="badge-wa" onclick="window.open('${waUrl}','_blank')">💬 Recuperar cliente</button>` : ''}
+            <span style="font-size:0.75rem;color:#507a3a;font-weight:500">📱 ${esc(c.celular || '—')}</span>
+            ${c.celular ? `<a class="badge-wa" href="${esc(waUrl)}" target="_blank" rel="noopener">💬 Recuperar cliente</a>` : ''}
           </div>
-          <div class="pedido-fecha">${formatFecha(c.fecha)}</div>
+          <div class="pedido-fecha">${esc(formatFecha(c.fecha))}</div>
         </div>
-        <button onclick="eliminarAbandonado('${c.id}')" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:#ccc;padding:4px">🗑️</button>
+        <button onclick="eliminarAbandonado(${jsArg(c.id)})" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:#ccc;padding:4px">🗑️</button>
       </div>
       <div class="pedido-productos">
-        ${(c.productos || []).map(p => `<div class="pedido-producto">• ${p.nombre} ${p.variante} x${p.qty} — $${(p.precio*p.qty).toLocaleString()}</div>`).join('')}
+        ${(c.productos || []).map(p => `<div class="pedido-producto">• ${esc(p.nombre)} ${esc(p.variante)} x${num(p.qty)} — $${(num(p.precio)*num(p.qty)).toLocaleString()}</div>`).join('')}
       </div>
       <div class="pedido-footer">
-        <div class="pedido-envio">📦 ${c.envio || '—'}</div>
-        <div class="pedido-total">$${(c.total||0).toLocaleString()}</div>
+        <div class="pedido-envio">📦 ${esc(c.envio || '—')}</div>
+        <div class="pedido-total">$${num(c.total).toLocaleString()}</div>
       </div>`;
     listaAbandonados.appendChild(div);
   });
@@ -689,24 +703,26 @@
       return;
     }
     listaWA.innerHTML = leads.map(l => {
-      const tel = l.phone ? l.phone.replace(/^598/, '0') : '—';
-      const waUrl = `https://wa.me/${l.phone}`;
+      const telDigitos = String(l.phone || '').replace(/\D/g, '');
+      const tel = telDigitos ? telDigitos.replace(/^598/, '0') : '—';
+      const waUrl = `https://wa.me/${telDigitos}`;
       const tipo = l.tipo === 'comprobante' ? '📎 Envió comprobante' : '💬 Cliente potencial';
       const fecha = l.fecha ? new Date(l.fecha).toLocaleString('es-UY') : '—';
-      const comprobante = l.comprobante ? `<div style="margin-top:10px"><img src="${l.comprobante}" style="max-width:100%;max-height:200px;border-radius:8px;border:1.5px solid #e8dfd2;cursor:pointer" onclick="this.style.maxHeight=this.style.maxHeight==='none'?'200px':'none'" /></div>` : '';
+      const comprobanteLead = imgSegura(l.comprobante);
+      const comprobante = comprobanteLead ? `<div style="margin-top:10px"><img src="${esc(comprobanteLead)}" style="max-width:100%;max-height:200px;border-radius:8px;border:1.5px solid #e8dfd2;cursor:pointer" onclick="this.style.maxHeight=this.style.maxHeight==='none'?'200px':'none'" /></div>` : '';
       return `
       <div class="pedido-card" style="border-color:#25D366;background:#f0fff4">
         <div class="pedido-header">
           <div>
-            <div class="pedido-cliente">💬 ${tel}</div>
+            <div class="pedido-cliente">💬 ${esc(tel)}</div>
             <div class="pedido-meta">
               <span style="font-size:0.75rem;color:#507a3a;font-weight:500">${tipo}</span>
             </div>
-            <div class="pedido-fecha">${fecha}</div>
+            <div class="pedido-fecha">${esc(fecha)}</div>
           </div>
           <div style="display:flex;gap:8px;align-items:center">
-            <a href="${waUrl}" target="_blank" class="badge-wa">💬 Escribir</a>
-            <button onclick="eliminarLead('${l.id}')" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:#ccc;padding:4px">🗑️</button>
+            <a href="${esc(waUrl)}" target="_blank" rel="noopener" class="badge-wa">💬 Escribir</a>
+            <button onclick="eliminarLead(${jsArg(l.id)})" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:#ccc;padding:4px">🗑️</button>
           </div>
         </div>
         ${comprobante}

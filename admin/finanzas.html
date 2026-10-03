@@ -555,7 +555,7 @@ function renderTodo(){
   const ventasMes=[
     ...todosPedidos.filter(p=>ESTADOS_VENTA.includes(p.estado)&&esPeriodo(p.fecha))
       .map(p=>({id:p.id,tipo:'auto',fecha:p.fecha,desc:p.cliente||'Pedido web',
-                canal:p.origen==='whatsapp'?'WhatsApp':'Web',importe:p.total||0})),
+                canal:p.origen==='whatsapp'?'WhatsApp':'Web',importe:num(p.total)})),
     ...todasVentas.filter(v=>esPeriodo(v.fecha))
   ].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
 
@@ -609,7 +609,7 @@ function renderStockUI(){
     ?'<p class="empty-msg" style="color:#507a3a">✓ Todo el stock en orden</p>'
     :`<ul class="alerta-lista">${alertas.map(v=>`
       <li class="alerta-item">
-        <div><div class="alerta-nombre">${v.nombre}</div><div class="alerta-variante">${v.variante}</div></div>
+        <div><div class="alerta-nombre">${esc(v.nombre)}</div><div class="alerta-variante">${esc(v.variante)}</div></div>
         <span class="${v.stock===0?'badge-0':'badge-bajo'}">${v.stock===0?'SIN STOCK':v.stock+' ud.'}</span>
       </li>`).join('')}</ul>`;
 
@@ -623,8 +623,8 @@ function renderTablaVentas(ventas){
   if(!rows.length){tb.innerHTML=`<tr><td colspan="4" class="empty-msg">Sin ventas en el período</td></tr>`;return;}
   tb.innerHTML=rows.map(v=>`<tr>
     <td class="muted">${fmtF(v.fecha)}</td>
-    <td>${v.desc||'—'}${v.tipo==='auto'?'<span class="badge badge-azul" style="margin-left:4px">Auto</span>':''}</td>
-    <td class="muted">${v.canal||'—'}</td>
+    <td>${esc(v.desc||'—')}${v.tipo==='auto'?'<span class="badge badge-azul" style="margin-left:4px">Auto</span>':''}</td>
+    <td class="muted">${esc(v.canal||'—')}</td>
     <td class="num">${fmt(v.importe)}</td>
   </tr>`).join('');
 }
@@ -635,8 +635,8 @@ function renderTablaGastos(gastos){
   if(!rows.length){tb.innerHTML=`<tr><td colspan="4" class="empty-msg">Sin gastos en el período</td></tr>`;return;}
   tb.innerHTML=rows.map(g=>`<tr>
     <td class="muted">${fmtF(g.fecha)}</td>
-    <td><span class="badge badge-rojo">${g.categoria||'—'}</span></td>
-    <td class="muted">${(g.detalle||'').slice(0,28)||'—'}</td>
+    <td><span class="badge badge-rojo">${esc(g.categoria||'—')}</span></td>
+    <td class="muted">${esc(String(g.detalle||'').slice(0,28)||'—')}</td>
     <td class="num">${fmt(g.importe)}</td>
   </tr>`).join('');
 }
@@ -647,10 +647,10 @@ function renderTablaCompras(compras,total){
   if(!rows.length){tb.innerHTML=`<tr><td colspan="7" class="empty-msg">Sin compras en el período</td></tr>`;return;}
   tb.innerHTML=rows.map(c=>`<tr>
     <td class="muted">${fmtF(c.fecha)}</td>
-    <td>${c.proveedor||'—'}</td>
-    <td><span class="badge badge-azul">${c.insumo||'—'}</span></td>
-    <td>${(c.descripcion||c.desc||'—').slice(0,30)}</td>
-    <td class="num">${c.cantidad||'—'}</td>
+    <td>${esc(c.proveedor||'—')}</td>
+    <td><span class="badge badge-azul">${esc(c.insumo||'—')}</span></td>
+    <td>${esc(String(c.descripcion||c.desc||'—').slice(0,30))}</td>
+    <td class="num">${esc(c.cantidad||'—')}</td>
     <td class="num muted">${c.costo_unit?fmt(c.costo_unit):'—'}</td>
     <td class="num">${fmt(c.total)}</td>
   </tr>`).join('');

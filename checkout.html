@@ -506,6 +506,7 @@
 
   // ── Descuento ─────────────────────────────────────────────
   let descuentoAplicado = 0;
+  let codigoAplicado = ''; // el servidor lo vuelve a validar y calcula el descuento real
 
   function calcularTotal() {
     const { items, envio } = pedidoData;
@@ -533,6 +534,7 @@
       msg.style.color = '#b91c1c';
       msg.textContent = '❌ Código inválido o no disponible.';
       descuentoAplicado = 0;
+      codigoAplicado = '';
       document.getElementById('descuento-row').style.display = 'none';
       actualizarTotal();
       return;
@@ -549,6 +551,7 @@
       document.getElementById('descuento-label').textContent = 'Descuento';
     }
 
+    codigoAplicado = codigo;
     document.getElementById('descuento-val').textContent = '-$' + descuentoAplicado.toLocaleString();
     document.getElementById('descuento-row').style.display = 'flex';
     msg.style.color = '#507a3a';
@@ -675,11 +678,16 @@
           cliente: nombre,
           celular: celular,
           items: pedidoData.items,
-          envio: pedidoData.envio
+          envio: pedidoData.envio,
+          codigo: codigoAplicado
         })
       });
 
       const data = await res.json();
+      if (!res.ok) {
+        mostrarResultado('error', data.error);
+        return;
+      }
 
       // Guardar pedido en Firebase
       if (data.status === 'approved') {
@@ -851,12 +859,16 @@
           cliente: nombre, celular, email,
           items: pedidoData.items.map(i => ({ nombre: i.name, variante: i.variant, qty: parseInt(i.qty), precio: parseFloat(i.precio) })),
           envio: pedidoData.envio,
-          carritoId: carritoAbandonadoId || '',
-          total: calcularTotal(),
-          fecha: new Date().toISOString()
+          codigo: codigoAplicado,
+          carritoId: carritoAbandonadoId || ''
         })
       });
       const data = await res.json();
+      if (!res.ok || !data.init_point) {
+        alert(data.error || 'No se pudo iniciar el pago. Intentá de nuevo.');
+        btn.disabled = false; btn.innerHTML = '<span>💳</span> Continuar con MercadoPago';
+        return;
+      }
       // No borrar sessionStorage — se necesita al volver del redirect
       window.location.href = data.init_point;
     } catch(e) {
