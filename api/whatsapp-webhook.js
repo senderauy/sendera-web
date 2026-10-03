@@ -439,7 +439,13 @@ export async function POST(request) {
     return new Response('', { status: 401 });
   }
   if (!firmaValida(cuerpoCrudo, request.headers.get('x-hub-signature-256'), secreto)) {
-    return new Response('', { status: 401 });
+    // Modo aviso (transitorio): mientras se confirma que WHATSAPP_APP_SECRET es la clave con la que firma Meta,
+    // una firma que no coincide se registra pero no corta a Senderita. Para exigir la firma, cargar
+    // WHATSAPP_FIRMA_ESTRICTA=1 en Vercel. El número de origen se sigue validando igual (solo dígitos).
+    if (process.env.WHATSAPP_FIRMA_ESTRICTA === '1') {
+      return new Response('', { status: 401 });
+    }
+    console.warn('whatsapp-webhook: firma de Meta no coincide con WHATSAPP_APP_SECRET (modo aviso, se procesa igual)');
   }
   let body;
   try { body = JSON.parse(cuerpoCrudo); } catch { return new Response('', { status: 400 }); }
