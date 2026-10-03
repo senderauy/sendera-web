@@ -445,7 +445,13 @@ export async function POST(request) {
     if (process.env.WHATSAPP_FIRMA_ESTRICTA === '1') {
       return new Response('', { status: 401 });
     }
-    console.warn('whatsapp-webhook: firma de Meta no coincide con WHATSAPP_APP_SECRET (modo aviso, se procesa igual)');
+    // Diagnóstico sin datos sensibles: primeros caracteres de las firmas (no revelan la clave),
+    // largo del cuerpo y si la firma coincidiría con el JSON re-serializado (cuerpo modificado en el camino)
+    const recibida = String(request.headers.get('x-hub-signature-256') || '');
+    const calculada = 'sha256=' + createHmac('sha256', secreto).update(cuerpoCrudo).digest('hex');
+    let coincideReserializado = false;
+    try { coincideReserializado = firmaValida(JSON.stringify(JSON.parse(cuerpoCrudo)), recibida, secreto); } catch {}
+    console.warn(`whatsapp-webhook: firma no coincide (modo aviso, se procesa igual) · recibida ${recibida.slice(0, 14)}… · calculada ${calculada.slice(0, 14)}… · largo ${cuerpoCrudo.length} · largo clave ${secreto.length} · coincide re-serializado: ${coincideReserializado}`);
   }
   let body;
   try { body = JSON.parse(cuerpoCrudo); } catch { return new Response('', { status: 400 }); }
