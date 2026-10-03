@@ -76,12 +76,16 @@
       top: 0;
       height: 100vh;
       overflow: hidden;
+      /* El fondo toma el color de la foto de la variante (como en "Elegí tu color y salí") */
+      background: var(--prod-bg, #e8e4dc);
+      transition: background-color 0.6s ease;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
     /* Fondo desenfocado */
+    .product-bg, .product-bg-overlay { display: none; }
     .product-bg {
       position: absolute;
       inset: 0;
@@ -164,9 +168,9 @@
     .product-main-img {
       width: 100%;
       height: 100%;
-      object-fit: contain;
+      object-fit: cover;
+      border-radius: 32px;
       transition: opacity 0.3s;
-      filter: drop-shadow(0 8px 32px rgba(0,0,0,0.18));
     }
 
     .product-main-img.fading { opacity: 0; }
@@ -195,7 +199,8 @@
 
     /* ── PANEL DERECHO — info ───────────────────────────────────── */
     .product-right {
-      background: #faf8f4;
+      background: color-mix(in srgb, var(--prod-bg, #faf8f4) 22%, #faf8f4);
+      transition: background-color 0.6s ease;
       padding: 80px 48px 60px 44px;
       display: flex;
       flex-direction: column;
@@ -213,11 +218,12 @@
     }
 
     .product-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(2rem, 3vw, 3rem);
-      font-weight: 500;
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(1.7rem, 2.4vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
       color: #1e1a12;
-      line-height: 1.1;
+      line-height: 1.05;
       margin-bottom: 8px;
     }
 
@@ -351,20 +357,118 @@
     .feature-item {
       display: flex;
       align-items: center;
-      gap: 7px;
-      font-size: 0.74rem;
-      color: #5a4f44;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: #3a3026;
       font-weight: 500;
     }
+    /* Íconos de línea, del mismo estilo que los de "¿Por qué elegirnos?" */
+    .feature-item svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      stroke: #c8861a;
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
 
+    /* Envíos: las tres opciones reales, una por línea */
     .product-shipping {
+      display: grid;
+      gap: 10px;
+      padding: 16px 0 0;
+      border-top: 1px solid #ede8e0;
+    }
+    .envio-linea {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.72rem;
-      color: #9a8f82;
-      padding: 14px 0 0;
-      border-top: 1px solid #ede8e0;
+      gap: 10px;
+      font-size: 0.78rem;
+      color: #3a3026;
+    }
+    .envio-linea svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      stroke: #c8861a;
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .envio-linea b { font-weight: 700; }
+    .envio-linea span { color: #7a6e62; }
+
+    /* ── TAMBIÉN TE PUEDE GUSTAR ───────────────────────────────── */
+    .relacionados {
+      --rel-pad: max(24px, calc((100% - 1180px) / 2));
+      background: color-mix(in srgb, var(--prod-bg, #faf8f4) 22%, #faf8f4);
+      transition: background-color 0.6s ease;
+      padding: 56px 0 72px;
+      border-top: 1px solid rgba(30, 26, 18, 0.08);
+    }
+    .relacionados-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--rel-pad);
+      margin-bottom: 20px;
+    }
+    .relacionados h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(1.4rem, 2.4vw, 2rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #1e1a12;
+    }
+    .relacionados-flechas { display: flex; gap: 10px; }
+    .relacionados-flecha {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(30, 26, 18, 0.2);
+      background: #fff;
+      color: #1e1a12;
+      font-size: 1.6rem;
+      line-height: 1;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .relacionados-flecha:hover { background: #1e1a12; color: #fff; }
+    .relacionados-track {
+      display: flex;
+      gap: 18px;
+      overflow-x: auto;
+      margin: 0 var(--rel-pad);
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+    .relacionados-track::-webkit-scrollbar { display: none; }
+    .rel-card {
+      flex: 0 0 calc((100% - 4 * 18px) / 5);
+      scroll-snap-align: start;
+      color: inherit;
+      text-decoration: none;
+    }
+    .rel-card img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 18px;
+      display: block;
+      background: #ede8e0;
+    }
+    .rel-card b { display: block; margin-top: 10px; font-size: 0.9rem; color: #1e1a12; }
+    .rel-card span { font-size: 0.8rem; color: #7a6e62; }
+    @media (max-width: 1100px) { .rel-card { flex-basis: calc((100% - 3 * 18px) / 4); } }
+    @media (max-width: 768px) {
+      .relacionados { padding: 40px 0 56px; }
+      .relacionados-head { padding: 0 16px; }
+      .relacionados-flechas { display: none; }
+      .relacionados-track { margin: 0; padding: 0 16px; scroll-padding-left: 16px; gap: 14px; }
+      .rel-card { flex-basis: 44vw; }
     }
 
     /* ── CARRITO ─────────────────────────────────────────────────── */
@@ -527,6 +631,18 @@
     </div>
   </div>
 
+  <!-- TAMBIÉN TE PUEDE GUSTAR (otros productos de la misma categoría) -->
+  <section class="relacionados" id="relacionados" style="display:none">
+    <div class="relacionados-head">
+      <h2>También te puede gustar</h2>
+      <div class="relacionados-flechas">
+        <button type="button" class="relacionados-flecha" aria-label="Anterior" onclick="relacionadosMover(-1)">&#8249;</button>
+        <button type="button" class="relacionados-flecha" aria-label="Siguiente" onclick="relacionadosMover(1)">&#8250;</button>
+      </div>
+    </div>
+    <div class="relacionados-track" id="relacionados-track"></div>
+  </section>
+
   <!-- MODAL CARRITO -->
   <div id="cart-modal" onclick="event.stopPropagation()">
     <div class="cart-header">
@@ -616,15 +732,71 @@
       default:[{i:'🏔️',l:'Outdoor'},{i:'⭐',l:'Calidad'},{i:'💧',l:'Resistente'},{i:'✨',l:'Estilo'}],
     };
 
+    // Íconos de línea para las características (por nombre); si no hay uno, un tilde
+    const ICONOS_FEATURE = {
+      'Liviano': '<path d="M12 3v3M12 18v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M3 12h3M18 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/><circle cx="12" cy="12" r="3"/>',
+      'Transpirable': '<path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8"/>',
+      'Ajustable': '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+      'Impermeable': '<path d="M12 2.7S6 9.5 6 14a6 6 0 0 0 12 0c0-4.5-6-11.3-6-11.3z"/>',
+      'Térmico': '<path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"/>',
+      'Abrigo': '<path d="M12 2c1 3 4 4.5 4 8.5a4 4 0 0 1-8 0C8 8 10 6.5 10 4c1.5 1 2 2 2 2"/><path d="M8 14a4 4 0 0 0 8 0"/>',
+      'Outdoor': '<path d="M3 20l6-10 4 6 3-4 5 8z"/><circle cx="17" cy="6" r="2"/>',
+      'Cómodo': '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/>',
+      'Versátil': '<path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/>',
+      'Secado rápido': '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+      'Running': '<circle cx="14" cy="4" r="2"/><path d="M6 20l3-6 3 2 1-5 3 3h3M9 11l2-3h4"/>',
+      'Calidad': '<path d="M12 2l3 6.3 7 1-5 4.8 1.2 6.9L12 17.8 5.8 21l1.2-6.9-5-4.8 7-1z"/>',
+      'Resistente': '<path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/>',
+      'Estilo': '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>'
+    };
+    function iconoFeature(nombre) {
+      const forma = ICONOS_FEATURE[nombre] || '<path d="M20 6L9 17l-5-5"/>';
+      return `<svg viewBox="0 0 24 24" aria-hidden="true">${forma}</svg>`;
+    }
+
     function getBgColor(name, idx) {
       const n = name.toLowerCase();
       for (const [k,v] of Object.entries(COLOR_BG)) { if (n.includes(k)) return v; }
       return ['#ddd3b0','#cacdd6','#eacfcb','#e0dcd4','#bfcfb8','#cfc8e0'][idx % 6];
     }
     function getSwatchColor(name, idx) {
-      const n = name.toLowerCase();
-      for (const [k,v] of Object.entries(COLOR_SWATCH)) { if (n.includes(k)) return v; }
+      // Con barra ("Gris / Verde") manda el último color, el de la visera.
+      // Sin barra ("Gris negro") manda el primero que se nombra; el blanco solo si no hay otro.
+      const partes = name.toLowerCase().split('/').map(s => s.trim()).reverse();
+      for (const parte of partes) {
+        const encontrados = Object.entries(COLOR_SWATCH)
+          .map(([k, v]) => ({ pos: parte.indexOf(k), v, blanco: k === 'blanco' || k === 'white' }))
+          .filter(x => x.pos >= 0)
+          .sort((a, b) => (a.blanco - b.blanco) || (a.pos - b.pos));
+        if (encontrados.length) return encontrados[0].v;
+      }
       return ['#c4aa78','#7a8898','#dc8888','#d5d0c8','#6a9858','#9878c0'][idx % 6];
+    }
+
+    // Color de fondo leído de las esquinas de la foto (la foto tiene su propio fondo liso)
+    const colorFotoCache = {};
+    function colorDeFoto(src) {
+      if (colorFotoCache[src]) return Promise.resolve(colorFotoCache[src]);
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const c = document.createElement('canvas');
+            c.width = img.naturalWidth; c.height = img.naturalHeight;
+            const ctx = c.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const w = c.width, h = c.height;
+            let r = 0, g = 0, b = 0;
+            [[6, 6], [w - 7, 6], [6, h / 2], [w - 7, h / 2]].forEach(([x, y]) => {
+              const d = ctx.getImageData(x, y, 1, 1).data; r += d[0]; g += d[1]; b += d[2];
+            });
+            colorFotoCache[src] = `rgb(${Math.round(r / 4)},${Math.round(g / 4)},${Math.round(b / 4)})`;
+            resolve(colorFotoCache[src]);
+          } catch (e) { resolve(null); }
+        };
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
     }
 
     // ── ESTADO ─────────────────────────────────────────────────────
@@ -699,6 +871,7 @@
           STOCK_MAP[productoActual.nombre + '-' + v.nombre] = v.stockId || (productoActual.id + '-' + i);
         });
         renderProducto(productoActual, initialVariant);
+        cargarRelacionados(productoActual);
         // Cargar stock en cadena, luego registrar listener en tiempo real
         db.ref('stock').once('value', stockSnap => {
           const data = stockSnap.val() || {};
@@ -772,9 +945,13 @@
             Consultar por WhatsApp
           </a>
           <div class="product-features">
-            ${features.map(f=>`<div class="feature-item"><span>${f.i}</span><span>${f.l}</span></div>`).join('')}
+            ${features.map(f=>`<div class="feature-item">${iconoFeature(f.l)}<span>${f.l}</span></div>`).join('')}
           </div>
-          <div class="product-shipping">🚚 Envíos a todo Uruguay</div>
+          <div class="product-shipping">
+            <div class="envio-linea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><div><b>Montevideo</b> <span>· Envío a domicilio $200</span></div></div>
+            <div class="envio-linea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><div><b>Interior</b> <span>· Por agencia, a cargo del comprador</span></div></div>
+            <div class="envio-linea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg><div><b>Retiro gratis</b> <span>· Cordón, coordinando antes</span></div></div>
+          </div>
         </div>
       `;
 
@@ -783,6 +960,35 @@
       initCarousel(variantes[variantActual]);
       actualizarBtnStock(variantes[variantActual]);
     }
+
+    // ── TAMBIÉN TE PUEDE GUSTAR ───────────────────────────────────
+    // Otros productos de la misma categoría (un color por tarjeta); si no hay, de cualquier categoría
+    function cargarRelacionados(prod) {
+      db.ref('productos').once('value', snap => {
+        const todos = [];
+        snap.forEach(c => { todos.push({ id: c.key, ...c.val() }); });
+        const otros = todos.filter(p => p.id !== prod.id);
+        const misma = otros.filter(p => p.categoria === prod.categoria);
+        const lista = (misma.length ? misma : otros)
+          .sort((a, b) => (a.orden || 999) - (b.orden || 999))
+          .flatMap(p => (p.variantes || []).map((v, i) => ({ p, v, i, foto: getFotos(v)[0] })))
+          .filter(x => x.foto && x.foto !== 'img/logo.png')
+          .slice(0, 12);
+        if (!lista.length) return;
+        document.getElementById('relacionados-track').innerHTML = lista.map(({ p, v, i, foto }) => `
+          <a class="rel-card" href="producto.html?id=${p.id}&v=${i}">
+            <img src="${foto}" alt="${p.nombre} ${v.nombre}" loading="lazy" />
+            <b>${p.nombre}</b>
+            <span>${v.nombre} · $${(v.precio || p.precio || 0).toLocaleString()}</span>
+          </a>`).join('');
+        document.getElementById('relacionados').style.display = '';
+      });
+    }
+
+    window.relacionadosMover = function(dir) {
+      const t = document.getElementById('relacionados-track');
+      t.scrollBy({ left: dir * (t.clientWidth + 18), behavior: 'smooth' });
+    };
 
     // ── FONDO (avatar desenfocado o color) ─────────────────────────
     function actualizarFondo(prod, idx) {
@@ -793,6 +999,14 @@
 
       const bgColor = getBgColor(v?.nombre || '', idx);
       document.body.style.background = bgColor;
+      const foto = getFotos(v)[0];
+      if (foto && foto !== 'img/logo.png') {
+        colorDeFoto(foto).then(c => {
+          if (!c || productoActual?.variantes[variantActual] !== v) return;
+          document.documentElement.style.setProperty('--prod-bg', c);
+          document.body.style.background = c;
+        });
+      }
 
       // Si el producto tiene foto de avatar (lifestyle), la usamos desenfocada
       if (prod.fotoAvatar) {
