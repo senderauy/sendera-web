@@ -438,7 +438,16 @@ export async function POST(request) {
     console.error('whatsapp-webhook: falta WHATSAPP_APP_SECRET; no se procesan mensajes hasta configurarlo');
     return new Response('', { status: 401 });
   }
-  if (!firmaValida(cuerpoCrudo, request.headers.get('x-hub-signature-256'), secreto)) {
+  // Hay dos apps de Meta llamadas "Sendera"; se acepta la clave de cualquiera de las dos
+  // (WHATSAPP_APP_SECRET y, opcional, WHATSAPP_APP_SECRET_ALT) y se registra cuál coincidió.
+  const cabeceraFirma = request.headers.get('x-hub-signature-256');
+  const secretoAlt = process.env.WHATSAPP_APP_SECRET_ALT;
+  const coincidePrincipal = firmaValida(cuerpoCrudo, cabeceraFirma, secreto);
+  const coincideAlt = !coincidePrincipal && !!secretoAlt && firmaValida(cuerpoCrudo, cabeceraFirma, secretoAlt);
+  if (coincidePrincipal || coincideAlt) {
+    console.log(`whatsapp-webhook: firma OK con ${coincidePrincipal ? 'WHATSAPP_APP_SECRET' : 'WHATSAPP_APP_SECRET_ALT'}`);
+  }
+  if (!coincidePrincipal && !coincideAlt) {
     // Modo aviso (transitorio): mientras se confirma que WHATSAPP_APP_SECRET es la clave con la que firma Meta,
     // una firma que no coincide se registra pero no corta a Senderita. Para exigir la firma, cargar
     // WHATSAPP_FIRMA_ESTRICTA=1 en Vercel. El número de origen se sigue validando igual (solo dígitos).
