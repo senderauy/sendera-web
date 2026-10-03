@@ -334,6 +334,16 @@
       </div>
 
       <div class="form-group">
+        <label>Destacar en el inicio</label>
+        <label style="display:flex;align-items:center;gap:8px;font-weight:500;text-transform:none;letter-spacing:0;margin:6px 0">
+          <input type="checkbox" id="prod-nuevo" style="width:18px;height:18px" /> Mostrar en "Lo nuevo"
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-weight:500;text-transform:none;letter-spacing:0;margin:6px 0">
+          <input type="checkbox" id="prod-mas-vendido" style="width:18px;height:18px" /> Mostrar en "Lo más vendido"
+        </label>
+      </div>
+
+      <div class="form-group">
         <label>Descripción</label>
         <textarea id="prod-descripcion" placeholder="Descripción del producto (opcional)"></textarea>
       </div>
@@ -440,7 +450,7 @@
             ${fotoUrl ? `<img src="${fotoUrl}" alt="${p.nombre}" onerror="this.style.display='none'" />` : '🏔️'}
           </div>
           <div class="prod-body">
-            <div class="prod-cat">${p.categoria || '—'}</div>
+            <div class="prod-cat">${p.categoria || '—'}${p.nuevo ? ' · ✨ Nuevo' : ''}${p.masVendido ? ' · 🔥 Más vendido' : ''}</div>
             <div class="prod-nombre">${p.nombre}</div>
             <div class="prod-variantes">
               ${vars.map(v => `<span class="prod-variante-chip">${v.nombre}</span>`).join('')}
@@ -515,6 +525,8 @@
     document.getElementById('prod-subgrupo').value = prod?.subgrupo || '';
     document.getElementById('prod-descripcion').value = prod?.descripcion || '';
     document.getElementById('prod-orden').value = prod?.orden || '';
+    document.getElementById('prod-nuevo').checked = !!prod?.nuevo;
+    document.getElementById('prod-mas-vendido').checked = !!prod?.masVendido;
 
     // Foto avatar/lifestyle
     avatarData = prod?.fotoAvatar || '';
@@ -707,6 +719,8 @@
 
     const prod = { nombre, categoria, subgrupo, descripcion, variantes, actualizado: new Date().toISOString() };
     if (orden !== null) prod.orden = orden;
+    if (document.getElementById('prod-nuevo').checked) prod.nuevo = true;
+    if (document.getElementById('prod-mas-vendido').checked) prod.masVendido = true;
     if (avatarData) prod.fotoAvatar = avatarData;
 
     const isNuevo = !editandoId;

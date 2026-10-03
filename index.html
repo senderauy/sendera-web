@@ -34,7 +34,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Sendera" />
   <meta name="theme-color" content="#1a1510" />
-  <link rel="stylesheet" href="style.css?v=8" />
+  <link rel="stylesheet" href="style.css?v=27" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
@@ -131,14 +131,51 @@
     </div>
   </section>
 
+  <!-- VIDRIERA: un gorro grande, el fondo toma el color de la foto -->
+  <section class="vidriera" id="elegi">
+    <div class="vidriera-inner">
+      <div class="vidriera-txt">
+        <h2 class="vidriera-titulo">Elegí tu color y salí.</h2>
+        <p class="vidriera-modelo" id="vid-modelo">&nbsp;</p>
+        <p class="vidriera-precio"><small>$UY</small><span id="vid-precio"></span></p>
+        <div class="vidriera-colores" id="vid-colores" role="group" aria-label="Elegir color"></div>
+        <button type="button" class="vidriera-btn" id="vid-btn" onclick="vidrieraAgregar()">Agregar al carrito</button>
+        <a href="#productos" class="vidriera-ver">Ver todos los productos</a>
+      </div>
+      <div class="vidriera-foto">
+        <button type="button" class="vidriera-flecha prev" onclick="vidrieraPasar(-1)" aria-label="Gorro anterior">&#8249;</button>
+        <a class="vidriera-img" id="vid-link" href="#productos" aria-label="Ver producto">
+          <img id="vid-img" alt="" />
+        </a>
+        <button type="button" class="vidriera-flecha next" onclick="vidrieraPasar(1)" aria-label="Gorro siguiente">&#8250;</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LO NUEVO / LO MÁS VENDIDO (se marcan desde el panel de productos) -->
+  <section class="destacados" id="destacados" style="display:none">
+    <div class="destacados-fila" id="fila-nuevo">
+      <h2>Lo nuevo</h2>
+      <div class="destacados-carrusel">
+        <button type="button" class="destacados-flecha prev" aria-label="Anterior" onclick="destacadosMover('track-nuevo', -1)">&#8249;</button>
+        <div class="destacados-track" id="track-nuevo"></div>
+        <button type="button" class="destacados-flecha next" aria-label="Siguiente" onclick="destacadosMover('track-nuevo', 1)">&#8250;</button>
+      </div>
+    </div>
+    <div class="destacados-fila" id="fila-vendido">
+      <h2>Lo más vendido</h2>
+      <div class="destacados-carrusel">
+        <button type="button" class="destacados-flecha prev" aria-label="Anterior" onclick="destacadosMover('track-vendido', -1)">&#8249;</button>
+        <div class="destacados-track" id="track-vendido"></div>
+        <button type="button" class="destacados-flecha next" aria-label="Siguiente" onclick="destacadosMover('track-vendido', 1)">&#8250;</button>
+      </div>
+    </div>
+  </section>
+
   <!-- COLECCIONES -->
   <section class="colecciones-section" id="colecciones">
     <div class="colecciones-header">
-      <div class="colecciones-header-left">
-        <p class="colecciones-label">Explorá por categoría</p>
-        <h2 class="colecciones-title">Nuestra <span class="colecciones-title-accent">colección</span></h2>
-      </div>
-      <p class="colecciones-subtitle">Encontrá rápido lo que buscás.</p>
+      <h2 class="colecciones-title">Nuestra colección.</h2>
     </div>
     <div class="colecciones-carousel-wrap">
       <button type="button" class="colecciones-nav colecciones-prev" id="col-prev" aria-label="Anterior">&#8249;</button>
@@ -476,6 +513,42 @@
       prev.addEventListener('click', () => goTo(idx - 1));
       next.addEventListener('click', () => goTo(idx + 1));
       goTo(0);
+
+      // Deslizar con el dedo: la tarjeta sigue al dedo y al soltar se acomoda en la más cercana.
+      // Los handlers usan la función goTo del último render, guardada en el track.
+      track._colGoTo = goTo;
+      track._colIdx = () => idx;
+      if (track._colSwipe) return;
+      track._colSwipe = true;
+      let x0 = 0, y0 = 0, dx = 0, arrastrando = false, decidido = false;
+      track.addEventListener('touchstart', e => {
+        x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+        dx = 0; arrastrando = false; decidido = false;
+      }, { passive: true });
+      track.addEventListener('touchmove', e => {
+        const mx = e.touches[0].clientX - x0, my = e.touches[0].clientY - y0;
+        if (!decidido && (Math.abs(mx) > 8 || Math.abs(my) > 8)) {
+          decidido = true;
+          arrastrando = Math.abs(mx) > Math.abs(my);
+          if (arrastrando) track.style.transition = 'none';
+        }
+        if (!arrastrando) return;
+        e.preventDefault();
+        dx = mx;
+        const card = track.querySelector('.coleccion-card');
+        const cardW = (card ? card.offsetWidth : 0) + 12;
+        track.style.transform = 'translateX(' + (-track._colIdx() * cardW + dx) + 'px)';
+      }, { passive: false });
+      track.addEventListener('touchend', () => {
+        if (!arrastrando) return;
+        track.style.transition = '';
+        const paso = Math.abs(dx) > 50 ? (dx < 0 ? 1 : -1) : 0;
+        track._colGoTo(track._colIdx() + paso);
+      }, { passive: true });
+      // Si fue un deslizamiento, que no abra la categoría
+      track.addEventListener('click', e => {
+        if (arrastrando && Math.abs(dx) > 8) { e.preventDefault(); e.stopPropagation(); arrastrando = false; }
+      }, true);
     }
 
     function irAColeccion(cat) {
@@ -656,7 +729,225 @@
       snapshot.forEach(c => { ultimosProductos.push({ id: c.key, ...c.val() }); });
       renderCategorias(ultimosProductos);
       initCardCarousels();
+      renderVidriera(ultimosProductos);
+      renderDestacados(ultimosProductos);
     });
+
+    // ── VIDRIERA (portada) ────────────────────────────────────
+    let vidGorros = [];
+    let vidActual = 0;
+
+    function fotoVariante(v) {
+      return (v.fotos && v.fotos[0]) || v.foto || '';
+    }
+
+    // Lee de la foto el color de fondo (esquinas) y el color del gorro (centro)
+    function coloresDeFoto(src) {
+      return new Promise(resolve => {
+        const fallo = { bg: '#f5ede0', oscuro: false, gorro: '#c8c0b4' };
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const c = document.createElement('canvas');
+            c.width = img.naturalWidth; c.height = img.naturalHeight;
+            const ctx = c.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const w = c.width, h = c.height;
+            const promedio = pts => {
+              let r = 0, g = 0, b = 0;
+              pts.forEach(([x, y]) => { const d = ctx.getImageData(x, y, 1, 1).data; r += d[0]; g += d[1]; b += d[2]; });
+              return [r, g, b].map(n => Math.round(n / pts.length));
+            };
+            const [r, g, b] = promedio([[6, 6], [w - 7, 6], [6, h / 2], [w - 7, h / 2]]);
+            const [gr, gg, gb] = promedio([[w * 0.5, h * 0.42], [w * 0.42, h * 0.45], [w * 0.58, h * 0.45], [w * 0.5, h * 0.5]]);
+            resolve({ bg: `rgb(${r},${g},${b})`, oscuro: (0.299 * r + 0.587 * g + 0.114 * b) < 120, gorro: `rgb(${gr},${gg},${gb})` });
+          } catch (e) { resolve(fallo); }
+        };
+        img.onerror = () => resolve(fallo);
+        img.src = src;
+      });
+    }
+
+    async function renderVidriera(productos) {
+      const lista = [];
+      productos
+        .filter(p => p.categoria === 'Gorros Visera')
+        .sort((a, b) => (a.orden || 999) - (b.orden || 999))
+        .forEach(p => (p.variantes || []).forEach((v, i) => {
+          const foto = fotoVariante(v);
+          if (!foto) return;
+          const stockId = STOCK_MAP[p.nombre + '-' + v.nombre] || v.stockId || (p.id + '-' + i);
+          lista.push({ p, v, i, foto, stockId });
+        }));
+      if (!lista.length) return;
+      const colores = await Promise.all(lista.map(g => coloresDeFoto(g.foto)));
+      lista.forEach((g, k) => Object.assign(g, colores[k]));
+      // La primera vez arranca en un gorro de color (rosado), no en el gris
+      if (!vidGorros.length) vidActual = Math.max(0, lista.findIndex(g => /rosa/i.test(g.v.nombre)));
+      vidGorros = lista;
+      vidrieraElegir(Math.min(vidActual, lista.length - 1), true);
+    }
+
+    // Color del puntito: primero por el nombre de la variante (ej. "Lila"); si no se reconoce, el que se leyó de la foto
+    const COLORES_POR_NOMBRE = [
+      [/lila|violeta/i, '#b9a2e0'], [/rosa/i, '#e58a8a'], [/rojo/i, '#c8433a'], [/verde/i, '#8fc4a6'],
+      [/azul/i, '#2f3a63'], [/celeste/i, '#7cc3e0'], [/negro/i, '#26262a'], [/gris/i, '#6f6f75'],
+      [/blanco/i, '#efebe3'], [/amarillo/i, '#e8c547'], [/naranja/i, '#ef8a3c'], [/beige|crema/i, '#e6dcc8']
+    ];
+    function colorDelPuntito(g) {
+      // En los de dos colores con barra ("Gris / Verde", "Rojo / Amarillo") manda el último, que es el de la visera.
+      // En los demás ("Gris negro") manda el primer color que se nombra; el blanco solo si no hay otro.
+      const partes = (g.v.nombre || '').split('/').map(s => s.trim()).reverse();
+      for (const parte of partes) {
+        const encontrados = COLORES_POR_NOMBRE
+          .map(([re, c]) => ({ pos: parte.search(re), c, blanco: re.test('blanco') }))
+          .filter(x => x.pos >= 0)
+          .sort((a, b) => (a.blanco - b.blanco) || (a.pos - b.pos));
+        if (encontrados.length) return encontrados[0].c;
+      }
+      return g.gorro;
+    }
+
+    // Puntitos de color del modelo que se está mostrando
+    function pintarSelectores(actual) {
+      const contColores = document.getElementById('vid-colores');
+      contColores.innerHTML = vidGorros
+        .map((g, k) => ({ g, k }))
+        .filter(({ g }) => g.p.nombre === actual.p.nombre)
+        .map(({ g, k }) => `<button type="button" class="vidriera-color" style="--c:${colorDelPuntito(g)}" aria-pressed="${g === actual}" aria-label="${g.v.nombre}" title="${g.v.nombre}" onclick="vidrieraElegir(${k})"></button>`)
+        .join('');
+    }
+
+    window.vidrieraElegir = function(k, sinAnimar) {
+      const g = vidGorros[k];
+      if (!g) return;
+      vidActual = k;
+      const sec = document.querySelector('.vidriera');
+      sec.style.setProperty('--vid-bg', g.bg);
+      sec.classList.toggle('oscura', g.oscuro);
+      const img = document.getElementById('vid-img');
+      const poner = () => { img.src = g.foto; img.alt = g.p.nombre + ' ' + g.v.nombre; img.classList.remove('saliendo'); };
+      if (sinAnimar) poner(); else { img.classList.add('saliendo'); setTimeout(poner, 180); }
+      document.getElementById('vid-modelo').textContent = g.p.nombre + ' · ' + g.v.nombre;
+      document.getElementById('vid-precio').textContent = (g.v.precio || 0).toLocaleString();
+      document.getElementById('vid-link').href = `producto.html?id=${g.p.id}&v=${g.i}`;
+      const sinStock = getStock(g.stockId) === 0;
+      const btn = document.getElementById('vid-btn');
+      btn.disabled = sinStock;
+      btn.textContent = sinStock ? 'Sin stock' : 'Agregar al carrito';
+      pintarSelectores(g);
+    };
+
+    window.vidrieraPasar = function(paso) {
+      if (!vidGorros.length) return;
+      vidrieraElegir((vidActual + paso + vidGorros.length) % vidGorros.length);
+    };
+
+    window.vidrieraAgregar = function() {
+      const g = vidGorros[vidActual];
+      if (!g) return;
+      const name = g.p.nombre, variant = g.v.nombre, price = g.v.precio || 0;
+      let item = cart.find(i => i.name === name && i.variant === variant);
+      if ((item ? item.qty : 0) >= getStock(g.stockId)) {
+        showCartError('No hay más unidades disponibles de este producto.');
+        return;
+      }
+      if (item) item.qty++; else cart.push({ name, variant, price, qty: 1 });
+      saveCart();
+      updateCartUI();
+      showCartNotification();
+    };
+
+    // Deslizar el gorro con el dedo para pasar al siguiente
+    (function() {
+      const zona = document.getElementById('vid-link');
+      let x0 = null, y0 = null, deslizo = false;
+      zona.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; deslizo = false; }, { passive: true });
+      zona.addEventListener('touchend', e => {
+        if (x0 === null || !vidGorros.length) return;
+        const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+        x0 = null;
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+          deslizo = true;
+          vidrieraPasar(dx < 0 ? 1 : -1);
+        }
+      });
+      // Si fue un deslizamiento, no abrir el producto
+      zona.addEventListener('click', e => { if (deslizo) { e.preventDefault(); deslizo = false; } });
+    })();
+
+    // Los gorros pasan solos mientras la sección está a la vista.
+    // Se frena cuando la persona toca, pasa el mouse o elige algo, y vuelve a arrancar después.
+    (function() {
+      const sec = document.querySelector('.vidriera');
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const CADA = 3200;
+      let visible = false, pausaHasta = 0;
+      setInterval(() => {
+        if (visible && Date.now() > pausaHasta && !document.hidden) vidrieraPasar(1);
+      }, CADA);
+      const pausar = ms => { pausaHasta = Date.now() + ms; };
+      sec.addEventListener('mouseenter', () => pausar(Infinity));
+      sec.addEventListener('mouseleave', () => pausar(0));
+      sec.addEventListener('touchstart', () => pausar(8000), { passive: true });
+      sec.addEventListener('click', () => pausar(8000));
+      new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { threshold: 0.5 }).observe(sec);
+    })();
+
+    // ── LO NUEVO / LO MÁS VENDIDO ─────────────────────────────
+    // Flechas de compu: avanzan una tanda entera de gorros (el ancho visible + el espacio entre tarjetas)
+    window.destacadosMover = function(id, dir) {
+      const t = document.getElementById(id);
+      const gap = parseFloat(getComputedStyle(t).columnGap) || 18;
+      t.scrollBy({ left: dir * (t.clientWidth + gap), behavior: 'smooth' });
+    };
+    function destacadosFlechas(t) {
+      const cont = t.closest('.destacados-carrusel');
+      const actualizar = () => {
+        const max = t.scrollWidth - t.clientWidth - 4;
+        cont.classList.toggle('al-inicio', t.scrollLeft <= 4);
+        cont.classList.toggle('al-final', t.scrollLeft >= max);
+      };
+      if (!t._flechas) {
+        t._flechas = true;
+        t.addEventListener('scroll', actualizar, { passive: true });
+        window.addEventListener('resize', actualizar);
+      }
+      actualizar();
+    }
+    function renderDestacados(productos) {
+      const tarjetas = filtro => {
+        const out = [];
+        productos.filter(filtro).forEach(p => (p.variantes || []).forEach((v, i) => {
+          const foto = fotoVariante(v);
+          if (foto) out.push({ p, v, i, foto });
+        }));
+        return out;
+      };
+      let nuevos = tarjetas(p => p.nuevo);
+      let vendidos = tarjetas(p => p.masVendido);
+
+      // Solo en la vista previa local: si todavía no se marcó nada, mostrar un ejemplo
+      const demo = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !nuevos.length && !vendidos.length;
+      if (demo) {
+        nuevos = tarjetas(p => p.nombre === 'Sunset Flower' || p.nombre === 'Anth co');
+        vendidos = tarjetas(p => p.nombre === 'Sendera Original' || p.nombre === 'Go One More').slice(0, 6);
+      }
+
+      const html = (lista, etiqueta) => lista.map(({ p, v, i, foto }) => `
+        <a class="destacado-card" href="producto.html?id=${p.id}&v=${i}">
+          <span class="destacado-img"><img src="${foto}" alt="${p.nombre} ${v.nombre}" loading="lazy" /><span class="destacado-tag">${etiqueta}</span></span>
+          <b>${p.nombre}</b>
+          <span>${v.nombre} · $${(v.precio || 0).toLocaleString()}</span>
+        </a>`).join('');
+
+      document.getElementById('track-nuevo').innerHTML = html(nuevos, 'Nuevo');
+      document.getElementById('track-vendido').innerHTML = html(vendidos, 'Más vendido');
+      document.getElementById('fila-nuevo').style.display = nuevos.length ? '' : 'none';
+      document.getElementById('fila-vendido').style.display = vendidos.length ? '' : 'none';
+      document.getElementById('destacados').style.display = (nuevos.length || vendidos.length) ? '' : 'none';
+      ['track-nuevo', 'track-vendido'].forEach(id => destacadosFlechas(document.getElementById(id)));
+    }
 
     // ── CARRUSEL EN TARJETAS ──────────────────────────────────
     window.cardCarouselGo = function(carousel, newIdx) {
@@ -682,7 +973,7 @@
       document.querySelectorAll('.card-carousel').forEach(carousel => {
         if (carousel._swipe) return;
         carousel._swipe = true;
-        let sx = 0, sy = 0, swiping = false;
+        let sx = 0, sy = 0, swiping = false, ultimoSwipe = 0;
         carousel.addEventListener('touchstart', e => {
           sx = e.touches[0].clientX;
           sy = e.touches[0].clientY;
@@ -702,12 +993,18 @@
           if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 28) {
             cardCarouselGo(carousel, parseInt(carousel.dataset.idx || '0') + (dx < 0 ? 1 : -1));
           }
+          if (swiping) ultimoSwipe = Date.now();
         }, { passive: true });
-        // Bloquea cualquier click en el carousel para que no abra el producto
+        // Tocar la foto abre el producto; solo se bloquea al usar flechas/puntitos o justo después de deslizar
         carousel.addEventListener('click', e => {
-          e.stopPropagation();
-          e.preventDefault();
-        }, false);
+          // Fase de captura: corre antes que el onclick de las flechas, que igual se ejecuta
+          if (e.target.closest('.card-carousel-btn, .card-carousel-dot')) {
+            e.preventDefault();
+          } else if (Date.now() - ultimoSwipe < 400) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }, true);
       });
     }
 
