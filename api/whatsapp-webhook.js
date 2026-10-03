@@ -438,29 +438,10 @@ export async function POST(request) {
     console.error('whatsapp-webhook: falta WHATSAPP_APP_SECRET; no se procesan mensajes hasta configurarlo');
     return new Response('', { status: 401 });
   }
-  // Hay dos apps de Meta llamadas "Sendera"; se acepta la clave de cualquiera de las dos
-  // (WHATSAPP_APP_SECRET y, opcional, WHATSAPP_APP_SECRET_ALT) y se registra cuál coincidió.
-  const cabeceraFirma = request.headers.get('x-hub-signature-256');
-  const secretoAlt = process.env.WHATSAPP_APP_SECRET_ALT;
-  const coincidePrincipal = firmaValida(cuerpoCrudo, cabeceraFirma, secreto);
-  const coincideAlt = !coincidePrincipal && !!secretoAlt && firmaValida(cuerpoCrudo, cabeceraFirma, secretoAlt);
-  if (coincidePrincipal || coincideAlt) {
-    console.log(`whatsapp-webhook: firma OK con ${coincidePrincipal ? 'WHATSAPP_APP_SECRET' : 'WHATSAPP_APP_SECRET_ALT'}`);
-  }
-  if (!coincidePrincipal && !coincideAlt) {
-    // Modo aviso (transitorio): mientras se confirma que WHATSAPP_APP_SECRET es la clave con la que firma Meta,
-    // una firma que no coincide se registra pero no corta a Senderita. Para exigir la firma, cargar
-    // WHATSAPP_FIRMA_ESTRICTA=1 en Vercel. El número de origen se sigue validando igual (solo dígitos).
-    if (process.env.WHATSAPP_FIRMA_ESTRICTA === '1') {
-      return new Response('', { status: 401 });
-    }
-    // Diagnóstico sin datos sensibles: primeros caracteres de las firmas (no revelan la clave),
-    // largo del cuerpo y si la firma coincidiría con el JSON re-serializado (cuerpo modificado en el camino)
-    const recibida = String(request.headers.get('x-hub-signature-256') || '');
-    const calculada = 'sha256=' + createHmac('sha256', secreto).update(cuerpoCrudo).digest('hex');
-    let coincideReserializado = false;
-    try { coincideReserializado = firmaValida(JSON.stringify(JSON.parse(cuerpoCrudo)), recibida, secreto); } catch {}
-    console.warn(`whatsapp-webhook: firma no coincide (modo aviso, se procesa igual) · recibida ${recibida.slice(0, 14)}… · calculada ${calculada.slice(0, 14)}… · largo ${cuerpoCrudo.length} · largo clave ${secreto.length} · coincide re-serializado: ${coincideReserializado}`);
+  // La clave es la de la app de Meta de WhatsApp (identificador 3910…), no la otra app "Sendera"
+  if (!firmaValida(cuerpoCrudo, request.headers.get('x-hub-signature-256'), secreto)) {
+    console.warn('whatsapp-webhook: firma de Meta inválida, mensaje rechazado');
+    return new Response('', { status: 401 });
   }
   let body;
   try { body = JSON.parse(cuerpoCrudo); } catch { return new Response('', { status: 400 }); }
