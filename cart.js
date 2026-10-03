@@ -41,6 +41,13 @@ if (typeof db !== 'undefined') {
 }
 
 let cart = (function() {
+  // Al volver de Mercado Pago con el pago aprobado (?pago=ok), la compra ya se hizo: carrito vacío
+  try {
+    if (new URLSearchParams(location.search).get('pago') === 'ok') {
+      localStorage.removeItem('sendera_cart');
+      localStorage.removeItem('sendera_checkout');
+    }
+  } catch(e) {}
   try { return JSON.parse(localStorage.getItem('sendera_cart') || '[]'); } catch(e) { return []; }
 })();
 

@@ -774,46 +774,6 @@
     mostrarResultado('transferencia');
   }
 
-  // ── Enviar WhatsApp ───────────────────────────────────────
-  const WA_NUMBERS = ['59895290959', '59899069384'];
-
-  function enviarWhatsApp(tipo) {
-    const nombre = document.getElementById('ch-nombre').value.trim();
-    const celular = document.getElementById('ch-celular').value.trim();
-    const { items, envio } = pedidoData;
-    const subtotal = items.reduce((s, i) => s + i.precio * i.qty, 0);
-    const total = calcularTotal();
-
-    const lineas = items.map(i => `• ${i.name} - ${i.variant} x${i.qty} → $${(i.precio * i.qty).toLocaleString()}`).join('\n');
-
-    let metodoTexto = '';
-    if (tipo === 'transferencia') metodoTexto = '🏦 Transferencia Prex (pendiente confirmación)';
-    else if (tipo === 'efectivo') metodoTexto = '💵 Efectivo al retirar';
-    else if (tipo === 'tarjeta-aprobada') metodoTexto = '💳 Tarjeta · Pago aprobado ✅';
-    else if (tipo === 'tarjeta-pendiente') metodoTexto = '💳 Tarjeta · Pago en proceso ⏳';
-
-    const descuentoLinea = descuentoAplicado > 0 ? `🏷️ Descuento: -$${descuentoAplicado.toLocaleString()}\n` : '';
-
-    const mensaje = encodeURIComponent(
-      `🛍️ *Nuevo pedido Sendera*\n\n` +
-      `${lineas}\n\n` +
-      `Subtotal: $${subtotal.toLocaleString()}\n` +
-      `📦 Envío: ${envio?.label || '—'}\n` +
-      `${descuentoLinea}` +
-      `*Total: $${total.toLocaleString()}*\n\n` +
-      `👤 Cliente: ${nombre}\n` +
-      `📱 Celular: ${celular}\n` +
-      `💰 Pago: ${metodoTexto}\n\n` +
-      `_Pedido recibido desde senderauy.com_`
-    );
-
-    WA_NUMBERS.forEach((num, i) => {
-      setTimeout(() => {
-        window.open(`https://wa.me/${num}?text=${mensaje}`, '_blank');
-      }, i * 800);
-    });
-  }
-
   // ── Copiar al portapapeles ────────────────────────────────
   function copiar(texto, btn) {
     navigator.clipboard.writeText(texto).then(() => {
@@ -836,8 +796,8 @@
     const nombre = document.getElementById('ch-nombre').value.trim();
     const celular = document.getElementById('ch-celular').value.trim();
     if (!nombre || !celular) { alert('Por favor completá tu nombre y celular.'); return; }
+    // Al cliente le llega el WhatsApp automático de confirmación (ya no se abre el WhatsApp de la tienda)
     guardarPedidoFirebase('pendiente-efectivo', null, 'efectivo');
-    enviarWhatsApp('efectivo');
     mostrarResultado('efectivo');
   }
 
@@ -906,22 +866,9 @@
       db.ref('users/' + user.uid + '/profile').set({ nombre: nombre, celular: celular, email: email });
     }
     localStorage.removeItem('sendera_checkout');
+    // Compra registrada: se vacía el carrito para que no siga armado al volver a la tienda
+    localStorage.removeItem('sendera_cart');
     eliminarCarritoAbandonado();
-    // Enviar email al cliente si lo proporcionó
-    if (email) {
-      const productosMsg = pedidoData.items.map(i => `• ${i.name} - ${i.variant} x${i.qty}`).join('\n');
-      fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: email,
-          cliente: nombre,
-          productos: productosMsg,
-          total: calcularTotal().toLocaleString(),
-          envio: pedidoData.envio?.label || '—'
-        })
-      }).catch(() => {});
-    }
     // Enviar notificación push
     fetch('/api/notify-pedido', {
       method: 'POST',
@@ -932,8 +879,11 @@
         envio: pedido.envio
       })
     }).catch(() => {});
-    // Enviar WhatsApp y email al cliente (solo para transferencia — MP lo maneja el webhook)
-    if (metodoPago === 'transferencia') {
+    // WhatsApp automático y email de confirmación al cliente, una sola vez, en efectivo, transferencia y tarjeta.
+    // Mercado Pago (redirect) no: esos los manda el webhook cuando se aprueba el pago.
+    // Tarjeta "en proceso" tampoco: todavía no está confirmada.
+    const enviarConfirmacion = metodoPago !== 'mercadopago' && estado !== 'pendiente';
+    if (enviarConfirmacion) {
       const productosMsg = pedidoData.items.map(i => `• ${i.name} - ${i.variant} x${i.qty}`).join('\n');
       const envioLabel = pedidoData.envio?.label || '—';
       if (celular) {
