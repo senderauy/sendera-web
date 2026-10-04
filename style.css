@@ -13,7 +13,7 @@
   --text-muted: #a89880;
   --cream: #f5ede0;
   --amber: #c8861a;
-  --green: #507a3a;
+  --green: var(--color-compra); /* el verde de la marca se reemplazó por el color de compra */
   --text-dark: #1e1a12;
 }
 
@@ -105,7 +105,7 @@ nav a::after {
   bottom: 0;
   width: 0;
   height: 2px;
-  background: #5c9940;
+  background: var(--color-compra);
   border-radius: 1px;
   transition: width 0.25s ease;
 }
@@ -260,8 +260,8 @@ nav a:hover::after {
 }
 
 .btn-primary:hover {
-  background-color: #3d5e2c;
-  border-color: #3d5e2c;
+  background-color: var(--color-compra-hover);
+  border-color: var(--color-compra-hover);
   color: #fff;
 }
 
@@ -722,7 +722,7 @@ nav a:hover::after {
 }
 
 .categorias .producto-card:hover {
-  border-color: var(--amber);
+  border-color: var(--color-compra);
 }
 
 .categorias .producto-img-wrap {
@@ -1309,7 +1309,7 @@ nav a:hover::after {
 }
 
 .qty-btn.qty-minus:hover {
-  background: #3d5e2c;
+  background: var(--color-compra-hover);
   color: #fff;
 }
 
@@ -1322,7 +1322,7 @@ nav a:hover::after {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(92,153,64,0.5);
+  background: var(--color-compra-suave);
 }
 
 .btn-agregar {
@@ -1342,7 +1342,7 @@ nav a:hover::after {
 }
 
 .btn-agregar:hover {
-  background: #3d5e2c;
+  background: var(--color-compra-hover);
 }
 
 .sin-stock-label {
@@ -1457,7 +1457,7 @@ nav a:hover::after {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(80,122,58,0.25);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
   transition: transform 0.2s;
 }
 
@@ -1658,7 +1658,7 @@ nav a:hover::after {
 }
 
 .cart-form input:focus {
-  border-color: #507a3a;
+  border-color: var(--color-compra);
 }
 
 .cart-form input::placeholder {
@@ -1668,7 +1668,7 @@ nav a:hover::after {
 .btn-send-order {
   width: 100%;
   padding: 13px;
-  background-color: #507a3a;
+  background-color: var(--color-compra);
   color: #fff;
   border: none;
   font-family: 'Montserrat', sans-serif;
@@ -1682,7 +1682,7 @@ nav a:hover::after {
 }
 
 .btn-send-order:hover {
-  background-color: #3d5e2c;
+  background-color: var(--color-compra-hover);
 }
 
 .btn-mp {
@@ -1718,7 +1718,7 @@ nav a:hover::after {
 }
 .envio-titulo {
   font-size: 0.72rem;
-  color: #507a3a;
+  color: var(--color-compra);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   margin-bottom: 10px;
@@ -1736,15 +1736,15 @@ nav a:hover::after {
   transition: border-color 0.2s;
   background: #f0ebe2;
 }
-.envio-opcion:hover { border-color: #507a3a; }
-.envio-opcion input[type="radio"] { accent-color: #507a3a; flex-shrink: 0; }
+.envio-opcion:hover { border-color: var(--color-compra); }
+.envio-opcion input[type="radio"] { accent-color: var(--color-compra); flex-shrink: 0; }
 .envio-info { display: flex; flex-direction: column; flex: 1; }
 .envio-nombre { font-size: 0.82rem; color: #2a2218; }
 .envio-detalle { font-size: 0.7rem; color: #9a8f82; margin-top: 1px; }
-.envio-precio { font-size: 0.82rem; color: #507a3a; font-weight: 600; white-space: nowrap; }
+.envio-precio { font-size: 0.82rem; color: var(--color-compra); font-weight: 600; white-space: nowrap; }
 
 .cart-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem; }
-.total-final { border-top: 1px solid #e0d8cc; padding-top: 10px; margin-top: 6px; margin-bottom: 14px; font-weight: 700; font-size: 1rem; color: #507a3a; }
+.total-final { border-top: 1px solid #e0d8cc; padding-top: 10px; margin-top: 6px; margin-bottom: 14px; font-weight: 700; font-size: 1rem; color: var(--color-compra); }
 .envio-row { color: #9a8f82; font-size: 0.8rem; }
 
 .envio-campos { padding: 10px 12px 4px; background: #f5f0ea; border: 1px solid #e0d8cc; border-top: none; border-radius: 0 0 8px 8px; margin-bottom: 6px; }
@@ -1760,10 +1760,10 @@ nav a:hover::after {
   margin-bottom: 8px;
   transition: border-color 0.2s;
 }
-.envio-input:focus { border-color: #507a3a; }
+.envio-input:focus { border-color: var(--color-compra); }
 .envio-radio-group { display: flex; gap: 16px; margin-bottom: 8px; }
 .envio-sub { font-size: 0.78rem; color: #7a6e62; display: flex; align-items: center; gap: 6px; cursor: pointer; }
-.envio-sub input { accent-color: #507a3a; }
+.envio-sub input { accent-color: var(--color-compra); }
 
 @media (max-width: 420px) {
   #cart-modal { width: calc(100vw - 32px); right: 16px; }
@@ -1792,7 +1792,7 @@ nav a:hover::after {
   }
 
   .productos-grid::-webkit-scrollbar-thumb {
-    background: var(--gold);
+    background: #cfc4b4; /* gris suave (antes mostaza) */
     border-radius: 2px;
   }
 
@@ -2380,7 +2380,7 @@ nav a:hover::after {
   padding-top: 8px;
 }
 .pedido-envio { font-size: 0.72rem; color: #9a8f82; }
-.pedido-total { font-size: 0.88rem; font-weight: 700; color: #507a3a; }
+.pedido-total { font-size: 0.88rem; font-weight: 700; color: var(--color-compra); }
 
 /* ── CONFIRMAR SALIDA MODAL ─────────────────────────────── */
 .confirm-salida-overlay {
@@ -2714,7 +2714,7 @@ nav a:hover::after {
 .vidriera-precio small { font-size: 0.9rem; font-weight: 600; margin-right: 4px; }
 .vidriera-btn {
   display: inline-block;
-  background: var(--green);
+  background: var(--color-compra);
   color: #fff;
   border: 0;
   border-radius: 999px;
@@ -2725,11 +2725,18 @@ nav a:hover::after {
   cursor: pointer;
   transition: background 0.2s;
 }
-.vidriera-btn:hover { background: #3d5e2c; }
+.vidriera-btn:hover { background: var(--color-compra-hover); }
 .vidriera-btn:disabled { background: #9a9187; cursor: not-allowed; }
+/* Botón y "Ver todos los productos" juntos: el texto queda centrado debajo del botón */
+.vidriera-acciones {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
 .vidriera-ver {
   display: inline-block;
-  margin-left: 18px;
+  margin: 0;
   color: inherit;
   font-size: 0.85rem;
   font-weight: 600;
@@ -2765,7 +2772,7 @@ nav a:hover::after {
   .vidriera-precio { font-size: 1.8rem; }
   .vidriera-colores { margin: 12px 0 18px; }
   .vidriera-btn { display: block; width: 100%; text-align: center; }
-  .vidriera-ver { display: block; margin: 14px 0 0; text-align: center; }
+  .vidriera-ver { margin: 0; }
 }
 
 /* ── LO NUEVO / LO MÁS VENDIDO ────────────────────────────── */
@@ -2841,3 +2848,222 @@ nav a:hover::after {
   .destacado-card { flex-basis: 64vw; }
   .destacado-img img { width: 64vw; height: 64vw; }
 }
+/* ── BOTÓN "AGREGAR AL CARRITO" DEL CATÁLOGO (opción A) ──────────
+   Botón contorneado y redondeado dentro de la tarjeta, en vez de la franja verde pegada al borde.
+   Con unidades en el carrito: círculos − y + con la cantidad en el medio. */
+.categorias .qty-control {
+  border-top: none;
+  padding: 2px 18px 18px;
+  gap: 8px;
+  align-items: center;
+}
+.categorias .btn-agregar {
+  flex: 1;
+  background: transparent;
+  color: var(--color-compra);
+  border: 1.5px solid var(--color-compra);
+  border-radius: 999px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 11px 16px;
+  transition: background 0.2s, color 0.2s;
+}
+.categorias .btn-agregar:hover {
+  background: var(--color-compra);
+  color: #fff;
+}
+.categorias .btn-agregar--compact,
+.categorias .qty-btn.qty-minus {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-compra);
+  background: transparent;
+  color: var(--color-compra);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+.categorias .btn-agregar--compact:hover,
+.categorias .qty-btn.qty-minus:hover {
+  background: var(--color-compra);
+  color: #fff;
+}
+/* Cantidad en el carrito: pastilla verde suave entre − y + ("2 en el carrito") */
+.categorias .qty-num {
+  flex: 1;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--color-compra-suave);
+  color: var(--color-compra);
+  font-size: 0.95rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+/* cart.js lo muestra con style="display:inline"; se fuerza flex para centrar el texto en la pastilla */
+.categorias .qty-num[style*="inline"] {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.categorias .qty-num::after {
+  content: ' en el carrito';
+  white-space: pre;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.categorias .sin-stock-label {
+  border: 1.5px solid #e3d6c4;
+  border-radius: 999px;
+  padding: 11px 16px;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: #9a8f82;
+}
+@media (max-width: 768px) {
+  .categorias .qty-control { padding: 2px 12px 12px; }
+  .categorias .btn-agregar { font-size: 0.78rem; padding: 10px 12px; }
+  .categorias .qty-num { font-size: 1.05rem; }
+  .categorias .qty-num::after { content: none; }
+}
+
+/* ── BOTONES DE COMPRA MÁS SOBRIOS (sin "píldora" larga) ──
+   Bordes de 10px, ícono de bolsa y ancho justo en vez de ocupar toda la fila.
+   El color de compra (botones y borde de la tarjeta al pasar el mouse) se define acá, en un solo lugar. */
+:root {
+  --color-compra: #182417;
+  --color-compra-hover: #0c140b;
+  --color-compra-suave: rgba(24, 36, 23, 0.1);
+}
+:root {
+  --icono-bolsa: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z'/%3E%3Cline x1='3' y1='6' x2='21' y2='6'/%3E%3Cpath d='M16 10a4 4 0 0 1-8 0'/%3E%3C/svg%3E");
+}
+.vidriera-btn,
+.categorias .btn-agregar:not(.btn-agregar--compact) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border-radius: 10px;
+}
+.vidriera-btn::before,
+.categorias .btn-agregar:not(.btn-agregar--compact)::before {
+  content: '';
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  background: currentColor;
+  -webkit-mask: var(--icono-bolsa) no-repeat center / contain;
+  mask: var(--icono-bolsa) no-repeat center / contain;
+}
+.vidriera-btn { padding: 15px 28px; font-size: 0.92rem; }
+.vidriera-btn:disabled::before { display: none; }
+.categorias .btn-agregar--compact,
+.categorias .qty-btn.qty-minus,
+.categorias .qty-num,
+.categorias .sin-stock-label { border-radius: 10px; }
+@media (max-width: 820px) {
+  .vidriera-btn { display: inline-flex; width: auto; padding: 14px 24px; }
+  .vidriera-ver { margin: 0; }
+}
+
+/* ── TODOS LOS BOTONES CON EL MISMO ESTILO ─────────────────────
+   Mismo color (el de compra), bordes de 10px y sin mayúsculas: "Ver más", "Comprar",
+   "Nuestra colección", "Enviar reseña" y los del carrito. */
+.btn-primary,
+.btn-hero-ghost,
+.btn-outline-light,
+.btn-send-order {
+  border-radius: 10px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+/* En la portada (sobre la foto) "Ver más" va en blanco: es lo que mejor se lee sobre una imagen oscura */
+.hero .btn-primary {
+  background: #fff;
+  border-color: #fff;
+  color: var(--text-dark);
+}
+.hero .btn-primary:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.85);
+  color: var(--text-dark);
+}
+
+/* "Sobre nosotros" en gris, sin mostaza */
+.nosotros-label { color: #8a7f73; }
+
+/* ── CATÁLOGO SIN MOSTAZA ──────────────────────────────────────
+   Lo único con color en el catálogo son los gorros y el botón de compra.
+   Modelo como subtítulo oscuro, descripción legible y el color de cada gorro en gris suave. */
+.categorias .subgrupo-titulo {
+  color: var(--text-dark);
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+.categorias .subgrupo-desc {
+  color: #6b5f54;
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.categorias .producto-colores {
+  color: #8a7f73;
+  letter-spacing: 0.06em;
+}
+
+/* "Ver más" de la portada en verde noche con borde blanco, para que se despegue de la foto */
+:root .hero .btn-primary {
+  background: var(--color-compra);
+  border: 2px solid #fff;
+  color: #fff;
+}
+:root .hero .btn-primary:hover {
+  background: var(--color-compra-hover);
+  border-color: #fff;
+  color: #fff;
+}
+
+/* "la aventura." de la portada en blanco */
+.hero-line2 { color: #fff; }
+
+/* Botón flotante de WhatsApp en blanco, más tranquilo, igual que el del carrito */
+.whatsapp-float {
+  background: #fff;
+  border: 1.5px solid #e2d8c8;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+.whatsapp-float svg { fill: #1fa855; }
+
+/* "Nuestra colección" con borde, sin relleno */
+.btn-outline-light {
+  background: transparent;
+  color: var(--color-compra);
+  border: 1.5px solid var(--color-compra);
+}
+.btn-outline-light:hover {
+  background: var(--color-compra);
+  color: #fff;
+}
+
+/* "Agregar al carrito" de la vidriera con borde, igual que "Nuestra colección" */
+.vidriera-btn {
+  background: transparent;
+  color: var(--color-compra);
+  box-shadow: inset 0 0 0 1.5px var(--color-compra);
+}
+.vidriera-btn:hover {
+  background: var(--color-compra);
+  color: #fff;
+}
+.vidriera-btn:disabled { background: transparent; color: #9a9187; box-shadow: inset 0 0 0 1.5px #cfc4b4; }

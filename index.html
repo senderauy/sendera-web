@@ -34,7 +34,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Sendera" />
   <meta name="theme-color" content="#1a1510" />
-  <link rel="stylesheet" href="style.css?v=27" />
+  <link rel="stylesheet" href="style.css?v=51" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
@@ -139,8 +139,10 @@
         <p class="vidriera-modelo" id="vid-modelo">&nbsp;</p>
         <p class="vidriera-precio"><small>$UY</small><span id="vid-precio"></span></p>
         <div class="vidriera-colores" id="vid-colores" role="group" aria-label="Elegir color"></div>
-        <button type="button" class="vidriera-btn" id="vid-btn" onclick="vidrieraAgregar()">Agregar al carrito</button>
-        <a href="#productos" class="vidriera-ver">Ver todos los productos</a>
+        <div class="vidriera-acciones">
+          <button type="button" class="vidriera-btn" id="vid-btn" onclick="vidrieraAgregar()">Agregar al carrito</button>
+          <a href="#productos" class="vidriera-ver">Ver todos los productos</a>
+        </div>
       </div>
       <div class="vidriera-foto">
         <button type="button" class="vidriera-flecha prev" onclick="vidrieraPasar(-1)" aria-label="Gorro anterior">&#8249;</button>
