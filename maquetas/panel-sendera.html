@@ -50,9 +50,8 @@
     background: var(--noche); color: var(--noche-texto);
     display: flex; flex-direction: column; padding: 28px 16px 20px; z-index: 20;
   }
-  .marca { display: flex; align-items: center; gap: 10px; padding: 0 10px 30px; }
-  .marca svg { width: 30px; height: 18px; }
-  .marca b { font: 600 1.35rem/1 var(--serif); letter-spacing: 0.2em; }
+  .marca { display: flex; align-items: center; padding: 4px 12px 32px; }
+  .marca img { height: 54px; width: auto; }
   .nav { display: flex; flex-direction: column; gap: 2px; }
   .nav button {
     display: flex; align-items: center; gap: 12px; width: 100%;
@@ -303,6 +302,7 @@
     .contenido { margin-left: 0; padding: 74px 16px 104px; }
     .tope-movil { display: flex; position: fixed; top: 0; left: 0; right: 0; z-index: 20; height: calc(58px + env(safe-area-inset-top, 0px)); align-items: center; justify-content: space-between; padding: env(safe-area-inset-top, 0px) 16px 0; background: var(--noche); color: var(--noche-texto); }
     .tope-movil .marca { padding: 0; }
+    .tope-movil .marca img { height: 34px; }
     .cinta { top: calc(17px + env(safe-area-inset-top, 0px)); right: 64px; background: transparent; color: var(--noche-tenue); border-color: rgba(236, 230, 214, 0.4); }
     .cinta-larga { display: none; }
     .barra-movil {
@@ -350,10 +350,7 @@
 <span class="cinta">Maqueta<span class="cinta-larga"> con datos de ejemplo</span></span>
 
 <aside class="lateral" aria-label="Menú del panel">
-  <div class="marca">
-    <svg viewBox="0 0 30 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M1 17 9 6l4 5 5-9 11 15"/></svg>
-    <b>SENDERA</b>
-  </div>
+  <div class="marca"><img src="logo-crema.png" alt="Sendera" /></div>
   <nav class="nav" id="nav">
     <button data-vista="inicio" class="activo"><i data-lucide="house"></i>Inicio</button>
     <button data-vista="pedidos"><i data-lucide="package"></i>Pedidos<span class="contador" id="contador-nav">3</span></button>
@@ -372,10 +369,7 @@
 </aside>
 
 <header class="tope-movil">
-  <div class="marca">
-    <svg viewBox="0 0 30 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M1 17 9 6l4 5 5-9 11 15"/></svg>
-    <b>SENDERA</b>
-  </div>
+  <div class="marca"><img src="logo-crema.png" alt="Sendera" /></div>
   <span class="avatar">S</span>
 </header>
 
