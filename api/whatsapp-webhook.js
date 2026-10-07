@@ -47,10 +47,14 @@ async function getProductos() {
     const lines = [];
     for (const [prodId, prod] of Object.entries(data)) {
       const nombre = prod.nombre || '';
+      // Mismo cálculo que api/_pedido.js: Senderita tiene que decir el precio que se cobra
+      const descuento = Math.min(90, Math.max(0, parseInt(prod.descuento, 10) || 0));
       for (const [i, v] of Object.entries(prod.variantes || {})) {
         if (!v || typeof v !== 'object') continue;
         const color = v.color || v.nombre || '';
-        const precio = v.precio ? `$${v.precio}` : '';
+        const base = Number(v.precio) || 0;
+        const final = Math.round(base * (100 - descuento) / 100);
+        const precio = !base ? '' : descuento ? `$${final} (${descuento}% OFF, antes $${base})` : `$${base}`;
         const sinStock = stock && (stock[v.stockId || `${prodId}-${i}`] ?? 0) <= 0 ? ' [SIN STOCK]' : '';
         lines.push(`- ${nombre}${color ? ' ' + color : ''}${precio ? ' — ' + precio : ''}${sinStock}`);
       }

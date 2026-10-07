@@ -244,6 +244,28 @@
       line-height: 1;
     }
 
+    .product-price .precio-antes {
+      font-size: 0.45em;
+      color: #9a8f82;
+      font-weight: 400;
+      margin-left: 12px;
+      vertical-align: middle;
+    }
+
+    .badge-descuento {
+      display: inline-block;
+      margin-left: 10px;
+      padding: 5px 10px;
+      background: #c8861a;
+      color: #fff;
+      font-size: 0.3em;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      vertical-align: middle;
+    }
+
+    .rel-card .precio-antes { color: #9a8f82; }
+
     .product-price .currency {
       font-size: 0.45em;
       color: #9a8f82;
@@ -714,7 +736,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="firebase-config.js?v=2"></script>
-  <script src="cart.js?v=4"></script>
+  <script src="cart.js?v=5"></script>
   <script>
     // ── MAPAS DE COLOR ─────────────────────────────────────────────
     const COLOR_BG = {
@@ -820,6 +842,15 @@
 
     // ── ESTADO ─────────────────────────────────────────────────────
     let productoActual = null;
+
+    // Precio final grande; si hay descuento, el anterior tachado y la etiqueta con el porcentaje
+    function precioHTML(prod, v) {
+      const base = v?.precio || prod.precio || 0;
+      const final = precioFinal(base, prod.descuento);
+      if (final === base) return `<span class="currency">$UY</span> ${base.toLocaleString()}`;
+      const dto = Math.min(90, Math.max(0, parseInt(prod.descuento, 10) || 0));
+      return `<span class="currency">$UY</span> ${final.toLocaleString()}<s class="precio-antes">$${base.toLocaleString()}</s><span class="badge-descuento">-${dto}%</span>`;
+    }
     let variantActual = 0;
     let fotoIdx = 0;
     let stockCargado = false;
@@ -885,6 +916,7 @@
       db.ref('productos/' + productId).once('value', snap => {
         if (!snap.exists()) { window.location.href = 'index.html'; return; }
         productoActual = { id: snap.key, ...snap.val() };
+        actualizarPreciosCarrito([productoActual]);
         // Actualizar STOCK_MAP igual que el catálogo: v.stockId o prod.id + '-' + i como fallback
         (productoActual.variantes || []).forEach((v, i) => {
           STOCK_MAP[productoActual.nombre + '-' + v.nombre] = v.stockId || (productoActual.id + '-' + i);
@@ -943,7 +975,7 @@
           <h1 class="product-title">${prod.nombre}</h1>
           <p class="product-subtitle">${variantes.length} color${variantes.length>1?'es':''} · Talle único ajustable</p>
           <div class="product-price">
-            <span class="currency">$UY</span> ${(variantes[variantActual]?.precio||prod.precio||0).toLocaleString()}
+            ${precioHTML(prod, variantes[variantActual])}
           </div>
           <div class="color-section">
             <p class="color-label">Color — <span id="color-name">${variantes[variantActual]?.nombre||''}</span></p>
@@ -998,7 +1030,7 @@
           <a class="rel-card" href="producto.html?id=${p.id}&v=${i}">
             <img src="${foto}" alt="${p.nombre} ${v.nombre}" loading="lazy" />
             <b>${p.nombre}</b>
-            <span>${v.nombre} · $${(v.precio || p.precio || 0).toLocaleString()}</span>
+            <span>${v.nombre} · ${precioFinal(v.precio || p.precio, p.descuento) !== (v.precio || p.precio || 0) ? `<s class="precio-antes">$${(v.precio || p.precio || 0).toLocaleString()}</s> ` : ''}$${precioFinal(v.precio || p.precio, p.descuento).toLocaleString()}</span>
           </a>`).join('');
         document.getElementById('relacionados').style.display = '';
       });
@@ -1067,7 +1099,7 @@
 
       // Precio
       const pe = document.querySelector('.product-price');
-      if (pe) pe.innerHTML = `<span class="currency">$UY</span> ${(v.precio||productoActual.precio||0).toLocaleString()}`;
+      if (pe) pe.innerHTML = precioHTML(productoActual, v);
 
       // Dots y swatches activos
       document.querySelectorAll('.color-dot').forEach((d,i) => d.classList.toggle('active', i===idx));
@@ -1103,7 +1135,7 @@
       if (stockId !== undefined && (!stockCargado || getStock(stockId) <= 0)) return;
       const existing = cart.find(i => i.name === productoActual.nombre && i.variant === v.nombre);
       if (existing) { existing.qty++; } else {
-        cart.push({ name: productoActual.nombre, variant: v.nombre, price: v.precio || productoActual.precio || 0, qty: 1 });
+        cart.push({ name: productoActual.nombre, variant: v.nombre, price: precioFinal(v.precio || productoActual.precio, productoActual.descuento), qty: 1 });
       }
       saveCart();
       updateCartUI();

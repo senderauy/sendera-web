@@ -39,16 +39,19 @@ function texto(v) {
   return String(v ?? '').trim();
 }
 
-// Precio real de cada producto + variante, tal como está cargado en el panel
+// Precio real de cada producto + variante, tal como está cargado en el panel (con el descuento del producto)
 function indexarPrecios(productos) {
   const precios = new Map();
   for (const prod of Object.values(productos || {})) {
     if (!prod || typeof prod !== 'object') continue;
     const variantes = Array.isArray(prod.variantes) ? prod.variantes : Object.values(prod.variantes || {});
+    // Mismo cálculo que precioFinal() en cart.js: si difieren, la tienda muestra un precio y se cobra otro
+    const descuento = Math.min(90, Math.max(0, parseInt(prod.descuento, 10) || 0));
     for (const v of variantes) {
       if (!v || typeof v !== 'object') continue;
-      const precio = Number(v.precio ?? prod.precio);
-      if (!Number.isFinite(precio) || precio <= 0) continue;
+      const base = Number(v.precio ?? prod.precio);
+      if (!Number.isFinite(base) || base <= 0) continue;
+      const precio = Math.round(base * (100 - descuento) / 100);
       precios.set(`${texto(prod.nombre)}\u0000${texto(v.nombre)}`, precio);
     }
   }

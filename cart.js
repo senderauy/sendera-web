@@ -40,6 +40,25 @@ if (typeof db !== 'undefined') {
   });
 }
 
+// Precio con el descuento del producto. Mismo cálculo que api/_pedido.js, que es el que cobra
+function precioFinal(precio, descuento) {
+  const d = Math.min(90, Math.max(0, parseInt(descuento, 10) || 0));
+  return Math.round((Number(precio) || 0) * (100 - d) / 100);
+}
+
+// Si cambió un precio o un descuento desde que se agregó al carrito, lo pone al día
+function actualizarPreciosCarrito(productos) {
+  let cambio = false;
+  cart.forEach(item => {
+    const p = productos.find(p => p && p.nombre === item.name);
+    const v = p && Object.values(p.variantes || {}).find(v => v && v.nombre === item.variant);
+    if (!v) return;
+    const precio = precioFinal(v.precio || p.precio, p.descuento);
+    if (precio && precio !== item.price) { item.price = precio; cambio = true; }
+  });
+  if (cambio) { saveCart(); updateCartUI(); }
+}
+
 let cart = (function() {
   // Al volver de Mercado Pago con el pago aprobado (?pago=ok), la compra ya se hizo: carrito vacío
   try {

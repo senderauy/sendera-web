@@ -1418,7 +1418,7 @@ nav a:hover::after {
   position: absolute;
   top: 12px;
   right: 12px;
-  background-color: #c0392b;
+  background-color: var(--amber);
   color: white;
   font-size: 0.72rem;
   font-weight: 600;
@@ -2712,6 +2712,7 @@ nav a:hover::after {
 .vidriera-modelo { margin: 22px 0 4px; font-size: 1rem; font-weight: 600; opacity: 0.75; }
 .vidriera-precio { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em; }
 .vidriera-precio small { font-size: 0.9rem; font-weight: 600; margin-right: 4px; }
+.vidriera-precio .precio-antes { font-size: 1rem; font-weight: 500; color: inherit; opacity: 0.55; }
 .vidriera-btn {
   display: inline-block;
   background: var(--color-compra);

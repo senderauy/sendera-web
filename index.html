@@ -34,7 +34,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Sendera" />
   <meta name="theme-color" content="#1a1510" />
-  <link rel="stylesheet" href="style.css?v=51" />
+  <link rel="stylesheet" href="style.css?v=52" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
@@ -137,7 +137,7 @@
       <div class="vidriera-txt">
         <h2 class="vidriera-titulo">Elegí tu color y salí.</h2>
         <p class="vidriera-modelo" id="vid-modelo">&nbsp;</p>
-        <p class="vidriera-precio"><small>$UY</small><span id="vid-precio"></span></p>
+        <p class="vidriera-precio"><small>$UY</small><span id="vid-precio"></span> <s id="vid-precio-antes" class="precio-antes"></s></p>
         <div class="vidriera-colores" id="vid-colores" role="group" aria-label="Elegir color"></div>
         <div class="vidriera-acciones">
           <button type="button" class="vidriera-btn" id="vid-btn" onclick="vidrieraAgregar()">Agregar al carrito</button>
@@ -454,7 +454,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script src="cart.js?v=4"></script>
+  <script src="cart.js?v=5"></script>
   <script>
     let ultimosProductos = [];
     let fotosColecciones = {};
@@ -683,16 +683,22 @@
                     ? `<img src="${v.foto}" alt="${p.nombre} ${v.nombre}" />`
                     : `<img src="img/logo.png" alt="${p.nombre}" style="object-fit:contain;padding:20px;background:#f2ede6;" />`
                   );
+              const dto = Math.min(90, Math.max(0, parseInt(p.descuento, 10) || 0));
+              // .precio tiene que quedar solo con el precio final: cardChangeQty lo lee para el carrito
+              const precioHtml = dto
+                ? `<div class="precio-oferta-wrap"><span class="precio-antes">$${(v.precio || 0).toLocaleString()}</span><span class="precio">$${precioFinal(v.precio, dto).toLocaleString()}</span></div>`
+                : `<span class="precio">$${(v.precio || 0).toLocaleString()}</span>`;
               return `
               <div class="producto-card">
                 <a class="producto-card-link" href="producto.html?id=${p.id}&v=${i}">
                   <div class="producto-img-wrap">
                     ${imgHtml}
+                    ${dto ? `<span class="badge-oferta">-${dto}%</span>` : ''}
                   </div>
                   <div class="producto-info">
                     <h3>${p.nombre}</h3>
                     <p class="producto-colores">${v.nombre}</p>
-                    <span class="precio">$${(v.precio || 0).toLocaleString()}</span>
+                    ${precioHtml}
                   </div>
                 </a>
                 <div class="qty-control">
@@ -733,6 +739,7 @@
       initCardCarousels();
       renderVidriera(ultimosProductos);
       renderDestacados(ultimosProductos);
+      actualizarPreciosCarrito(ultimosProductos);
     });
 
     // ── VIDRIERA (portada) ────────────────────────────────────
@@ -831,7 +838,8 @@
       const poner = () => { img.src = g.foto; img.alt = g.p.nombre + ' ' + g.v.nombre; img.classList.remove('saliendo'); };
       if (sinAnimar) poner(); else { img.classList.add('saliendo'); setTimeout(poner, 180); }
       document.getElementById('vid-modelo').textContent = g.p.nombre + ' · ' + g.v.nombre;
-      document.getElementById('vid-precio').textContent = (g.v.precio || 0).toLocaleString();
+      document.getElementById('vid-precio').textContent = precioFinal(g.v.precio, g.p.descuento).toLocaleString();
+      document.getElementById('vid-precio-antes').textContent = precioFinal(g.v.precio, g.p.descuento) !== (g.v.precio || 0) ? '$' + (g.v.precio || 0).toLocaleString() : '';
       document.getElementById('vid-link').href = `producto.html?id=${g.p.id}&v=${g.i}`;
       const sinStock = getStock(g.stockId) === 0;
       const btn = document.getElementById('vid-btn');
@@ -848,7 +856,7 @@
     window.vidrieraAgregar = function() {
       const g = vidGorros[vidActual];
       if (!g) return;
-      const name = g.p.nombre, variant = g.v.nombre, price = g.v.precio || 0;
+      const name = g.p.nombre, variant = g.v.nombre, price = precioFinal(g.v.precio, g.p.descuento);
       let item = cart.find(i => i.name === name && i.variant === variant);
       if ((item ? item.qty : 0) >= getStock(g.stockId)) {
         showCartError('No hay más unidades disponibles de este producto.');
@@ -940,7 +948,7 @@
         <a class="destacado-card" href="producto.html?id=${p.id}&v=${i}">
           <span class="destacado-img"><img src="${foto}" alt="${p.nombre} ${v.nombre}" loading="lazy" /><span class="destacado-tag">${etiqueta}</span></span>
           <b>${p.nombre}</b>
-          <span>${v.nombre} · $${(v.precio || 0).toLocaleString()}</span>
+          <span>${v.nombre} · ${precioFinal(v.precio, p.descuento) !== (v.precio || 0) ? `<s class="precio-antes">$${(v.precio || 0).toLocaleString()}</s> ` : ''}$${precioFinal(v.precio, p.descuento).toLocaleString()}</span>
         </a>`).join('');
 
       document.getElementById('track-nuevo').innerHTML = html(nuevos, 'Nuevo');

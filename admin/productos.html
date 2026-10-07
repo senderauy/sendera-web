@@ -334,6 +334,11 @@
       </div>
 
       <div class="form-group">
+        <label>Descuento % <span style="font-weight:400;color:#b0a598">(para todos los colores · vacío = sin descuento)</span></label>
+        <input type="number" id="prod-descuento" placeholder="Ej: 20" min="1" max="90" style="width:120px" />
+      </div>
+
+      <div class="form-group">
         <label>Destacar en el inicio</label>
         <label style="display:flex;align-items:center;gap:8px;font-weight:500;text-transform:none;letter-spacing:0;margin:6px 0">
           <input type="checkbox" id="prod-nuevo" style="width:18px;height:18px" /> Mostrar en "Lo nuevo"
@@ -441,7 +446,12 @@
       const precios = vars.map(v => v.precio).filter(Boolean);
       const minP = precios.length ? Math.min(...precios) : 0;
       const maxP = precios.length ? Math.max(...precios) : 0;
-      const precioLabel = minP === maxP ? `$${minP.toLocaleString()}` : `$${minP.toLocaleString()} – $${maxP.toLocaleString()}`;
+      const rango = (a, b) => a === b ? `$${a.toLocaleString()}` : `$${a.toLocaleString()} – $${b.toLocaleString()}`;
+      const dto = Math.min(90, Math.max(0, parseInt(p.descuento, 10) || 0));
+      const conDto = n => Math.round(n * (100 - dto) / 100);
+      const precioLabel = dto
+        ? `<s style="color:#b0a598;font-weight:500">${rango(minP, maxP)}</s> ${rango(conDto(minP), conDto(maxP))}`
+        : rango(minP, maxP);
       const fotoUrl = vars.find(v => v.foto)?.foto || '';
 
       return `
@@ -450,7 +460,7 @@
             ${fotoUrl ? `<img src="${fotoUrl}" alt="${p.nombre}" onerror="this.style.display='none'" />` : '🏔️'}
           </div>
           <div class="prod-body">
-            <div class="prod-cat">${p.categoria || '—'}${p.nuevo ? ' · ✨ Nuevo' : ''}${p.masVendido ? ' · 🔥 Más vendido' : ''}</div>
+            <div class="prod-cat">${p.categoria || '—'}${p.nuevo ? ' · ✨ Nuevo' : ''}${p.masVendido ? ' · 🔥 Más vendido' : ''}${dto ? ` · 🏷️ ${dto}% OFF` : ''}</div>
             <div class="prod-nombre">${p.nombre}</div>
             <div class="prod-variantes">
               ${vars.map(v => `<span class="prod-variante-chip">${v.nombre}</span>`).join('')}
@@ -525,6 +535,7 @@
     document.getElementById('prod-subgrupo').value = prod?.subgrupo || '';
     document.getElementById('prod-descripcion').value = prod?.descripcion || '';
     document.getElementById('prod-orden').value = prod?.orden || '';
+    document.getElementById('prod-descuento').value = prod?.descuento || '';
     document.getElementById('prod-nuevo').checked = !!prod?.nuevo;
     document.getElementById('prod-mas-vendido').checked = !!prod?.masVendido;
 
@@ -688,6 +699,10 @@
 
     if (!nombre || !categoria) { showToast('⚠️ Completá nombre y categoría', true); return; }
 
+    const descuentoVal = document.getElementById('prod-descuento').value.trim();
+    const descuento = descuentoVal ? parseInt(descuentoVal, 10) : 0;
+    if (descuentoVal && !(descuento >= 1 && descuento <= 90)) { showToast('⚠️ El descuento tiene que ser entre 1 y 90%', true); return; }
+
     // Recolectar variantes
     const varItems = document.querySelectorAll('.variante-item');
     const variantes = [];
@@ -719,6 +734,7 @@
 
     const prod = { nombre, categoria, subgrupo, descripcion, variantes, actualizado: new Date().toISOString() };
     if (orden !== null) prod.orden = orden;
+    if (descuento) prod.descuento = descuento;
     if (document.getElementById('prod-nuevo').checked) prod.nuevo = true;
     if (document.getElementById('prod-mas-vendido').checked) prod.masVendido = true;
     if (avatarData) prod.fotoAvatar = avatarData;
