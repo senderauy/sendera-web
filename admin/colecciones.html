@@ -46,16 +46,12 @@
     .portada .prestada { position: absolute; left: 12px; top: 12px; padding: 3px 9px; border-radius: 999px; background: rgba(255, 253, 248, 0.92); color: var(--sa-tinta); font-size: 0.7rem; font-weight: 600; }
     .portada .guardando { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(24, 20, 14, 0.55); font-size: 0.85rem; font-weight: 600; }
 
-    .datos { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .datos small { color: var(--sa-tinta-3); font-size: 0.78rem; }
     .acciones { display: flex; flex-wrap: wrap; gap: 6px; }
     .boton-chico { padding: 7px 11px; font-size: 0.78rem; }
     .archivo { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
     .enlace { display: flex; gap: 6px; }
     .enlace .sa-campo { flex: 1; min-width: 0; padding: 8px 10px; font-size: 0.82rem; }
-    .segmentos { display: inline-flex; padding: 3px; border-radius: 10px; background: #ece2d2; }
-    .segmentos button { padding: 5px 10px; border: 0; border-radius: 8px; background: none; color: var(--sa-tinta-2); font-size: 0.76rem; font-weight: 600; cursor: pointer; }
-    .segmentos button[aria-pressed="true"] { background: var(--sa-papel); color: var(--sa-tinta); box-shadow: 0 1px 2px rgba(30, 26, 18, 0.08); }
 
     @media (max-width: 900px) {
       .nueva { width: 100%; }
@@ -63,9 +59,6 @@
       .colecciones { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
       .coleccion { min-width: 0; }
       .portada .nombre { font-size: 1.15rem; left: 12px; right: 12px; bottom: 12px; }
-      .datos { flex-direction: column; align-items: stretch; gap: 6px; }
-      .segmentos { display: flex; }
-      .segmentos button { flex: 1; padding: 5px 4px; }
       .acciones .sa-boton-sec { flex: 1 1 auto; }
     }
   </style>
@@ -119,7 +112,6 @@
     const foto = propia || fotoPrestada(cat);
     const [x, y] = posicion(cat);
     const cuantos = estado.productos.filter(p => p.categoria === cat).length;
-    const orientacion = datos.orientacion === 'horizontal' ? 'horizontal' : 'vertical';
     return `
       <article class="coleccion" data-cat="${esc(cat)}">
         ${propia
@@ -138,10 +130,6 @@
              </div>`}
         <div class="datos">
           <small>${cuantos === 0 ? 'Sin productos' : cuantos === 1 ? '1 producto' : `${cuantos} productos`}</small>
-          <span class="segmentos" role="group" aria-label="Orientación">
-            <button type="button" data-orientacion="vertical" aria-pressed="${orientacion === 'vertical'}">Vertical</button>
-            <button type="button" data-orientacion="horizontal" aria-pressed="${orientacion === 'horizontal'}">Horizontal</button>
-          </span>
         </div>
         <div class="acciones">
           <label class="sa-boton-sec boton-chico"><i data-lucide="upload"></i>${propia ? 'Cambiar foto' : 'Subir foto'}<input class="archivo" type="file" accept="image/*" data-subir /></label>
@@ -244,13 +232,6 @@
       } catch (err) {
         panel.aviso('No se pudo guardar el encuadre.', true);
       }
-      return;
-    }
-
-    const orientacion = e.target.closest('[data-orientacion]');
-    if (orientacion) {
-      try { await db.ref(ruta(cat, 'orientacion')).set(orientacion.dataset.orientacion); }
-      catch (err) { panel.aviso('No se pudo guardar la orientación.', true); }
       return;
     }
 
