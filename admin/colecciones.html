@@ -7,445 +7,315 @@
   <link rel="icon" type="image/png" href="../img/logo.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Sendera Admin" />
-  <meta name="theme-color" content="#f2ede6" />
+  <meta name="theme-color" content="#182417" />
   <title>Sendera - Colecciones</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="../firebase-config.js"></script>
-  <script src="admin-auth.js"></script>
+  <script src="admin-auth.js?v=2"></script>
+  <link rel="stylesheet" href="admin.css?v=1" />
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="admin-ui.js?v=1"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Montserrat', sans-serif; background: #f2ede6; color: #3a3026; min-height: 100vh; }
+    [hidden] { display: none !important; }
+    body { min-height: 100vh; font-size: 14px; line-height: 1.5; }
+    button, input { font-family: inherit; }
 
-    .navbar {
-      background: #fff; border-bottom: 2px solid #e8dfd2; padding: 0 24px;
-      display: flex; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; z-index: 10; height: 60px;
-      box-shadow: 0 2px 8px rgba(80,60,30,0.06);
+    .nueva { display: flex; gap: 10px; }
+    .nueva .sa-campo { width: 260px; }
+
+    .colecciones { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 20px; align-items: start; }
+    .colecciones > .sa-vacio { grid-column: 1 / -1; background: var(--sa-papel); border: 1px solid var(--sa-linea); border-radius: 16px; }
+    .coleccion { display: flex; flex-direction: column; gap: 12px; }
+
+    /* Vista previa igual a la tarjeta de la tienda */
+    .portada {
+      position: relative; display: block; width: 100%; aspect-ratio: 7 / 13; padding: 0; border: 0; border-radius: 16px; overflow: hidden;
+      background: #2a2218; cursor: crosshair; color: #fff;
     }
-    .navbar .logo { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: #3a3026; letter-spacing: 0.12em; display: flex; align-items: center; gap: 8px; }
-    .nav-links { display: flex; align-items: center; gap: 4px; }
-    .nav-links a { color: #7a6e62; text-decoration: none; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 500; }
-    .nav-links a:hover { background: #f2ede6; color: #3a3026; }
-    .nav-links a.active { background: #507a3a; color: #fff; }
-    .btn-logout { font-size: 0.72rem; color: #9a8f82; cursor: pointer; text-transform: uppercase; letter-spacing: 0.08em; background: none; border: 1px solid #ddd5c8; border-radius: 8px; padding: 7px 14px; margin-left: 8px; }
-    .btn-logout:hover { background: #f2ede6; color: #3a3026; }
-    .btn-logout-top { display: none; background: none; border: none; cursor: pointer; font-size: 1rem; color: #9a8f82; padding: 2px 6px; margin-left: 6px; }
+    .portada.sin-foto { cursor: default; }
+    .portada img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+    .portada .sombra { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.25) 32%, rgba(0, 0, 0, 0) 55%); }
+    .portada .nombre { position: absolute; left: 18px; right: 18px; bottom: 18px; text-align: left; font: 800 1.45rem/0.95 var(--sa-sans); letter-spacing: -0.03em; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35); overflow-wrap: anywhere; }
+    .portada .punto { position: absolute; width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid #fff; background: rgba(200, 134, 26, 0.9); transform: translate(-50%, -50%); box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.25); pointer-events: none; }
+    .portada .pista { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); padding: 4px 10px; border-radius: 999px; background: rgba(24, 20, 14, 0.62); font-size: 0.72rem; font-weight: 600; white-space: nowrap; opacity: 0; transition: opacity 0.15s; pointer-events: none; }
+    .portada:hover .pista, .portada:focus-visible .pista { opacity: 1; }
+    .portada .prestada { position: absolute; left: 12px; top: 12px; padding: 3px 9px; border-radius: 999px; background: rgba(255, 253, 248, 0.92); color: var(--sa-tinta); font-size: 0.7rem; font-weight: 600; }
+    .portada .guardando { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(24, 20, 14, 0.55); font-size: 0.85rem; font-weight: 600; }
 
-    .mobile-nav { display: none; background: #fff; border-top: 2px solid #e8dfd2; position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; padding: 8px 0 12px; }
-    .mobile-nav-links { display: flex; justify-content: space-around; }
-    .mobile-nav-links a { display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: #9a8f82; font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 12px; border-radius: 10px; }
-    .mobile-nav-links a.active { color: #507a3a; }
-    .mobile-nav-links .icon { font-size: 1.2rem; }
+    .datos { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .datos small { color: var(--sa-tinta-3); font-size: 0.78rem; }
+    .acciones { display: flex; flex-wrap: wrap; gap: 6px; }
+    .boton-chico { padding: 7px 11px; font-size: 0.78rem; }
+    .archivo { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+    .enlace { display: flex; gap: 6px; }
+    .enlace .sa-campo { flex: 1; min-width: 0; padding: 8px 10px; font-size: 0.82rem; }
+    .segmentos { display: inline-flex; padding: 3px; border-radius: 10px; background: #ece2d2; }
+    .segmentos button { padding: 5px 10px; border: 0; border-radius: 8px; background: none; color: var(--sa-tinta-2); font-size: 0.76rem; font-weight: 600; cursor: pointer; }
+    .segmentos button[aria-pressed="true"] { background: var(--sa-papel); color: var(--sa-tinta); box-shadow: 0 1px 2px rgba(30, 26, 18, 0.08); }
 
-    .container { max-width: 960px; margin: 0 auto; padding: 28px 20px 100px; }
-    .page-header { margin-bottom: 8px; }
-    .page-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: #2a2218; }
-    .page-subtitle { font-size: 0.78rem; color: #9a8f82; margin-bottom: 28px; }
-
-    .cats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 18px;
-    }
-
-    .cat-card {
-      background: #fff;
-      border: 1.5px solid #e8dfd2;
-      border-radius: 14px;
-      overflow: hidden;
-    }
-
-    .cat-card-foto {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      display: block;
-      background: #f0ebe3;
-    }
-
-    .cat-card-placeholder {
-      width: 100%;
-      height: 180px;
-      background: #f0ebe3;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-      color: #c8b89a;
-    }
-
-    .cat-card-body { padding: 14px 16px; }
-
-    .cat-nombre {
-      font-size: 0.78rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #2a2218;
-      margin-bottom: 12px;
-    }
-
-    /* ENCUADRE */
-    .cat-img-wrap {
-      position: relative;
-      width: 100%;
-      height: 180px;
-      overflow: hidden;
-      cursor: crosshair;
-    }
-    .cat-img-wrap img {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      display: block;
-      pointer-events: none;
-    }
-    .focal-hint {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0,0,0,0);
-      color: transparent;
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      transition: background 0.2s, color 0.2s;
-    }
-    .cat-img-wrap:hover .focal-hint {
-      background: rgba(0,0,0,0.35);
-      color: #fff;
-    }
-    .focal-dot {
-      position: absolute;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      border: 2.5px solid #fff;
-      background: rgba(200,134,26,0.85);
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      box-shadow: 0 0 0 3px rgba(0,0,0,0.25);
-    }
-
-    .cat-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
-
-    .btn-file-cat {
-      display: inline-block;
-      padding: 8px 14px;
-      background: #507a3a;
-      color: #fff;
-      border-radius: 8px;
-      font-size: 0.72rem;
-      font-family: inherit;
-      cursor: pointer;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      border: none;
-      white-space: nowrap;
-    }
-    .btn-file-cat:hover { background: #3d5e2c; }
-
-    input[type="file"].hidden-file { display: none; }
-
-    .btn-url-cat {
-      padding: 8px 14px;
-      background: #f5f0ea;
-      border: 1.5px solid #e8dfd2;
-      color: #3a3026;
-      border-radius: 8px;
-      font-size: 0.72rem;
-      font-family: inherit;
-      cursor: pointer;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-    .btn-url-cat:hover { background: #ede6db; }
-
-    .btn-borrar-cat {
-      padding: 8px 14px;
-      background: none;
-      border: 1.5px solid #fca5a5;
-      color: #b91c1c;
-      border-radius: 8px;
-      font-size: 0.72rem;
-      font-family: inherit;
-      cursor: pointer;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-    .btn-borrar-cat:hover { background: #fee2e2; }
-
-    .url-input-wrap { display: none; margin-top: 10px; gap: 6px; }
-    .url-input-wrap.visible { display: flex; }
-    .url-input-wrap input {
-      flex: 1; padding: 8px 12px; border: 1.5px solid #e8dfd2; border-radius: 8px;
-      font-family: inherit; font-size: 0.82rem; background: #faf7f3; color: #3a3026;
-    }
-    .url-input-wrap input:focus { outline: none; border-color: #507a3a; }
-    .url-input-wrap button {
-      padding: 8px 14px; background: #507a3a; color: #fff; border: none; border-radius: 8px;
-      font-family: inherit; font-size: 0.72rem; cursor: pointer; font-weight: 600;
-    }
-
-    .saving-indicator { font-size: 0.7rem; color: #507a3a; margin-top: 6px; display: none; }
-
-    /* FORMULARIO NUEVA COLECCIÓN */
-    .form-nueva {
-      background: #fff;
-      border: 1.5px solid #e8dfd2;
-      border-radius: 14px;
-      padding: 20px;
-      margin-bottom: 28px;
-    }
-    .form-nueva h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; color: #2a2218; margin-bottom: 14px; }
-    .form-nueva-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-    .form-nueva-row input[type="text"] {
-      flex: 1; min-width: 160px; padding: 10px 14px;
-      border: 1.5px solid #e8dfd2; border-radius: 8px;
-      font-family: inherit; font-size: 0.85rem; color: #3a3026; background: #faf7f3;
-    }
-    .form-nueva-row input:focus { outline: none; border-color: #507a3a; }
-    .btn-nueva { padding: 10px 18px; background: #507a3a; color: #fff; border: none; border-radius: 8px; font-family: inherit; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
-    .btn-nueva:hover { background: #3d5e2c; }
-    .badge-nueva { display: inline-block; font-size: 0.6rem; background: #e8f5e0; color: #3d5e2c; border-radius: 4px; padding: 2px 7px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
-
-    @media (max-width: 640px) {
-      .nav-links { display: none; }
-      .btn-logout-top { display: inline-block; }
-      .mobile-nav { display: block; }
-      .cats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 900px) {
+      .nueva { width: 100%; }
+      .nueva .sa-campo { flex: 1; width: auto; min-width: 0; }
+      .colecciones { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+      .coleccion { min-width: 0; }
+      .portada .nombre { font-size: 1.15rem; left: 12px; right: 12px; bottom: 12px; }
+      .datos { flex-direction: column; align-items: stretch; gap: 6px; }
+      .segmentos { display: flex; }
+      .segmentos button { flex: 1; padding: 5px 4px; }
+      .acciones .sa-boton-sec { flex: 1 1 auto; }
     }
   </style>
 </head>
 <body>
 
-<div class="navbar">
-  <div class="logo">SENDERA <button class="btn-logout-top" onclick="logout()" title="Salir">↩</button></div>
-  <div class="nav-links">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="pedidos.html">Pedidos</a>
-    <a href="productos.html">Productos</a>
-    <a href="stock.html">Stock</a>
-    <a href="colecciones.html" class="active">Colecciones</a>
-    <a href="lookbook.html">Lookbook</a>
-    <a href="finanzas.html">Finanzas</a>
-    <a href="https://analytics.google.com" target="_blank">Analytics</a>
-    <button class="btn-logout" onclick="logout()">↩ Salir</button>
-  </div>
-</div>
-
-<div class="container">
-  <div class="page-header">
-    <h1>Colecciones 🖼️</h1>
-  </div>
-  <p class="page-subtitle">Gestioná la foto de portada de cada categoría. Aparece en la sección Colecciones de la tienda.</p>
-
-  <div class="form-nueva">
-    <h2>➕ Nueva colección</h2>
-    <div class="form-nueva-row">
-      <input type="text" id="nueva-nombre" placeholder="Nombre de la colección (ej: Mochilas)" />
-      <button class="btn-nueva" onclick="crearColeccion()">Crear colección</button>
+<main class="sa-pagina">
+  <header class="sa-encabezado">
+    <div>
+      <h1>Colecciones</h1>
+      <p>La portada de cada categoría, tal como se ve en la tienda. Tocá la foto para elegir qué parte se ve.</p>
     </div>
-  </div>
+    <form class="nueva" id="form-nueva" novalidate>
+      <input class="sa-campo" id="nueva-nombre" maxlength="60" placeholder="Nombre de la colección" aria-label="Nombre de la nueva colección" />
+      <button type="submit" class="sa-boton"><i data-lucide="plus"></i>Crear</button>
+    </form>
+  </header>
 
-  <div id="cats-grid" class="cats-grid">
-    <div style="color:#9a8f82;font-size:0.82rem;">Cargando categorías...</div>
-  </div>
-</div>
-
-<div class="mobile-nav">
-  <div class="mobile-nav-links">
-    <a href="dashboard.html"><span class="icon">📊</span>Dashboard</a>
-    <a href="pedidos.html"><span class="icon">📦</span>Pedidos</a>
-    <a href="productos.html"><span class="icon">🛍️</span>Productos</a>
-    <a href="stock.html"><span class="icon">🏷️</span>Stock</a>
-    <a href="colecciones.html" class="active"><span class="icon">🖼️</span>Colec.</a>
-  </div>
-</div>
+  <div class="colecciones" id="colecciones"><div class="sa-vacio">Cargando colecciones…</div></div>
+</main>
 
 <script>
+  const $ = id => document.getElementById(id);
 
+  // Mismo orden que usa la tienda; las que no están en la lista van al final, por nombre
   const ORDEN_CATS = ['Gorros Visera', 'Gorros Invierno', 'Buff', 'Riñoneras', 'Accesorios'];
-  let fotosActuales = {};
-  let posicionesActuales = {};
-  let orientacionesActuales = {};
-  let catsConProductos = new Set();
-  let todasLasCats = [];
+  const estado = { colecciones: {}, productos: [], cargado: { colecciones: false, productos: false } };
+  const guardando = new Set();
 
   function ordenarCats(cats) {
     return [...cats].sort((a, b) => {
       const ia = ORDEN_CATS.indexOf(a), ib = ORDEN_CATS.indexOf(b);
       if (ia === -1 && ib === -1) return a.localeCompare(b);
-      if (ia === -1) return 1; if (ib === -1) return -1;
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
       return ia - ib;
     });
   }
 
-  function renderGrid(cats) {
-    const grid = document.getElementById('cats-grid');
-    if (!cats.length) { grid.innerHTML = '<div style="color:#9a8f82;font-size:0.82rem;">No hay categorías todavía.</div>'; return; }
-    grid.innerHTML = cats.map(cat => {
-      const foto = fotosActuales[cat];
-      const pos = posicionesActuales[cat] || '50% 50%';
-      const [px, py] = pos.replace(/%/g,'').split(' ');
-      const catId = cat.replace(/\s+/g, '_');
-      const sinProd = !catsConProductos.has(cat);
-      return `
-        <div class="cat-card" id="card-${catId}">
-          ${foto
-            ? `<div class="cat-img-wrap" onclick="setFocalPoint(event,this,'${cat}','${catId}')">
-                 <img id="img-${catId}" src="${foto}" alt="${cat}" style="object-position:${pos}" />
-                 <div class="focal-dot" id="dot-${catId}" style="left:${px}%;top:${py}%"></div>
-                 <div class="focal-hint">Clic para ajustar encuadre</div>
-               </div>`
-            : `<div class="cat-card-placeholder" id="img-${catId}">🏔️</div>`
-          }
-          <div class="cat-card-body">
-            <div class="cat-nombre">
-              ${sinProd ? '<span class="badge-nueva">Sin productos</span><br>' : ''}
-              ${cat}
-            </div>
-            <div class="cat-acciones">
-              <label class="btn-file-cat" for="file-${catId}">📷 Subir foto</label>
-              <input type="file" class="hidden-file" id="file-${catId}" accept="image/*"
-                     onchange="onFileChange(this, '${cat}')" />
-              <button class="btn-url-cat" onclick="toggleUrl('${catId}')">🔗 URL</button>
-              ${foto ? `<button class="btn-borrar-cat" onclick="borrarFoto('${cat}','${catId}')">✕ Quitar</button>` : ''}
-              ${sinProd ? `<button class="btn-borrar-cat" onclick="eliminarColeccion('${cat}')">🗑 Eliminar</button>` : ''}
-            </div>
-            <div style="display:flex;gap:6px;margin-top:10px;">
-              <button onclick="setOrientacion('${cat}','vertical')"
-                style="flex:1;padding:7px 4px;border-radius:7px;font-size:0.7rem;font-weight:600;cursor:pointer;border:1.5px solid ${(orientacionesActuales[cat]||'vertical')==='vertical'?'#507a3a':'#e8dfd2'};background:${(orientacionesActuales[cat]||'vertical')==='vertical'?'#507a3a':'#fff'};color:${(orientacionesActuales[cat]||'vertical')==='vertical'?'#fff':'#3a3026'};">
-                ↕ Vertical
-              </button>
-              <button onclick="setOrientacion('${cat}','horizontal')"
-                style="flex:1;padding:7px 4px;border-radius:7px;font-size:0.7rem;font-weight:600;cursor:pointer;border:1.5px solid ${orientacionesActuales[cat]==='horizontal'?'#507a3a':'#e8dfd2'};background:${orientacionesActuales[cat]==='horizontal'?'#507a3a':'#fff'};color:${orientacionesActuales[cat]==='horizontal'?'#fff':'#3a3026'};">
-                ↔ Horizontal
-              </button>
-            </div>
-            <div class="url-input-wrap" id="url-wrap-${catId}">
-              <input type="url" id="url-input-${catId}" placeholder="https://..." />
-              <button onclick="guardarUrl('${cat}','${catId}')">Guardar</button>
-            </div>
-            <div class="saving-indicator" id="saving-${catId}">Guardando...</div>
-          </div>
+  const variantesDe = p => (Array.isArray(p.variantes) ? p.variantes : Object.values(p.variantes || {})).filter(v => v && typeof v === 'object');
+  const posicion = cat => {
+    const m = String(estado.colecciones[cat]?.posicion || '').match(/^(\d{1,3})% (\d{1,3})%$/);
+    return m ? [Math.min(100, +m[1]), Math.min(100, +m[2])] : [50, 50];
+  };
+  // Si la colección no tiene portada, la tienda usa la foto del primer producto de esa categoría
+  const fotoPrestada = cat => estado.productos.filter(p => p.categoria === cat).flatMap(p => variantesDe(p).map(v => fotoVariante(v))).find(Boolean) || '';
+
+  function tarjeta(cat) {
+    const datos = estado.colecciones[cat] || {};
+    const propia = typeof datos.foto === 'string' && datos.foto ? datos.foto : '';
+    const foto = propia || fotoPrestada(cat);
+    const [x, y] = posicion(cat);
+    const cuantos = estado.productos.filter(p => p.categoria === cat).length;
+    const orientacion = datos.orientacion === 'horizontal' ? 'horizontal' : 'vertical';
+    return `
+      <article class="coleccion" data-cat="${esc(cat)}">
+        ${propia
+          ? `<button type="button" class="portada" data-encuadre aria-label="Elegir qué parte de la foto de ${esc(cat)} se ve">
+               <img src="${esc(fotoLiviana(propia))}" alt="" style="object-position:${x}% ${y}%" />
+               <span class="sombra"></span><span class="nombre">${esc(cat)}</span>
+               <span class="punto" style="left:${x}%;top:${y}%"></span>
+               <span class="pista">Tocá para centrar</span>
+               ${guardando.has(cat) ? '<span class="guardando">Guardando…</span>' : ''}
+             </button>`
+          : `<div class="portada sin-foto">
+               ${foto ? `<img src="${esc(fotoLiviana(foto))}" alt="" />` : ''}
+               <span class="sombra"></span><span class="nombre">${esc(cat)}</span>
+               ${foto ? '<span class="prestada">Usa la foto de un producto</span>' : ''}
+               ${guardando.has(cat) ? '<span class="guardando">Guardando…</span>' : ''}
+             </div>`}
+        <div class="datos">
+          <small>${cuantos === 0 ? 'Sin productos' : cuantos === 1 ? '1 producto' : `${cuantos} productos`}</small>
+          <span class="segmentos" role="group" aria-label="Orientación">
+            <button type="button" data-orientacion="vertical" aria-pressed="${orientacion === 'vertical'}">Vertical</button>
+            <button type="button" data-orientacion="horizontal" aria-pressed="${orientacion === 'horizontal'}">Horizontal</button>
+          </span>
         </div>
-      `;
-    }).join('');
+        <div class="acciones">
+          <label class="sa-boton-sec boton-chico"><i data-lucide="upload"></i>${propia ? 'Cambiar foto' : 'Subir foto'}<input class="archivo" type="file" accept="image/*" data-subir /></label>
+          <button type="button" class="sa-boton-sec boton-chico" data-mostrar-enlace><i data-lucide="link"></i>Enlace</button>
+          ${propia ? '<button type="button" class="sa-boton-sec boton-chico" data-quitar-foto>Quitar foto</button>' : ''}
+          ${cuantos === 0 ? `<button type="button" class="sa-icono-btn" data-eliminar aria-label="Eliminar la colección ${esc(cat)}"><i data-lucide="trash-2"></i></button>` : ''}
+        </div>
+        <div class="enlace" data-enlace hidden>
+          <input class="sa-campo" type="url" placeholder="https://…" aria-label="Enlace de la foto de ${esc(cat)}" />
+          <button type="button" class="sa-boton boton-chico" data-guardar-enlace>Guardar</button>
+        </div>
+      </article>`;
   }
 
-  function crearColeccion() {
-    const nombre = document.getElementById('nueva-nombre').value.trim();
-    if (!nombre) { alert('Ingresá un nombre para la colección.'); return; }
-    if (todasLasCats.includes(nombre)) { alert('Esa colección ya existe.'); return; }
-    db.ref('colecciones/' + nombre).set({ creada: new Date().toISOString() }).then(() => {
-      document.getElementById('nueva-nombre').value = '';
-    });
+  function dibujar() {
+    if (!estado.cargado.colecciones || !estado.cargado.productos) return;
+    const cats = ordenarCats(new Set([...estado.productos.map(p => p.categoria).filter(Boolean), ...Object.keys(estado.colecciones)]));
+    $('colecciones').innerHTML = cats.length
+      ? cats.map(tarjeta).join('')
+      : '<div class="sa-vacio">Todavía no hay colecciones. Creá la primera con el nombre de arriba.</div>';
+    panel.iconos();
   }
 
-  function eliminarColeccion(cat) {
-    if (!confirm('¿Eliminar la colección "' + cat + '"? Esto borra la foto y la colección.')) return;
-    db.ref('colecciones/' + cat).remove();
+  // ── Guardar ────────────────────────────────────
+  const ruta = (cat, campo) => 'colecciones/' + cat + (campo ? '/' + campo : '');
+
+  async function guardarFoto(cat, foto) {
+    guardando.add(cat);
+    dibujar();
+    try {
+      await db.ref(ruta(cat, 'foto')).set(foto);
+      panel.aviso(`Portada de ${cat} actualizada`);
+    } catch (e) {
+      panel.aviso('No se pudo guardar la foto. Probá de nuevo.', true);
+    } finally {
+      guardando.delete(cat);
+      dibujar();
+    }
   }
 
-  function toggleUrl(catId) {
-    const wrap = document.getElementById('url-wrap-' + catId);
-    wrap.classList.toggle('visible');
-    if (wrap.classList.contains('visible')) document.getElementById('url-input-' + catId).focus();
-  }
-
-  function mostrarGuardando(catId, show) {
-    const el = document.getElementById('saving-' + catId);
-    if (el) el.style.display = show ? 'block' : 'none';
-  }
-
-  function onFileChange(input, cat) {
-    const file = input.files[0];
-    if (!file) return;
-    const catId = cat.replace(/\s+/g, '_');
-    mostrarGuardando(catId, true);
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const img = new Image();
-      img.onload = function() {
-        const canvas = document.createElement('canvas');
-        const MAX = 1200;
-        let w = img.width, h = img.height;
-        if (w > MAX || h > MAX) {
-          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-          else { w = Math.round(w * MAX / h); h = MAX; }
-        }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        guardarFoto(cat, catId, canvas.toDataURL('image/jpeg', 0.82));
+  function achicarFoto(archivo) {
+    return new Promise((resolver, rechazar) => {
+      const lector = new FileReader();
+      lector.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX = 1200;
+          let w = img.width, h = img.height;
+          if (w > MAX || h > MAX) {
+            if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+            else { w = Math.round(w * MAX / h); h = MAX; }
+          }
+          const lienzo = document.createElement('canvas');
+          lienzo.width = w; lienzo.height = h;
+          lienzo.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolver(lienzo.toDataURL('image/jpeg', 0.82));
+        };
+        img.onerror = () => rechazar(new Error('foto'));
+        img.src = e.target.result;
       };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function guardarUrl(cat, catId) {
-    const url = document.getElementById('url-input-' + catId).value.trim();
-    if (!url) return;
-    mostrarGuardando(catId, true);
-    guardarFoto(cat, catId, url);
-  }
-
-  function guardarFoto(cat, catId, data) {
-    db.ref('colecciones/' + cat + '/foto').set(data).then(() => mostrarGuardando(catId, false));
-  }
-
-  function borrarFoto(cat, catId) {
-    if (!confirm('¿Quitar la foto de portada de ' + cat + '?')) return;
-    db.ref('colecciones/' + cat + '/foto').remove();
-  }
-
-  function setOrientacion(cat, valor) {
-    db.ref('colecciones/' + cat + '/orientacion').set(valor);
-  }
-
-  function setFocalPoint(event, wrap, cat, catId) {
-    const rect = wrap.getBoundingClientRect();
-    const x = Math.round((event.clientX - rect.left) / rect.width * 100);
-    const y = Math.round((event.clientY - rect.top) / rect.height * 100);
-    const pos = x + '% ' + y + '%';
-    // Actualizar visualmente al instante
-    const img = wrap.querySelector('img');
-    const dot = document.getElementById('dot-' + catId);
-    if (img) img.style.objectPosition = pos;
-    if (dot) { dot.style.left = x + '%'; dot.style.top = y + '%'; }
-    db.ref('colecciones/' + cat + '/posicion').set(pos);
-  }
-
-  // Cargar todo y escuchar cambios en tiempo real
-  db.ref('productos').once('value').then(prodSnap => {
-    prodSnap.forEach(c => { const cat = c.val().categoria; if (cat) catsConProductos.add(cat); });
-
-    db.ref('colecciones').on('value', snap => {
-      const colVal = snap.val() || {};
-      fotosActuales = {};
-      posicionesActuales = {};
-      orientacionesActuales = {};
-      Object.entries(colVal).forEach(([cat, data]) => {
-        if (data && data.foto) fotosActuales[cat] = data.foto;
-        if (data && data.posicion) posicionesActuales[cat] = data.posicion;
-        if (data && data.orientacion) orientacionesActuales[cat] = data.orientacion;
-      });
-
-      // Unión: categorías de productos + categorías creadas en Firebase
-      const catsFirebase = Object.keys(colVal);
-      const union = new Set([...catsConProductos, ...catsFirebase]);
-      todasLasCats = ordenarCats(union);
-      renderGrid(todasLasCats);
+      lector.onerror = () => rechazar(new Error('foto'));
+      lector.readAsDataURL(archivo);
     });
+  }
+
+  // ── Eventos ────────────────────────────────────
+  $('form-nueva').addEventListener('submit', async e => {
+    e.preventDefault();
+    const nombre = $('nueva-nombre').value.trim().replace(/\s+/g, ' ');
+    if (!nombre) { panel.aviso('Escribí el nombre de la colección.', true); return $('nueva-nombre').focus(); }
+    // La base de datos no acepta estos caracteres en los nombres
+    if (/[.#$\[\]\/]/.test(nombre)) { panel.aviso('El nombre no puede tener . # $ [ ] ni /', true); return $('nueva-nombre').focus(); }
+    const existe = [...estado.productos.map(p => p.categoria), ...Object.keys(estado.colecciones)].some(c => String(c || '').toLowerCase() === nombre.toLowerCase());
+    if (existe) { panel.aviso('Esa colección ya existe.', true); return $('nueva-nombre').focus(); }
+    try {
+      await db.ref(ruta(nombre)).set({ creada: new Date().toISOString() });
+      $('nueva-nombre').value = '';
+      panel.aviso(`Colección ${nombre} creada`);
+    } catch (err) {
+      panel.aviso('No se pudo crear la colección. Probá de nuevo.', true);
+    }
+  });
+
+  $('colecciones').addEventListener('click', async e => {
+    const caja = e.target.closest('[data-cat]');
+    if (!caja) return;
+    const cat = caja.dataset.cat;
+
+    const portada = e.target.closest('[data-encuadre]');
+    if (portada) {
+      const r = portada.getBoundingClientRect();
+      // Con teclado (sin posición del puntero) se deja centrada
+      const x = e.clientX ? Math.round(Math.min(100, Math.max(0, (e.clientX - r.left) / r.width * 100))) : 50;
+      const y = e.clientY ? Math.round(Math.min(100, Math.max(0, (e.clientY - r.top) / r.height * 100))) : 50;
+      portada.querySelector('img').style.objectPosition = `${x}% ${y}%`;
+      Object.assign(portada.querySelector('.punto').style, { left: x + '%', top: y + '%' });
+      try {
+        await db.ref(ruta(cat, 'posicion')).set(`${x}% ${y}%`);
+        panel.aviso('Encuadre guardado');
+      } catch (err) {
+        panel.aviso('No se pudo guardar el encuadre.', true);
+      }
+      return;
+    }
+
+    const orientacion = e.target.closest('[data-orientacion]');
+    if (orientacion) {
+      try { await db.ref(ruta(cat, 'orientacion')).set(orientacion.dataset.orientacion); }
+      catch (err) { panel.aviso('No se pudo guardar la orientación.', true); }
+      return;
+    }
+
+    if (e.target.closest('[data-mostrar-enlace]')) {
+      const enlace = caja.querySelector('[data-enlace]');
+      enlace.hidden = !enlace.hidden;
+      if (!enlace.hidden) enlace.querySelector('input').focus();
+      return;
+    }
+
+    if (e.target.closest('[data-guardar-enlace]')) {
+      const input = caja.querySelector('[data-enlace] input');
+      const u = input.value.trim();
+      if (!/^https:\/\/[^\s"'<>]+$/i.test(u)) { panel.aviso('Pegá un enlace que empiece con https://', true); return input.focus(); }
+      return guardarFoto(cat, u);
+    }
+
+    if (e.target.closest('[data-quitar-foto]')) {
+      const si = await panel.confirmar({ titulo: `¿Quitar la portada de ${cat}?`, texto: 'La tienda va a usar la foto de un producto de esta colección.', boton: 'Quitar foto', peligro: true });
+      if (!si) return;
+      try { await db.ref(ruta(cat, 'foto')).remove(); panel.aviso('Portada quitada'); }
+      catch (err) { panel.aviso('No se pudo quitar la foto.', true); }
+      return;
+    }
+
+    if (e.target.closest('[data-eliminar]')) {
+      const si = await panel.confirmar({ titulo: `¿Eliminar la colección ${cat}?`, texto: 'Se borra con su foto. No tiene productos, así que la tienda no pierde nada.', boton: 'Eliminar colección', peligro: true });
+      if (!si) return;
+      try { await db.ref(ruta(cat)).remove(); panel.aviso(`Colección ${cat} eliminada`); }
+      catch (err) { panel.aviso('No se pudo eliminar la colección.', true); }
+    }
+  });
+
+  $('colecciones').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.closest('[data-enlace]')) {
+      e.preventDefault();
+      e.target.closest('[data-cat]').querySelector('[data-guardar-enlace]').click();
+    }
+  });
+
+  $('colecciones').addEventListener('change', async e => {
+    if (!e.target.matches('[data-subir]')) return;
+    const cat = e.target.closest('[data-cat]').dataset.cat;
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+    try {
+      const foto = await achicarFoto(archivo);
+      await guardarFoto(cat, foto);
+    } catch (err) {
+      panel.aviso('No se pudo leer esa foto. Probá con otra.', true);
+    }
+  });
+
+  // ── Datos en vivo ──────────────────────────────
+  db.ref('colecciones').on('value', snap => {
+    estado.colecciones = snap.val() || {};
+    estado.cargado.colecciones = true;
+    dibujar();
+  });
+  db.ref('productos').on('value', snap => {
+    const lista = [];
+    snap.forEach(c => { const v = c.val(); if (v && typeof v === 'object') lista.push(v); });
+    estado.productos = lista;
+    estado.cargado.productos = true;
+    dibujar();
   });
 </script>
 </body>

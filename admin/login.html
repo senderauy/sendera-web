@@ -7,224 +7,78 @@
   <link rel="icon" type="image/png" href="../img/logo.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Sendera Admin" />
-  <meta name="theme-color" content="#f2ede6" />
-  <title>Sendera Admin</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <meta name="theme-color" content="#182417" />
+  <title>Sendera - Ingresar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="../firebase-config.js"></script>
+  <link rel="stylesheet" href="admin.css?v=1" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
-      font-family: 'Montserrat', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: #f2ede6;
-      background-image:
-        radial-gradient(ellipse at 20% 50%, rgba(120,153,100,0.12) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 20%, rgba(180,140,90,0.1) 0%, transparent 50%);
-      padding: 20px;
+      min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center;
+      padding: calc(24px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px));
+      background: var(--sa-noche); color: var(--sa-tinta); font-family: var(--sa-sans); font-size: 14px; line-height: 1.5;
     }
-
-    .login-wrap {
-      width: 100%;
-      max-width: 420px;
-    }
-
-    /* Encabezado */
-    .login-header {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-
-    .login-icon {
-      font-size: 2.8rem;
-      margin-bottom: 10px;
-      display: block;
-    }
-
-    .logo {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2.2rem;
-      color: #3a3026;
-      letter-spacing: 0.18em;
-      margin-bottom: 4px;
-    }
-
-    .subtitle {
-      font-size: 0.7rem;
-      color: #7a6e62;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-    }
-
-    /* Card */
-    .login-card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 40px 36px;
-      box-shadow: 0 4px 24px rgba(80,60,30,0.1), 0 1px 4px rgba(80,60,30,0.06);
-      border: 1px solid rgba(180,155,100,0.15);
-    }
-
-    .card-title {
-      font-size: 0.72rem;
-      color: #9a8f82;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      margin-bottom: 28px;
-      text-align: center;
-    }
-
-    .form-group {
-      margin-bottom: 18px;
-    }
-
-    label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.72rem;
-      color: #6b5f54;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-      font-weight: 500;
-    }
-
-    input {
-      width: 100%;
-      padding: 13px 16px;
-      background: #faf8f4;
-      border: 1.5px solid #ddd5c8;
-      border-radius: 10px;
-      color: #3a3026;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 0.92rem;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    input::placeholder { color: #c0b5a8; }
-
-    input:focus {
-      border-color: #a07d45;
-      box-shadow: 0 0 0 3px rgba(160,125,69,0.1);
-    }
-
-    .btn-login {
-      width: 100%;
-      padding: 15px;
-      background: linear-gradient(135deg, #6b8f52, #507a3a);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 0.82rem;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      cursor: pointer;
-      margin-top: 28px;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .btn-login:hover {
-      background: linear-gradient(135deg, #7aa35e, #5c8b44);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 16px rgba(80,122,58,0.3);
-    }
-
-    .btn-login:active { transform: translateY(0); }
-    .btn-login:disabled { opacity: 0.7; cursor: default; transform: none; box-shadow: none; }
-
-    .btn-link {
-      display: block;
-      width: 100%;
-      margin-top: 16px;
-      background: none;
-      border: none;
-      color: #7a6e62;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 0.72rem;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-
-    .msg {
-      display: none;
-      border-radius: 8px;
-      font-size: 0.78rem;
-      line-height: 1.5;
-      padding: 10px 14px;
-      margin-top: 14px;
-      text-align: center;
-      overflow-wrap: anywhere;
-    }
-    .msg.error { background: #fff5f5; border: 1px solid #fca5a5; color: #b91c1c; }
-    .msg.info { background: #f0faf4; border: 1px solid #b8dba8; color: #2d6a4f; }
-
-    .login-footer {
-      text-align: center;
-      margin-top: 24px;
-      font-size: 0.68rem;
-      color: #b0a598;
-      letter-spacing: 0.08em;
-    }
-
-    /* Mobile */
+    :focus-visible { outline: 2px solid var(--sa-ambar); outline-offset: 2px; }
+    .entrada { width: 100%; max-width: 400px; }
+    .marca { display: block; width: auto; height: 84px; margin: 0 auto 28px; }
+    .tarjeta { background: var(--sa-papel); border-radius: 20px; padding: 32px 30px 26px; }
+    .tarjeta h1 { font: 600 2rem/1.1 var(--sa-serif); }
+    .tarjeta > p { margin-top: 6px; color: var(--sa-tinta-3); font-size: 0.86rem; }
+    form { display: flex; flex-direction: column; gap: 14px; margin-top: 24px; }
+    label { display: block; margin-bottom: 6px; font-size: 0.8rem; font-weight: 500; color: var(--sa-tinta-2); }
+    .sa-campo { padding: 12px 14px; font-size: 0.95rem; }
+    .btn-login { width: 100%; margin-top: 8px; padding: 13px 16px; font-size: 0.9rem; }
+    .btn-link { display: block; width: 100%; padding: 6px; background: none; border: 0; color: var(--sa-tinta-2); font: 500 0.82rem var(--sa-sans); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .btn-link:hover { color: var(--sa-tinta); }
+    .enlaces { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+    .msg { display: none; margin-top: 16px; padding: 10px 12px; border-radius: 10px; font-size: 0.84rem; line-height: 1.5; overflow-wrap: anywhere; }
+    .msg.error { background: var(--sa-rojo-fondo); color: var(--sa-rojo); }
+    .msg.info { background: var(--sa-verde-fondo); color: var(--sa-verde); }
+    .pie { margin-top: 22px; text-align: center; color: var(--sa-noche-tenue); font-size: 0.78rem; }
     @media (max-width: 480px) {
-      .login-card {
-        padding: 32px 24px;
-        border-radius: 14px;
-      }
-      .logo { font-size: 1.9rem; }
+      .tarjeta { padding: 26px 20px 20px; border-radius: 18px; }
+      .marca { height: 70px; margin-bottom: 22px; }
     }
   </style>
 </head>
 <body>
-  <div class="login-wrap">
-    <div class="login-header">
-      <div class="logo">SENDERA</div>
-      <div class="subtitle">Equipamiento outdoor · Uruguay</div>
-    </div>
+  <main class="entrada">
+    <img class="marca" src="../img/logo-crema.png" alt="Sendera" />
 
-    <div class="login-card">
-      <div class="card-title">Panel de administración</div>
+    <div class="tarjeta">
+      <h1>Panel de Sendera</h1>
+      <p>Entrá con el mail y la contraseña de administrador.</p>
 
       <form onsubmit="event.preventDefault(); enviar();">
-        <div class="form-group">
-          <label for="email">✉️ Email</label>
-          <input type="email" id="email" placeholder="Tu email" autocomplete="username" />
+        <div>
+          <label for="email">Email</label>
+          <input class="sa-campo" type="email" id="email" placeholder="tu@mail.com" autocomplete="username" />
         </div>
-        <div class="form-group">
-          <label for="password">🔒 Contraseña</label>
-          <input type="password" id="password" placeholder="Tu contraseña" autocomplete="current-password" />
+        <div>
+          <label for="password">Contraseña</label>
+          <input class="sa-campo" type="password" id="password" placeholder="Tu contraseña" autocomplete="current-password" />
         </div>
-
-        <button type="submit" class="btn-login" id="btn-login">🌿 Ingresar al panel</button>
-        <button type="button" class="btn-link" id="btn-olvide" onclick="recuperar()">¿Olvidaste tu contraseña?</button>
-        <button type="button" class="btn-link" id="btn-modo" onclick="cambiarModo()">¿Primera vez? Creá tu contraseña</button>
+        <button type="submit" class="sa-boton btn-login" id="btn-login">Ingresar al panel</button>
+        <div class="enlaces">
+          <button type="button" class="btn-link" id="btn-olvide" onclick="recuperar()">¿Olvidaste tu contraseña?</button>
+          <button type="button" class="btn-link" id="btn-modo" onclick="cambiarModo()">¿Primera vez? Creá tu contraseña</button>
+        </div>
       </form>
       <div class="msg" id="login-msg" role="alert"></div>
     </div>
 
-    <div class="login-footer">sendera · admin v2.0</div>
-  </div>
+    <p class="pie">Solo para el equipo de Sendera</p>
+  </main>
 
   <script>
     const btn = document.getElementById('btn-login');
     const msg = document.getElementById('login-msg');
-    const TEXTO_INGRESAR = '🌿 Ingresar al panel';
-    const TEXTO_CREAR = '🌿 Crear contraseña';
+    const TEXTO_INGRESAR = 'Ingresar al panel';
+    const TEXTO_CREAR = 'Crear contraseña';
     let modoCrear = false;
 
     firebase.auth().languageCode = 'es';

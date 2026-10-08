@@ -44,6 +44,42 @@ function num(valor) {
   return Number.isFinite(n) ? n : 0;
 }
 
+// Foto de una variante de producto: base64, https o rutas del sitio; cualquier otra cosa no se muestra
+function fotoVariante(v) {
+  const f = String((v && ((v.fotos && v.fotos[0]) || v.foto)) || '').trim();
+  if (/^(data:image\/[a-z+.-]+;base64,|https:\/\/|\/)/i.test(f)) return f;
+  // Rutas cargadas sin barra inicial (img/...) se buscan desde la raíz de la tienda
+  return /^[\w-][\w\-./]*$/.test(f) && !f.includes('..') ? '/' + f : '';
+}
+
+// Las fotos guardadas en base64 se convierten una sola vez en una dirección corta del navegador (blob:),
+// así una lista con muchas miniaturas no repite la imagen entera en cada fila
+const fotosLivianas = new Map();
+function fotoLiviana(f) {
+  f = String(f || '');
+  if (!f.startsWith('data:')) return f;
+  if (!fotosLivianas.has(f)) {
+    let url = '';
+    try {
+      const coma = f.indexOf(',');
+      const bin = atob(f.slice(coma + 1));
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      url = URL.createObjectURL(new Blob([bytes], { type: f.slice(5, coma).split(';')[0] || 'image/jpeg' }));
+    } catch (e) { url = ''; }
+    fotosLivianas.set(f, url);
+  }
+  return fotosLivianas.get(f);
+}
+
+// Celular en formato internacional para wa.me, igual que en el servidor: 099 123 456 → 59899123456
+function celularWA(celular) {
+  const d = String(celular ?? '').replace(/\D/g, '');
+  if (!d) return '';
+  if (d.startsWith('598')) return d;
+  return '598' + (d.startsWith('0') ? d.slice(1) : d);
+}
+
 function logout() {
   firebase.auth().signOut().then(() => location.replace('login.html'));
 }

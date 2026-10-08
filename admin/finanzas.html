@@ -5,978 +5,797 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="apple-touch-icon" href="../img/logo.png" />
   <link rel="icon" type="image/png" href="../img/logo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Sendera Admin" />
+  <meta name="theme-color" content="#182417" />
   <title>Sendera - Finanzas</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="../firebase-config.js"></script>
-  <script src="admin-auth.js"></script>
+  <script src="admin-auth.js?v=2"></script>
+  <link rel="stylesheet" href="admin.css?v=1" />
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="admin-ui.js?v=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Montserrat', sans-serif; background: #f2ede6; color: #3a3026; min-height: 100vh; }
+    [hidden] { display: none !important; }
+    body { min-height: 100vh; font-size: 14px; line-height: 1.5; }
+    button, input, select { font-family: inherit; }
 
-    .navbar { background:#fff; border-bottom:2px solid #e8dfd2; padding:0 24px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; height:60px; box-shadow:0 2px 8px rgba(80,60,30,.06); }
-    .navbar .logo { font-family:'Cormorant Garamond',serif; font-size:1.4rem; color:#3a3026; letter-spacing:.12em; }
-    .nav-links { display:flex; align-items:center; gap:4px; }
-    .nav-links a { color:#7a6e62; text-decoration:none; font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; padding:8px 14px; border-radius:8px; transition:all .2s; font-weight:500; }
-    .nav-links a:hover { background:#f2ede6; color:#3a3026; }
-    .nav-links a.active { background:#507a3a; color:#fff; }
-    .btn-logout { font-size:.72rem; color:#9a8f82; cursor:pointer; text-transform:uppercase; letter-spacing:.08em; background:none; border:1px solid #ddd5c8; border-radius:8px; padding:7px 14px; margin-left:8px; transition:all .2s; font-family:'Montserrat',sans-serif; }
-    .btn-logout:hover { background:#f2ede6; color:#3a3026; }
-    .btn-logout-top { display:none; background:none; border:none; cursor:pointer; font-size:1rem; color:#9a8f82; padding:2px 6px; margin-left:6px; }
+    .herramientas { display: flex; flex-wrap: wrap; gap: 8px; }
 
-    .container { max-width:1100px; margin:0 auto; padding:24px 20px 60px; }
+    /* Resumen del período */
+    .cifras { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .cifras > div { padding: 2px 22px; border-left: 1px solid var(--sa-linea-2); min-width: 0; }
+    .cifras > div:first-child { padding-left: 0; border-left: 0; }
+    .cifras small { display: block; color: var(--sa-tinta-2); font-size: 0.8rem; font-weight: 500; }
+    .cifras b { display: block; margin-top: 4px; font: 600 2.2rem/1.05 var(--sa-serif); font-variant-numeric: lining-nums tabular-nums; color: var(--sa-tinta); overflow-wrap: anywhere; }
+    .cifras b.positivo { color: var(--sa-verde); }
+    .cifras b.negativo { color: var(--sa-rojo); }
+    .cifras span { display: block; margin-top: 4px; color: var(--sa-tinta-3); font-size: 0.78rem; }
+    .inventario { margin-top: 16px; }
+    .inventario b { font-size: 1.6rem; }
+    .inventario b.alerta { color: var(--sa-rojo); }
+    .inventario b.aviso { color: var(--sa-ambar-oscuro); }
 
-    .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
-    .page-header h1 { font-family:'Cormorant Garamond',serif; font-size:2rem; color:#3a3026; }
-    .page-header p { font-size:.75rem; color:#9a8f82; margin-top:2px; }
-    .header-btns { display:flex; gap:8px; flex-wrap:wrap; }
-    .btn-sec { background:none; border:1.5px solid #c8d8be; border-radius:10px; padding:8px 16px; font-family:'Montserrat',sans-serif; font-size:.72rem; color:#507a3a; cursor:pointer; transition:all .2s; font-weight:500; }
-    .btn-sec:hover { background:#507a3a; color:#fff; border-color:#507a3a; }
-    .btn-prim { background:#507a3a; border:none; border-radius:10px; padding:8px 18px; font-family:'Montserrat',sans-serif; font-size:.72rem; color:#fff; cursor:pointer; font-weight:600; transition:background .2s; }
-    .btn-prim:hover { background:#3d5c2c; }
-    .btn-compra { background:#1a5276; border:none; border-radius:10px; padding:8px 18px; font-family:'Montserrat',sans-serif; font-size:.72rem; color:#fff; cursor:pointer; font-weight:600; transition:background .2s; }
-    .btn-compra:hover { background:#154360; }
+    .grilla-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 20px; align-items: start; }
+    .ancho { grid-column: 1 / -1; }
+    .sa-panel-titulo small { color: var(--sa-tinta-3); font-size: 0.8rem; }
+    .grafico { position: relative; height: 240px; }
+    .grafico.alto { height: 280px; }
+    .grafico .sa-vacio { position: absolute; inset: 0; display: grid; place-items: center; }
 
-    .period-bar { display:flex; align-items:center; gap:10px; margin-bottom:22px; flex-wrap:wrap; }
-    .period-label { font-size:.65rem; color:#9a8f82; text-transform:uppercase; letter-spacing:.1em; }
-    .mes-pills { display:flex; gap:4px; flex-wrap:wrap; }
-    .mes-btn { padding:5px 13px; border:1.5px solid #e8dfd2; background:#fff; color:#7a6e62; font-family:'Montserrat',sans-serif; font-size:.65rem; text-transform:uppercase; letter-spacing:.06em; cursor:pointer; border-radius:20px; transition:all .2s; font-weight:500; }
-    .mes-btn:hover { border-color:#b8dba8; color:#507a3a; }
-    .mes-btn.active { background:#507a3a; color:#fff; border-color:#507a3a; }
-    .mes-btn.all.active { background:#3a3026; border-color:#3a3026; }
+    .alertas li { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 0; border-top: 1px solid var(--sa-linea-2); }
+    .alertas li:first-child { border-top: 0; padding-top: 0; }
+    .alertas b { display: block; font-weight: 500; }
+    .alertas small { color: var(--sa-tinta-3); font-size: 0.78rem; }
+    .alertas .sa-vacio .lucide { color: var(--sa-verde); }
 
-    .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:14px; }
-    .kpi-card { background:#3a3026; border-radius:14px; padding:20px 18px; color:#fff; position:relative; overflow:hidden; }
-    .kpi-card::before { content:''; position:absolute; right:-20px; top:-20px; width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,.05); }
-    .kpi-card.verde { background:#507a3a; }
-    .kpi-card.rojo  { background:#c0392b; }
-    .kpi-card.azul  { background:#1a5276; }
-    .kpi-card.naranja { background:#ca6f1e; }
-    .kpi-label { font-size:.6rem; text-transform:uppercase; letter-spacing:.1em; opacity:.75; margin-bottom:8px; }
-    .kpi-value { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:600; font-variant-numeric:tabular-nums; line-height:1; }
-    .kpi-sub { font-size:.65rem; opacity:.6; margin-top:6px; }
+    .tabla-envoltura { overflow-x: auto; margin: 0 -24px -24px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    th { padding: 10px 24px; text-align: left; font-size: 0.76rem; font-weight: 500; color: var(--sa-tinta-3); background: var(--sa-papel-2); border-top: 1px solid var(--sa-linea-2); border-bottom: 1px solid var(--sa-linea-2); white-space: nowrap; }
+    td { padding: 11px 24px; border-bottom: 1px solid var(--sa-linea-2); vertical-align: middle; }
+    tr:last-child td { border-bottom: 0; }
+    td.fecha, td.suave { color: var(--sa-tinta-3); white-space: nowrap; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    td.vacia { padding: 26px 24px; text-align: center; color: var(--sa-tinta-2); }
+    .etiqueta-web { margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--sa-azul-fondo); color: var(--sa-azul); font-size: 0.7rem; font-weight: 600; }
+    .total-panel { font-weight: 600; font-variant-numeric: tabular-nums; }
 
-    .stock-bar { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
-    .stock-kpi { background:#fff; border:1.5px solid #e8dfd2; border-radius:12px; padding:14px 18px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 6px rgba(80,60,30,.04); }
-    .stock-kpi-icon { font-size:1.5rem; }
-    .stock-kpi-val { font-family:'Cormorant Garamond',serif; font-size:1.5rem; color:#3a3026; font-variant-numeric:tabular-nums; }
-    .stock-kpi-lbl { font-size:.6rem; color:#9a8f82; text-transform:uppercase; letter-spacing:.08em; margin-top:1px; }
-    .stock-kpi.warn { border-color:#fca5a5; }
-    .stock-kpi.warn .stock-kpi-val { color:#c0392b; }
-    .stock-kpi.warn2 { border-color:#fde68a; }
-    .stock-kpi.warn2 .stock-kpi-val { color:#b45309; }
-
-    .charts-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
-    .chart-card { background:#fff; border-radius:14px; border:1.5px solid #e8dfd2; padding:20px; box-shadow:0 2px 6px rgba(80,60,30,.04); }
-    .chart-card.wide { grid-column:span 2; }
-    .chart-title { font-family:'Cormorant Garamond',serif; font-size:1.1rem; color:#3a3026; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; }
-    .chart-title span { font-family:'Montserrat',sans-serif; font-size:.65rem; color:#9a8f82; font-weight:400; }
-    .chart-wrap canvas { max-height:240px; }
-    .chart-wrap.tall canvas { max-height:300px; }
-
-    .alerta-lista { list-style:none; }
-    .alerta-item { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f5f0ea; font-size:.78rem; }
-    .alerta-item:last-child { border-bottom:none; }
-    .alerta-nombre { color:#3a3026; font-weight:500; }
-    .alerta-variante { color:#9a8f82; font-size:.7rem; }
-    .badge-0 { background:#fee2e2; color:#c0392b; border-radius:10px; padding:2px 8px; font-size:.65rem; font-weight:700; }
-    .badge-bajo { background:#fef3c7; color:#b45309; border-radius:10px; padding:2px 8px; font-size:.65rem; font-weight:700; }
-
-    .tables-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
-    .table-card { background:#fff; border-radius:14px; border:1.5px solid #e8dfd2; overflow:hidden; box-shadow:0 2px 6px rgba(80,60,30,.04); }
-    .table-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1.5px solid #f0ebe3; background:#faf8f4; }
-    .table-header h3 { font-family:'Cormorant Garamond',serif; font-size:1.1rem; color:#3a3026; }
-    .table-header .total-lbl { font-family:'Cormorant Garamond',serif; font-size:1rem; color:#507a3a; font-variant-numeric:tabular-nums; }
-    .mini-table { width:100%; border-collapse:collapse; font-size:.75rem; }
-    .mini-table th { padding:8px 16px; text-align:left; font-size:.6rem; color:#9a8f82; text-transform:uppercase; letter-spacing:.08em; font-weight:600; border-bottom:1px solid #f0ebe3; }
-    .mini-table td { padding:9px 16px; border-bottom:1px solid #f5f0ea; color:#3a3026; }
-    .mini-table tr:last-child td { border-bottom:none; }
-    .mini-table tr:hover td { background:#faf8f4; }
-    .mini-table .num { text-align:right; font-variant-numeric:tabular-nums; }
-    .mini-table .muted { color:#9a8f82; font-size:.7rem; }
-    .badge { display:inline-block; border-radius:12px; padding:2px 8px; font-size:.62rem; font-weight:600; }
-    .badge-verde { background:#e8f5e8; color:#2d6a2d; }
-    .badge-rojo  { background:#fde8e8; color:#c0392b; }
-    .badge-azul  { background:#e8f0fd; color:#1a5276; }
-    .btn-add-row { display:block; width:100%; padding:10px; text-align:center; font-family:'Montserrat',sans-serif; font-size:.7rem; color:#507a3a; background:#f9fbf7; border:none; border-top:1.5px solid #f0ebe3; cursor:pointer; transition:background .2s; font-weight:600; }
-    .btn-add-row:hover { background:#f0f7ea; }
-    .btn-add-row.azul { color:#1a5276; background:#f0f4fd; }
-    .btn-add-row.azul:hover { background:#e0eaf8; }
-
-    /* Tabla compras full width */
-    .compras-card { background:#fff; border-radius:14px; border:1.5px solid #d0dff8; overflow:hidden; box-shadow:0 2px 6px rgba(80,60,30,.04); }
-    .compras-card .table-header { background:#f0f4fd; border-bottom-color:#d0dff8; }
-    .compras-card .mini-table th { background:#f5f8fe; }
-
-    .add-panel { display:none; position:fixed; top:0; right:0; width:400px; height:100vh; background:#fff; box-shadow:-4px 0 24px rgba(0,0,0,.12); z-index:200; padding:28px 24px; overflow-y:auto; }
-    .add-panel.open { display:block; animation:slideIn .25s ease; }
-    @keyframes slideIn { from{transform:translateX(30px);opacity:0}to{transform:translateX(0);opacity:1} }
-    .panel-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
-    .panel-header h3 { font-family:'Cormorant Garamond',serif; font-size:1.3rem; color:#3a3026; }
-    .btn-close-panel { background:none; border:none; font-size:1.3rem; color:#9a8f82; cursor:pointer; }
-    .form-group { margin-bottom:14px; }
-    .form-group label { display:block; font-size:.62rem; color:#9a8f82; text-transform:uppercase; letter-spacing:.08em; margin-bottom:5px; }
-    .form-group input, .form-group select {
-      width:100%; padding:9px 12px; border:1.5px solid #e8dfd2; border-radius:8px;
-      font-family:'Montserrat',sans-serif; font-size:.8rem; color:#3a3026; background:#fff; outline:none; transition:border-color .2s;
+    /* Registrar venta, gasto o compra */
+    .velo-registro { position: fixed; inset: 0; z-index: 40; background: rgba(24, 20, 14, 0.32); opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .velo-registro.visible { opacity: 1; pointer-events: auto; }
+    .registro {
+      position: fixed; top: 0; right: 0; bottom: 0; z-index: 50; width: min(440px, 100%);
+      display: flex; flex-direction: column; background: var(--sa-papel); border-left: 1px solid var(--sa-linea);
+      transform: translateX(100%); visibility: hidden;
+      transition: transform 0.28s cubic-bezier(.2, .8, .2, 1), visibility 0s linear 0.28s;
     }
-    .form-group input:focus, .form-group select:focus { border-color:#507a3a; }
-    .form-row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .form-row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
-    .total-preview { background:#f0f4fd; border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:.8rem; color:#1a5276; font-weight:600; display:flex; justify-content:space-between; }
-    .stock-disp { font-size:.7rem; margin-top:4px; padding:5px 8px; border-radius:6px; background:#f0f7ea; color:#507a3a; }
-    .stock-disp.sin { background:#fee2e2; color:#c0392b; }
-    .stock-disp.bajo { background:#fef3c7; color:#b45309; }
-    .btn-guardar { width:100%; background:#507a3a; color:#fff; border:none; border-radius:10px; padding:12px; font-family:'Montserrat',sans-serif; font-size:.8rem; font-weight:600; cursor:pointer; margin-top:8px; }
-    .btn-guardar:hover { background:#3d5c2c; }
-    .btn-guardar.azul-btn { background:#1a5276; }
-    .btn-guardar.azul-btn:hover { background:#154360; }
-    .panel-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.3); z-index:199; }
-    .panel-overlay.open { display:block; }
-    .divider { border:none; border-top:1.5px solid #f0ebe3; margin:14px 0; }
-    .info-box { border-radius:8px; padding:10px 12px; font-size:.72rem; margin-bottom:14px; }
-    .info-box.verde { background:#f0f7ea; color:#507a3a; }
-    .info-box.azul { background:#e8f0fd; color:#1a5276; }
+    .registro.abierto { transform: translateX(0); visibility: visible; transition: transform 0.28s cubic-bezier(.2, .8, .2, 1), visibility 0s; }
+    .registro > header { display: flex; align-items: center; gap: 12px; padding: 22px 24px 16px; border-bottom: 1px solid var(--sa-linea-2); }
+    .registro h2 { font: 600 1.6rem/1.1 var(--sa-serif); }
+    .registro .cerrar { margin-left: auto; color: var(--sa-tinta-2); }
+    .registro .cerrar:hover { color: var(--sa-tinta); }
+    .registro .cuerpo { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 20px 24px 28px; }
+    .registro form { display: flex; flex-direction: column; gap: 14px; }
+    .registro > footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--sa-linea-2); }
+    .campo > span { display: block; margin-bottom: 6px; font-size: 0.8rem; font-weight: 500; color: var(--sa-tinta-2); }
+    .campo > span i { font-style: normal; font-weight: 400; color: var(--sa-tinta-3); }
+    .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .tres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .nota { padding: 10px 12px; border-radius: 10px; background: var(--sa-papel-2); color: var(--sa-tinta-2); font-size: 0.82rem; }
+    .nota.verde { background: var(--sa-verde-fondo); color: var(--sa-verde); }
+    .nota.ambar { background: var(--sa-ambar-fondo); color: var(--sa-ambar-oscuro); }
+    .nota.rojo { background: var(--sa-rojo-fondo); color: var(--sa-rojo); }
+    .separador { height: 1px; background: var(--sa-linea-2); margin: 4px 0; }
 
-    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:300; align-items:center; justify-content:center; }
-    .modal-overlay.open { display:flex; }
-    .modal-box { background:#fff; border-radius:16px; padding:28px; max-width:440px; width:90%; }
-    .modal-box h3 { font-family:'Cormorant Garamond',serif; font-size:1.3rem; color:#3a3026; margin-bottom:8px; }
-    .modal-box p { font-size:.78rem; color:#7a6e62; margin-bottom:18px; line-height:1.6; }
-    .import-drop { border:2.5px dashed #c8d8be; border-radius:12px; padding:28px 20px; text-align:center; cursor:pointer; transition:all .2s; margin-bottom:14px; }
-    .import-drop:hover { border-color:#507a3a; background:#f0f7ea; }
-    .import-drop input[type=file] { display:none; }
-    .import-progress { font-size:.78rem; color:#507a3a; text-align:center; padding:10px; display:none; }
-    .modal-close { background:none; border:1.5px solid #e8dfd2; border-radius:8px; padding:8px 18px; font-family:'Montserrat',sans-serif; font-size:.72rem; color:#9a8f82; cursor:pointer; }
+    /* Importar Excel */
+    dialog.importar { width: min(460px, calc(100% - 32px)); }
+    .opciones-importar { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+    .opciones-importar label { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid var(--sa-linea); border-radius: 12px; cursor: pointer; font-size: 0.86rem; }
+    .opciones-importar label:has(input:checked) { border-color: var(--sa-noche); background: var(--sa-papel-2); }
+    .opciones-importar input { margin-top: 3px; accent-color: var(--sa-noche); }
+    .opciones-importar small { display: block; color: var(--sa-tinta-3); font-size: 0.78rem; }
+    .soltar { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 14px; padding: 22px 16px; border: 1.5px dashed var(--sa-tinta-3); border-radius: 12px; text-align: center; cursor: pointer; color: var(--sa-tinta-2); font-size: 0.86rem; font-weight: 600; }
+    .soltar:hover, .soltar.encima { border-color: var(--sa-tinta); color: var(--sa-tinta); }
+    .soltar small { font-weight: 400; color: var(--sa-tinta-3); }
+    .soltar .lucide { width: 24px; height: 24px; }
+    .archivo { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+    .progreso { margin-top: 12px; font-size: 0.86rem; color: var(--sa-tinta-2); }
 
-    .empty-msg { text-align:center; padding:24px; color:#b0a898; font-size:.78rem; }
-
-    @media (max-width:900px) {
-      .kpi-grid { grid-template-columns:1fr 1fr; }
-      .stock-bar { grid-template-columns:1fr 1fr; }
-      .charts-grid { grid-template-columns:1fr; }
-      .chart-card.wide { grid-column:span 1; }
-      .tables-grid { grid-template-columns:1fr; }
-      .nav-links, .btn-logout { display:none; }
-      .btn-logout-top { display:inline-block; }
-      .add-panel { width:100%; }
+    @media (max-width: 1100px) {
+      .cifras b { font-size: 1.8rem; }
+      .inventario b { font-size: 1.4rem; }
+    }
+    @media (max-width: 900px) {
+      .herramientas { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .cifras { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 18px; }
+      .cifras > div:nth-child(3) { padding-left: 0; border-left: 0; }
+      .grilla-2 { grid-template-columns: minmax(0, 1fr); }
+      .tabla-envoltura { margin: 0 -20px -20px; }
+      th, td { padding-left: 16px; padding-right: 16px; }
+      .registro { width: 100%; border-left: 0; }
+      .registro > header { padding-top: calc(18px + env(safe-area-inset-top, 0px)); }
+      .registro .cuerpo { padding: 18px 18px 24px; }
+      .registro > footer { padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px)); }
+    }
+    @media (max-width: 480px) {
+      .dos { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .registro, .registro.abierto, .velo-registro { transition: none; }
     }
   </style>
 </head>
 <body>
 
-<div class="navbar">
-  <div class="logo">SENDERA <button class="btn-logout-top" onclick="logout()">↩</button></div>
-  <div class="nav-links">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="pedidos.html">Pedidos</a>
-    <a href="productos.html">Productos</a>
-    <a href="stock.html">Stock</a>
-    <a href="colecciones.html">Colecciones</a>
-    <a href="lookbook.html">Lookbook</a>
-    <a href="finanzas.html" class="active">Finanzas</a>
-    <a href="https://analytics.google.com" target="_blank">Analytics</a>
-    <button class="btn-logout" onclick="logout()">↩ Salir</button>
-  </div>
-</div>
-
-<div class="container">
-
-  <div class="page-header">
+<main class="sa-pagina">
+  <header class="sa-encabezado">
     <div>
-      <h1>Finanzas 📊</h1>
-      <p id="period-desc">Cargando...</p>
+      <h1>Finanzas</h1>
+      <p id="periodo-texto">Cargando…</p>
     </div>
-    <div class="header-btns">
-      <button class="btn-sec" onclick="abrirImport()">⬆ Importar Excel</button>
-      <button class="btn-prim" onclick="abrirPanel('gasto')">+ Gasto</button>
-      <button class="btn-compra" onclick="abrirPanel('compra')">📦 Compra mercadería</button>
-      <button class="btn-prim" onclick="abrirPanel('venta')">+ Venta</button>
+    <div class="herramientas">
+      <button type="button" class="sa-boton" data-registrar="venta"><i data-lucide="plus"></i>Venta</button>
+      <button type="button" class="sa-boton-sec" data-registrar="gasto"><i data-lucide="receipt"></i>Gasto</button>
+      <button type="button" class="sa-boton-sec" data-registrar="compra" aria-label="Compra de mercadería"><i data-lucide="package-plus"></i><span>Compra<span class="sa-solo-ancho"> de mercadería</span></span></button>
+      <button type="button" class="sa-boton-sec" id="btn-importar" aria-label="Importar Excel"><i data-lucide="file-spreadsheet"></i><span>Importar<span class="sa-solo-ancho"> Excel</span></span></button>
     </div>
+  </header>
+
+  <div class="sa-filtros" id="meses" aria-label="Período"></div>
+
+  <section class="sa-panel">
+    <div class="cifras">
+      <div><small>Ventas</small><b id="k-ventas">—</b><span id="k-ventas-sub"></span></div>
+      <div><small>Gastos y compras</small><b id="k-gastos">—</b><span id="k-gastos-sub"></span></div>
+      <div><small>Resultado</small><b id="k-balance">—</b><span id="k-balance-sub"></span></div>
+      <div><small>Ticket promedio</small><b id="k-ticket">—</b><span>por venta</span></div>
+    </div>
+  </section>
+
+  <section class="sa-panel inventario">
+    <div class="sa-panel-titulo"><h2>Inventario hoy</h2><a class="sa-enlace" href="stock.html">Ver stock<i data-lucide="arrow-right"></i></a></div>
+    <div class="cifras">
+      <div><small>Valor a precio de venta</small><b id="sk-valor">—</b></div>
+      <div><small>Unidades</small><b id="sk-units">—</b></div>
+      <div><small>Colores sin stock</small><b id="sk-sin">—</b></div>
+      <div><small>Con poco stock</small><b id="sk-bajo">—</b></div>
+    </div>
+  </section>
+
+  <div class="grilla-2">
+    <section class="sa-panel ancho">
+      <div class="sa-panel-titulo"><h2>Ventas y gastos por mes</h2><small id="anio-grafico"></small></div>
+      <div class="grafico alto"><canvas id="chart-meses" aria-label="Ventas y gastos de cada mes del año"></canvas></div>
+    </section>
+    <section class="sa-panel">
+      <div class="sa-panel-titulo"><h2>Ventas por canal</h2></div>
+      <div class="grafico"><canvas id="chart-plat" aria-label="Ventas del período por canal"></canvas></div>
+    </section>
+    <section class="sa-panel">
+      <div class="sa-panel-titulo"><h2>Gastos por categoría</h2></div>
+      <div class="grafico"><canvas id="chart-gastos" aria-label="Gastos del período por categoría"></canvas></div>
+    </section>
+    <section class="sa-panel">
+      <div class="sa-panel-titulo"><h2>Stock por categoría</h2></div>
+      <div class="grafico"><canvas id="chart-stock" aria-label="Unidades en stock por categoría"></canvas></div>
+    </section>
+    <section class="sa-panel">
+      <div class="sa-panel-titulo"><h2>Para reponer</h2></div>
+      <ul class="alertas" id="alertas"><li class="sa-vacio">Cargando…</li></ul>
+    </section>
   </div>
 
-  <div class="period-bar">
-    <span class="period-label">Período</span>
-    <div class="mes-pills" id="mes-pills"></div>
+  <div class="grilla-2">
+    <section class="sa-panel">
+      <div class="sa-panel-titulo"><h2>Últimas ventas</h2><span class="total-panel" id="tbl-ventas-total"></span></div>
+      <div class="tabla-envoltura">
+        <table>
+          <thead><tr><th>Fecha</th><th>Descripción</th><th>Canal</th><th class="num">Importe</th></tr></thead>
+          <tbody id="tbl-ventas"></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="sa-panel">
+      <div class="sa-panel-titulo"><h2>Últimos gastos</h2><span class="total-panel" id="tbl-gastos-total"></span></div>
+      <div class="tabla-envoltura">
+        <table>
+          <thead><tr><th>Fecha</th><th>Categoría</th><th>Detalle</th><th class="num">Importe</th></tr></thead>
+          <tbody id="tbl-gastos"></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="sa-panel ancho">
+      <div class="sa-panel-titulo"><h2>Compras de mercadería</h2><span class="total-panel" id="tbl-compras-total"></span></div>
+      <div class="tabla-envoltura">
+        <table>
+          <thead><tr><th>Fecha</th><th>Proveedor</th><th>Insumo</th><th>Descripción</th><th class="num">Cantidad</th><th class="num">Costo unitario</th><th class="num">Total</th></tr></thead>
+          <tbody id="tbl-compras"></tbody>
+        </table>
+      </div>
+    </section>
   </div>
+</main>
 
-  <!-- KPIs financieros -->
-  <div class="kpi-grid">
-    <div class="kpi-card verde">
-      <div class="kpi-label">💰 Ventas</div>
-      <div class="kpi-value" id="k-ventas">$0</div>
-      <div class="kpi-sub" id="k-ventas-sub">0 transacciones</div>
-    </div>
-    <div class="kpi-card rojo">
-      <div class="kpi-label">💸 Gastos</div>
-      <div class="kpi-value" id="k-gastos">$0</div>
-      <div class="kpi-sub" id="k-gastos-sub">0 registros</div>
-    </div>
-    <div class="kpi-card azul" id="k-balance-card">
-      <div class="kpi-label">📈 Balance</div>
-      <div class="kpi-value" id="k-balance">$0</div>
-      <div class="kpi-sub" id="k-balance-sub">resultado del período</div>
-    </div>
-    <div class="kpi-card naranja">
-      <div class="kpi-label">🎯 Ticket promedio</div>
-      <div class="kpi-value" id="k-ticket">$0</div>
-      <div class="kpi-sub">por venta</div>
-    </div>
-  </div>
-
-  <!-- Stock resumen -->
-  <div class="stock-bar">
-    <div class="stock-kpi">
-      <div class="stock-kpi-icon">📦</div>
-      <div>
-        <div class="stock-kpi-val" id="sk-valor">$0</div>
-        <div class="stock-kpi-lbl">Valor inventario</div>
+<div class="velo-registro" id="velo-registro"></div>
+<aside class="registro" id="registro" role="dialog" aria-labelledby="registro-titulo">
+  <header>
+    <h2 id="registro-titulo">Nueva venta</h2>
+    <button type="button" class="sa-icono-btn cerrar" data-cerrar-registro aria-label="Cerrar"><i data-lucide="x"></i></button>
+  </header>
+  <div class="cuerpo">
+    <!-- Venta -->
+    <form id="form-venta" novalidate>
+      <div class="dos">
+        <label class="campo"><span>Fecha</span><input class="sa-campo" type="date" id="v-fecha" /></label>
+        <label class="campo"><span>Importe $</span><input class="sa-campo" type="number" inputmode="decimal" min="0" id="v-importe" placeholder="0" /></label>
       </div>
-    </div>
-    <div class="stock-kpi">
-      <div class="stock-kpi-icon">🔢</div>
-      <div>
-        <div class="stock-kpi-val" id="sk-units">0</div>
-        <div class="stock-kpi-lbl">Unidades en stock</div>
+      <label class="campo"><span>Comprador o descripción</span><input class="sa-campo" id="v-desc" maxlength="140" placeholder="Ej: María García, Gorro Runner" /></label>
+      <div class="dos">
+        <label class="campo"><span>Canal</span><select class="sa-campo" id="v-canal"><option>Web</option><option>Instagram</option><option>WhatsApp</option><option>Personalmente</option><option>Feria</option><option>Mercado Libre</option><option>Otro</option></select></label>
+        <label class="campo"><span>Forma de pago</span><select class="sa-campo" id="v-pago"><option>Prex Edgardo</option><option>Mercado Pago</option><option>Efectivo</option><option>OCA Edgardo</option></select></label>
       </div>
-    </div>
-    <div class="stock-kpi warn">
-      <div class="stock-kpi-icon">🚨</div>
-      <div>
-        <div class="stock-kpi-val" id="sk-sin">0</div>
-        <div class="stock-kpi-lbl">Sin stock</div>
-      </div>
-    </div>
-    <div class="stock-kpi warn2">
-      <div class="stock-kpi-icon">⚠️</div>
-      <div>
-        <div class="stock-kpi-val" id="sk-bajo">0</div>
-        <div class="stock-kpi-lbl">Stock bajo (≤ 2)</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Charts -->
-  <div class="charts-grid">
-    <div class="chart-card wide">
-      <div class="chart-title">Ventas por mes <span id="chart-año"></span></div>
-      <div class="chart-wrap tall"><canvas id="chart-meses"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Por plataforma</div>
-      <div class="chart-wrap"><canvas id="chart-plat"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Gastos por categoría</div>
-      <div class="chart-wrap"><canvas id="chart-gastos"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Stock por grupo</div>
-      <div class="chart-wrap"><canvas id="chart-stock"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Alertas de stock</div>
-      <div id="alerta-lista-wrap"><p class="empty-msg">Cargando...</p></div>
-    </div>
-  </div>
-
-  <!-- Ventas + Gastos -->
-  <div class="tables-grid" style="margin-bottom:16px">
-    <div class="table-card">
-      <div class="table-header">
-        <h3>💰 Últimas ventas</h3>
-        <span class="total-lbl" id="tbl-ventas-total"></span>
-      </div>
-      <table class="mini-table">
-        <thead><tr><th>Fecha</th><th>Descripción</th><th>Canal</th><th class="num">Importe</th></tr></thead>
-        <tbody id="tbl-ventas"></tbody>
-      </table>
-      <button class="btn-add-row" onclick="abrirPanel('venta')">+ Agregar venta</button>
-    </div>
-    <div class="table-card">
-      <div class="table-header">
-        <h3>💸 Últimos gastos</h3>
-        <span class="total-lbl" id="tbl-gastos-total" style="color:#c0392b"></span>
-      </div>
-      <table class="mini-table">
-        <thead><tr><th>Fecha</th><th>Categoría</th><th>Detalle</th><th class="num">Importe</th></tr></thead>
-        <tbody id="tbl-gastos"></tbody>
-      </table>
-      <button class="btn-add-row" onclick="abrirPanel('gasto')">+ Agregar gasto</button>
-    </div>
-  </div>
-
-  <!-- Compras de mercadería (tabla propia) -->
-  <div class="compras-card">
-    <div class="table-header">
-      <h3>📦 Compras de mercadería</h3>
-      <span class="total-lbl" id="tbl-compras-total" style="color:#1a5276"></span>
-    </div>
-    <div style="overflow-x:auto">
-      <table class="mini-table">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Proveedor</th>
-            <th>Insumo</th>
-            <th>Descripción</th>
-            <th class="num">Cant.</th>
-            <th class="num">Costo unit.</th>
-            <th class="num">Total</th>
-          </tr>
-        </thead>
-        <tbody id="tbl-compras"></tbody>
-      </table>
-    </div>
-    <button class="btn-add-row azul" onclick="abrirPanel('compra')">📦 Registrar compra de mercadería</button>
-  </div>
-
-</div>
-
-<!-- Panel overlay -->
-<div class="panel-overlay" id="panel-overlay" onclick="cerrarPanel()"></div>
-
-<!-- Panel lateral -->
-<div class="add-panel" id="add-panel">
-  <div class="panel-header">
-    <h3 id="panel-title">Agregar</h3>
-    <button class="btn-close-panel" onclick="cerrarPanel()">✕</button>
-  </div>
-
-  <!-- VENTA -->
-  <div id="form-venta">
-    <div class="form-row2">
-      <div class="form-group"><label>Fecha</label><input type="date" id="v-fecha"></div>
-      <div class="form-group"><label>Importe $</label><input type="number" id="v-importe" placeholder="0"></div>
-    </div>
-    <div class="form-group"><label>Comprador / Descripción</label>
-      <input type="text" id="v-desc" placeholder="Ej: María García — Gorro Runner">
-    </div>
-    <div class="form-row2">
-      <div class="form-group"><label>Canal</label>
-        <select id="v-canal">
-          <option>Web</option><option>Instagram</option><option>WhatsApp</option>
-          <option>Personalmente</option><option>Feria</option><option>Mercado Libre</option><option>Otro</option>
-        </select>
-      </div>
-      <div class="form-group"><label>Forma de pago</label>
-        <select id="v-pago">
-          <option>Prex Edgardo</option><option>Mercado Pago</option>
-          <option>Efectivo</option><option>OCA Edgardo</option>
-        </select>
-      </div>
-    </div>
-    <hr class="divider">
-    <div class="info-box verde">📦 Si vendiste algo del stock, elegí el producto para descontarlo automáticamente.</div>
-    <div class="form-group">
-      <label>Producto del stock <span style="opacity:.6;font-weight:400">— opcional</span></label>
-      <select id="v-producto" onchange="onVentaProductoChange()">
-        <option value="">— Sin descontar del stock —</option>
-      </select>
-    </div>
-    <div id="v-cantidad-group" style="display:none">
-      <div class="form-row2">
-        <div class="form-group"><label>Cantidad</label>
-          <input type="number" id="v-cantidad" value="1" min="1" oninput="onVentaCantidadChange()">
+      <div class="separador"></div>
+      <p class="nota">Si vendiste algo del stock, elegí el producto y se descuenta solo.</p>
+      <label class="campo"><span>Producto del stock <i>(opcional)</i></span><select class="sa-campo" id="v-producto"></select></label>
+      <div id="v-detalle-stock" hidden>
+        <div class="dos">
+          <label class="campo"><span>Cantidad</span><input class="sa-campo" type="number" inputmode="numeric" min="1" id="v-cantidad" value="1" /></label>
+          <label class="campo"><span>Descuento $</span><input class="sa-campo" type="number" inputmode="decimal" min="0" id="v-desc2" placeholder="0" /></label>
         </div>
-        <div class="form-group"><label>Descuento $</label>
-          <input type="number" id="v-desc2" placeholder="0">
-        </div>
+        <p class="nota" id="v-stock-disp" style="margin-top:12px"></p>
       </div>
-      <div class="stock-disp" id="v-stock-disp" style="display:none"></div>
-    </div>
-    <button class="btn-guardar" onclick="guardarVenta()">Guardar venta</button>
+    </form>
+
+    <!-- Gasto -->
+    <form id="form-gasto" novalidate hidden>
+      <div class="dos">
+        <label class="campo"><span>Fecha</span><input class="sa-campo" type="date" id="g-fecha" /></label>
+        <label class="campo"><span>Importe $</span><input class="sa-campo" type="number" inputmode="decimal" min="0" id="g-importe" placeholder="0" /></label>
+      </div>
+      <label class="campo"><span>Categoría</span><select class="sa-campo" id="g-cat"><option>Publicidad</option><option>Packaging</option><option>Financieros</option><option>Envíos</option><option>Varios</option></select></label>
+      <label class="campo"><span>Detalle</span><input class="sa-campo" id="g-detalle" maxlength="140" placeholder="Ej: Publicidad en Instagram de agosto" /></label>
+      <div class="dos">
+        <label class="campo"><span>Proveedor</span><input class="sa-campo" id="g-prov" maxlength="80" placeholder="Ej: Meta" /></label>
+        <label class="campo"><span>Forma de pago</span><select class="sa-campo" id="g-pago"><option>Prex Edgardo</option><option>OCA Edgardo</option><option>Mercado Pago</option><option>Efectivo</option></select></label>
+      </div>
+    </form>
+
+    <!-- Compra de mercadería -->
+    <form id="form-compra" novalidate hidden>
+      <p class="nota">Si la vinculás a un producto, el stock sube solo al confirmar.</p>
+      <div class="dos">
+        <label class="campo"><span>Fecha</span><input class="sa-campo" type="date" id="c-fecha" /></label>
+        <label class="campo"><span>Proveedor</span><select class="sa-campo" id="c-prov"><option>Temu</option><option>Alibaba</option><option>Otro</option></select></label>
+      </div>
+      <div class="dos">
+        <label class="campo"><span>Forma de pago</span><select class="sa-campo" id="c-pago"><option>Prex Edgardo</option><option>OCA Edgardo</option><option>Lore</option><option>Mercado Pago</option><option>Efectivo</option></select></label>
+        <label class="campo"><span>Insumo</span><select class="sa-campo" id="c-insumo"><option>Gorro</option><option>Riñonera</option><option>Buff</option><option>Medallero</option><option>Porta Celular</option><option>Otro</option></select></label>
+      </div>
+      <label class="campo"><span>Descripción</span><input class="sa-campo" id="c-desc" maxlength="140" placeholder="Ej: Gorro térmico negro" /></label>
+      <div class="tres">
+        <label class="campo"><span>Cantidad</span><input class="sa-campo" type="number" inputmode="numeric" min="1" id="c-cantidad" value="1" /></label>
+        <label class="campo"><span>Costo unit. $</span><input class="sa-campo" type="number" inputmode="decimal" min="0" id="c-costo-unit" placeholder="0" /></label>
+        <label class="campo"><span>Total $</span><input class="sa-campo" type="number" inputmode="decimal" min="0" id="c-total" placeholder="Solo" /></label>
+      </div>
+      <div class="separador"></div>
+      <label class="campo"><span>Vincular a stock <i>(opcional)</i></span><select class="sa-campo" id="c-producto"></select></label>
+      <p class="nota" id="c-stock-disp" hidden></p>
+    </form>
   </div>
+  <footer>
+    <button type="button" class="sa-boton-sec" data-cerrar-registro>Cancelar</button>
+    <button type="button" class="sa-boton" id="btn-guardar-registro"><i data-lucide="check"></i><span>Guardar venta</span></button>
+  </footer>
+</aside>
 
-  <!-- GASTO -->
-  <div id="form-gasto" style="display:none">
-    <div class="form-row2">
-      <div class="form-group"><label>Fecha</label><input type="date" id="g-fecha"></div>
-      <div class="form-group"><label>Importe $</label><input type="number" id="g-importe" placeholder="0"></div>
-    </div>
-    <div class="form-group"><label>Categoría</label>
-      <select id="g-cat">
-        <option>Publicidad</option><option>Packaging</option>
-        <option>Financieros</option><option>Envíos</option><option>Varios</option>
-      </select>
-    </div>
-    <div class="form-group"><label>Detalle</label>
-      <input type="text" id="g-detalle" placeholder="Ej: Publicidad Meta — Agosto">
-    </div>
-    <div class="form-row2">
-      <div class="form-group"><label>Proveedor</label>
-        <input type="text" id="g-prov" placeholder="Ej: Meta">
-      </div>
-      <div class="form-group"><label>Forma de pago</label>
-        <select id="g-pago">
-          <option>Prex Edgardo</option><option>OCA Edgardo</option>
-          <option>Mercado Pago</option><option>Efectivo</option>
-        </select>
-      </div>
-    </div>
-    <button class="btn-guardar" onclick="guardarGasto()">Guardar gasto</button>
+<dialog class="sa-dialogo importar" id="dialogo-importar" aria-labelledby="importar-titulo">
+  <h3 id="importar-titulo">Importar Excel</h3>
+  <p>Si ya importaste las ventas y los gastos, elegí solo compras para no duplicar datos.</p>
+  <div class="opciones-importar">
+    <label><input type="radio" name="importar-tipo" value="todo" checked /><span>Todo<small>Ventas, gastos y compras. Para la primera vez.</small></span></label>
+    <label><input type="radio" name="importar-tipo" value="compras" /><span>Solo compras de mercadería<small>Si las ventas y los gastos ya están cargados.</small></span></label>
   </div>
-
-  <!-- COMPRA DE MERCADERÍA -->
-  <div id="form-compra" style="display:none">
-    <div class="info-box azul">📦 El stock sube automáticamente al confirmar. Completá igual si la compra no tiene producto en stock asignado.</div>
-    <div class="form-row2">
-      <div class="form-group"><label>Fecha</label><input type="date" id="c-fecha"></div>
-      <div class="form-group"><label>Proveedor</label>
-        <select id="c-prov">
-          <option>Temu</option><option>Alibaba</option><option>Otro</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-row2">
-      <div class="form-group"><label>Forma de pago</label>
-        <select id="c-pago">
-          <option>Prex Edgardo</option><option>OCA Edgardo</option>
-          <option>Lore</option><option>Mercado Pago</option><option>Efectivo</option>
-        </select>
-      </div>
-      <div class="form-group"><label>Insumo</label>
-        <select id="c-insumo">
-          <option>Gorro</option><option>Riñonera</option><option>Buff</option>
-          <option>Medallero</option><option>Porta Celular</option><option>Otro</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-group"><label>Descripción</label>
-      <input type="text" id="c-desc" placeholder="Ej: Gorro térmico negro">
-    </div>
-    <div class="form-row3">
-      <div class="form-group"><label>Cantidad</label>
-        <input type="number" id="c-cantidad" value="1" min="1" oninput="calcTotalCompra()">
-      </div>
-      <div class="form-group"><label>Costo unit. $</label>
-        <input type="number" id="c-costo-unit" placeholder="0" oninput="calcTotalCompra()">
-      </div>
-      <div class="form-group"><label>Total $</label>
-        <input type="number" id="c-total" placeholder="Auto">
-      </div>
-    </div>
-    <hr class="divider">
-    <div class="form-group">
-      <label>Vincular a stock <span style="opacity:.6;font-weight:400">— opcional</span></label>
-      <select id="c-producto" onchange="onCompraProductoChange()">
-        <option value="">— No vincular al stock —</option>
-      </select>
-    </div>
-    <div class="stock-disp" id="c-stock-disp" style="display:none;margin-bottom:12px"></div>
-    <button class="btn-guardar azul-btn" onclick="guardarCompra()">Confirmar compra</button>
-  </div>
-</div>
-
-<!-- Import modal -->
-<div class="modal-overlay" id="modal-import">
-  <div class="modal-box">
-    <h3>Importar Excel</h3>
-    <p>Elegí qué querés importar. Si ya importaste ventas y gastos, usá solo <strong>Compras</strong> para no duplicar datos.</p>
-
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
-      <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid #e8dfd2;border-radius:10px;cursor:pointer;font-size:.8rem;color:#3a3026">
-        <input type="radio" name="import-tipo" value="todo" checked style="width:auto">
-        <span><strong>Todo</strong> — ventas, gastos y compras (primera vez)</span>
-      </label>
-      <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid #1a5276;border-radius:10px;cursor:pointer;font-size:.8rem;color:#1a5276;background:#f0f4fd">
-        <input type="radio" name="import-tipo" value="compras" style="width:auto">
-        <span><strong>Solo compras de mercadería</strong> — si ventas y gastos ya están importados</span>
-      </label>
-    </div>
-
-    <label for="import-file" class="import-drop">
-      <div style="font-size:2rem;margin-bottom:8px">📂</div>
-      <p style="font-size:.8rem;color:#507a3a;font-weight:600">Hacé clic o arrastrá el archivo</p>
-      <p style="font-size:.7rem;color:#b0c0a8;margin-top:4px">SENDERA 2026.xlsx</p>
-      <input type="file" id="import-file" accept=".xlsx,.xls" onchange="procesarImport(this.files[0])">
-    </label>
-    <div class="import-progress" id="import-progress"></div>
-    <div style="display:flex;justify-content:flex-end">
-      <button class="modal-close" onclick="cerrarImport()">Cerrar</button>
-    </div>
-  </div>
-</div>
+  <label class="soltar" id="soltar-excel">
+    <i data-lucide="file-spreadsheet"></i>Elegí o arrastrá el archivo
+    <small>Por ejemplo SENDERA 2026.xlsx</small>
+    <input class="archivo" type="file" id="importar-archivo" accept=".xlsx,.xls" />
+  </label>
+  <p class="progreso" id="importar-progreso" hidden></p>
+  <div class="sa-acciones"><button type="button" class="sa-boton-sec" id="btn-cerrar-importar">Cerrar</button></div>
+</dialog>
 
 <script>
-
-const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-               'Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
-const ESTADOS_VENTA = ['confirmado','camino','entregado'];
+const $ = id => document.getElementById(id);
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
+// Pedidos de la tienda que cuentan como venta (con el pago ya confirmado)
+const ESTADOS_VENTA = ['aprobado', 'confirmado', 'camino', 'entregado'];
 const AÑO = new Date().getFullYear();
-const COLORS = ['#507a3a','#2563eb','#e67e22','#7c3aed','#c0392b','#16a085','#d35400','#8e44ad'];
+const POCO_STOCK = 3;
+const PALETA = ['#182417', '#c8861a', '#507a3a', '#3e5b86', '#684d86', '#0f766e', '#a5432f', '#8e8273'];
 
 let mesFiltro = new Date().getMonth();
-let todosPedidos=[], todasVentas=[], todosGastos=[], todasCompras=[];
-let productosFirebase={}, stockData={};
-let charts={};
+let todosPedidos = [], todasVentas = [], todosGastos = [], todasCompras = [];
+let productosFirebase = {}, stockData = {};
+const charts = {};
+let tipoRegistro = 'venta';
 
-// ── Period ─────────────────────────────────────────────────
-function renderPills() {
-  document.getElementById('mes-pills').innerHTML =
-    `<button class="mes-btn all ${mesFiltro===-1?'active':''}" onclick="setMes(-1)">Todo el año</button>` +
-    MESES.map((m,i)=>`<button class="mes-btn ${mesFiltro===i?'active':''}" onclick="setMes(${i})">${m.slice(0,3)}</button>`).join('');
-  document.getElementById('chart-año').textContent = AÑO;
-  document.getElementById('period-desc').textContent =
-    mesFiltro===-1 ? `Año ${AÑO} completo` : `${MESES[mesFiltro]} ${AÑO}`;
-}
-function setMes(i){mesFiltro=i;renderPills();renderTodo();}
-function esPeriodo(fechaISO){
-  if(!fechaISO) return false;
-  const d=new Date(fechaISO);
-  return d.getFullYear()===AÑO&&(mesFiltro===-1||d.getMonth()===mesFiltro);
-}
+Chart.defaults.font.family = "'Montserrat', system-ui, sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = '#5d5348';
 
-// ── Formato ────────────────────────────────────────────────
-function fmt(n){return '$'+Math.round(n||0).toLocaleString('es-UY');}
-function fmtF(iso){return new Date(iso).toLocaleDateString('es-UY',{day:'2-digit',month:'2-digit'});}
+// ── Fechas ─────────────────────────────────────────────────
+// Las fechas cargadas a mano son "AAAA-MM-DD": se leen como día local (si no, el día 1 caía en el mes anterior)
+function fechaLocal(valor) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(valor || ''));
+  return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(valor);
+}
+const hoyTexto = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+function esPeriodo(valor) {
+  if (!valor) return false;
+  const d = fechaLocal(valor);
+  return !isNaN(d) && d.getFullYear() === AÑO && (mesFiltro === -1 || d.getMonth() === mesFiltro);
+}
+function fmt(n) { return '$' + Math.round(num(n)).toLocaleString('es-UY'); }
+function fmtF(valor) { const d = fechaLocal(valor); return isNaN(d) ? '—' : d.toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit' }); }
 
 // ── Stock ─────────────────────────────────────────────────
-function getStock(id){return stockData[id]!==undefined?stockData[id]:0;}
-function getAllVariants(){
-  return Object.entries(productosFirebase).flatMap(([pid,prod])=>
-    (prod.variantes||[]).map((v,i)=>({
-      id:pid+'-'+i,nombre:prod.nombre,variante:v.nombre,
-      precio:v.precio||0,categoria:prod.categoria||'Otros',stock:getStock(pid+'-'+i)
-    }))
-  );
-}
-function obtenerNombreProd(id){
-  const v=getAllVariants().find(v=>v.id===id);
-  return v?`${v.nombre} — ${v.variante}`:'Producto';
+const getStock = id => Math.max(0, num(stockData[id]));
+function getAllVariants() {
+  return Object.entries(productosFirebase).flatMap(([pid, prod]) =>
+    (Array.isArray(prod.variantes) ? prod.variantes : Object.values(prod.variantes || {}))
+      .filter(v => v && typeof v === 'object')
+      .map((v, i) => {
+        // Mismo lugar de stock que usa la tienda
+        const id = v.stockId || pid + '-' + i;
+        return { id, nombre: prod.nombre || 'Sin nombre', variante: v.nombre || '', precio: num(v.precio), categoria: prod.categoria || 'Otros', stock: getStock(id) };
+      }));
 }
 
-// ── Render ─────────────────────────────────────────────────
-function renderTodo(){
-  const ventasMes=[
-    ...todosPedidos.filter(p=>ESTADOS_VENTA.includes(p.estado)&&esPeriodo(p.fecha))
-      .map(p=>({id:p.id,tipo:'auto',fecha:p.fecha,desc:p.cliente||'Pedido web',
-                canal:p.origen==='whatsapp'?'WhatsApp':'Web',importe:num(p.total)})),
-    ...todasVentas.filter(v=>esPeriodo(v.fecha))
-  ].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+// ── Período ────────────────────────────────────────────────
+function renderPills() {
+  $('meses').innerHTML = `<button type="button" data-mes="-1" aria-pressed="${mesFiltro === -1}">Todo el año</button>` +
+    MESES.map((m, i) => `<button type="button" data-mes="${i}" aria-pressed="${mesFiltro === i}">${m.slice(0, 3)}</button>`).join('');
+  $('anio-grafico').textContent = AÑO;
+  // En el celular los meses se desplazan de costado: se deja a la vista el elegido
+  const c = $('meses'), b = c.querySelector('[aria-pressed="true"]');
+  if (b) c.scrollLeft += b.getBoundingClientRect().left - c.getBoundingClientRect().left - (c.clientWidth - b.offsetWidth) / 2;
+  $('periodo-texto').textContent = mesFiltro === -1 ? `Todo ${AÑO}` : `${MESES[mesFiltro]} de ${AÑO}`;
+}
 
-  const gastosMes=todosGastos.filter(g=>esPeriodo(g.fecha))
-    .sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+// ── Resumen y tablas ───────────────────────────────────────
+function renderTodo() {
+  const ventasMes = [
+    ...todosPedidos.filter(p => ESTADOS_VENTA.includes(p.estado) && esPeriodo(p.fecha))
+      .map(p => ({ id: p.id, tipo: 'auto', fecha: p.fecha, desc: p.cliente || 'Pedido web', canal: p.origen === 'whatsapp' ? 'WhatsApp' : 'Web', importe: num(p.total) })),
+    ...todasVentas.filter(v => esPeriodo(v.fecha))
+  ].sort((a, b) => fechaLocal(b.fecha) - fechaLocal(a.fecha));
+  const gastosMes = todosGastos.filter(g => esPeriodo(g.fecha)).sort((a, b) => fechaLocal(b.fecha) - fechaLocal(a.fecha));
+  const comprasMes = todasCompras.filter(c => esPeriodo(c.fecha)).sort((a, b) => fechaLocal(b.fecha) - fechaLocal(a.fecha));
 
-  const comprasMes=todasCompras.filter(c=>esPeriodo(c.fecha))
-    .sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+  const totalV = ventasMes.reduce((s, v) => s + num(v.importe), 0);
+  const totalG = gastosMes.reduce((s, g) => s + num(g.importe), 0);
+  const totalC = comprasMes.reduce((s, c) => s + num(c.total), 0);
+  const balance = totalV - (totalG + totalC);
 
-  const totalV=ventasMes.reduce((s,v)=>s+(v.importe||0),0);
-  const totalG=gastosMes.reduce((s,g)=>s+(g.importe||0),0);
-  const totalC=comprasMes.reduce((s,c)=>s+(c.total||0),0);
-  const balance=totalV-(totalG+totalC);
+  $('k-ventas').textContent = fmt(totalV);
+  $('k-ventas-sub').textContent = ventasMes.length === 1 ? '1 venta' : `${ventasMes.length} ventas`;
+  $('k-gastos').textContent = fmt(totalG + totalC);
+  const registros = gastosMes.length + comprasMes.length;
+  $('k-gastos-sub').textContent = registros === 1 ? '1 registro' : `${registros} registros`;
+  $('k-balance').textContent = fmt(balance);
+  $('k-balance').className = balance >= 0 ? 'positivo' : 'negativo';
+  $('k-balance-sub').textContent = balance >= 0 ? 'Ganancia del período' : 'Pérdida del período';
+  $('k-ticket').textContent = ventasMes.length ? fmt(totalV / ventasMes.length) : '$0';
 
-  document.getElementById('k-ventas').textContent=fmt(totalV);
-  document.getElementById('k-gastos').textContent=fmt(totalG+totalC);
-  document.getElementById('k-balance').textContent=fmt(balance);
-  document.getElementById('k-ticket').textContent=ventasMes.length?fmt(totalV/ventasMes.length):'$0';
-  document.getElementById('k-ventas-sub').textContent=`${ventasMes.length} transacciones`;
-  document.getElementById('k-gastos-sub').textContent=`${gastosMes.length+comprasMes.length} registros`;
-  document.getElementById('k-balance-sub').textContent=balance>=0?'↑ positivo':'↓ negativo';
-  document.getElementById('k-balance-card').className='kpi-card '+(balance>=0?'azul':'rojo');
-
-  renderTablaVentas(ventasMes,totalV);
-  renderTablaGastos(gastosMes,totalG);
-  renderTablaCompras(comprasMes,totalC);
-  document.getElementById('tbl-ventas-total').textContent=fmt(totalV);
-  document.getElementById('tbl-gastos-total').textContent=fmt(totalG);
-  document.getElementById('tbl-compras-total').textContent=fmt(totalC);
+  renderTablaVentas(ventasMes);
+  renderTablaGastos(gastosMes);
+  renderTablaCompras(comprasMes);
+  $('tbl-ventas-total').textContent = fmt(totalV);
+  $('tbl-gastos-total').textContent = fmt(totalG);
+  $('tbl-compras-total').textContent = fmt(totalC);
 
   renderChartMeses();
   renderChartPlat(ventasMes);
-  renderChartGastos(gastosMes,comprasMes);
+  renderChartGastos(gastosMes, comprasMes);
 }
 
-function renderStockUI(){
-  const vars=getAllVariants();
-  const totalUnits=vars.reduce((s,v)=>s+v.stock,0);
-  const valorInv=vars.reduce((s,v)=>s+v.stock*v.precio,0);
-  const sinStock=vars.filter(v=>v.stock===0);
-  const bajoStock=vars.filter(v=>v.stock>0&&v.stock<=2);
+function renderStockUI() {
+  const vars = getAllVariants();
+  const sinStock = vars.filter(v => v.stock === 0);
+  const bajoStock = vars.filter(v => v.stock > 0 && v.stock <= POCO_STOCK);
+  $('sk-valor').textContent = fmt(vars.reduce((s, v) => s + v.stock * v.precio, 0));
+  $('sk-units').textContent = vars.reduce((s, v) => s + v.stock, 0).toLocaleString('es-UY');
+  $('sk-sin').textContent = sinStock.length;
+  $('sk-sin').className = sinStock.length ? 'alerta' : '';
+  $('sk-bajo').textContent = bajoStock.length;
+  $('sk-bajo').className = bajoStock.length ? 'aviso' : '';
 
-  document.getElementById('sk-valor').textContent=fmt(valorInv);
-  document.getElementById('sk-units').textContent=totalUnits.toLocaleString('es-UY');
-  document.getElementById('sk-sin').textContent=sinStock.length;
-  document.getElementById('sk-bajo').textContent=bajoStock.length;
-
-  const alertas=[...sinStock,...bajoStock].slice(0,10);
-  const wrap=document.getElementById('alerta-lista-wrap');
-  wrap.innerHTML=!alertas.length
-    ?'<p class="empty-msg" style="color:#507a3a">✓ Todo el stock en orden</p>'
-    :`<ul class="alerta-lista">${alertas.map(v=>`
-      <li class="alerta-item">
-        <div><div class="alerta-nombre">${esc(v.nombre)}</div><div class="alerta-variante">${esc(v.variante)}</div></div>
-        <span class="${v.stock===0?'badge-0':'badge-bajo'}">${v.stock===0?'SIN STOCK':v.stock+' ud.'}</span>
-      </li>`).join('')}</ul>`;
+  const alertas = [...sinStock, ...bajoStock].slice(0, 10);
+  $('alertas').innerHTML = alertas.length
+    ? alertas.map(v => `
+      <li><span><b>${esc(v.nombre)}</b><small>${esc(v.variante)}</small></span>
+        <span class="sa-pastilla ${v.stock === 0 ? 'rojo' : 'ambar'}">${v.stock === 0 ? 'Sin stock' : v.stock === 1 ? 'Queda 1' : `Quedan ${v.stock}`}</span></li>`).join('')
+    : '<li class="sa-vacio"><i data-lucide="circle-check"></i>Todo el stock en orden.</li>';
+  panel.iconos();
 
   renderChartStock(vars);
   llenarSelectProductos();
 }
 
-function renderTablaVentas(ventas){
-  const tb=document.getElementById('tbl-ventas');
-  const rows=ventas.slice(0,8);
-  if(!rows.length){tb.innerHTML=`<tr><td colspan="4" class="empty-msg">Sin ventas en el período</td></tr>`;return;}
-  tb.innerHTML=rows.map(v=>`<tr>
-    <td class="muted">${fmtF(v.fecha)}</td>
-    <td>${esc(v.desc||'—')}${v.tipo==='auto'?'<span class="badge badge-azul" style="margin-left:4px">Auto</span>':''}</td>
-    <td class="muted">${esc(v.canal||'—')}</td>
-    <td class="num">${fmt(v.importe)}</td>
-  </tr>`).join('');
+const filaVacia = (cols, texto) => `<tr><td colspan="${cols}" class="vacia">${texto}</td></tr>`;
+function renderTablaVentas(ventas) {
+  const filas = ventas.slice(0, 8);
+  $('tbl-ventas').innerHTML = filas.length ? filas.map(v => `<tr>
+      <td class="fecha">${fmtF(v.fecha)}</td>
+      <td>${esc(v.desc || '—')}${v.tipo === 'auto' ? '<span class="etiqueta-web">Tienda</span>' : ''}</td>
+      <td class="suave">${esc(v.canal || '—')}</td>
+      <td class="num">${fmt(v.importe)}</td>
+    </tr>`).join('') : filaVacia(4, 'Sin ventas en el período.');
+}
+function renderTablaGastos(gastos) {
+  const filas = gastos.slice(0, 8);
+  $('tbl-gastos').innerHTML = filas.length ? filas.map(g => `<tr>
+      <td class="fecha">${fmtF(g.fecha)}</td>
+      <td><span class="sa-pastilla rojo">${esc(g.categoria || '—')}</span></td>
+      <td class="suave">${esc(String(g.detalle || '').slice(0, 40) || '—')}</td>
+      <td class="num">${fmt(g.importe)}</td>
+    </tr>`).join('') : filaVacia(4, 'Sin gastos en el período.');
+}
+function renderTablaCompras(compras) {
+  const filas = compras.slice(0, 12);
+  $('tbl-compras').innerHTML = filas.length ? filas.map(c => `<tr>
+      <td class="fecha">${fmtF(c.fecha)}</td>
+      <td>${esc(c.proveedor || '—')}</td>
+      <td><span class="sa-pastilla gris">${esc(c.insumo || '—')}</span></td>
+      <td>${esc(String(c.descripcion || c.desc || '—').slice(0, 40))}</td>
+      <td class="num">${esc(c.cantidad || '—')}</td>
+      <td class="num suave">${c.costo_unit ? fmt(c.costo_unit) : '—'}</td>
+      <td class="num">${fmt(c.total)}</td>
+    </tr>`).join('') : filaVacia(7, 'Sin compras en el período.');
 }
 
-function renderTablaGastos(gastos){
-  const tb=document.getElementById('tbl-gastos');
-  const rows=gastos.slice(0,8);
-  if(!rows.length){tb.innerHTML=`<tr><td colspan="4" class="empty-msg">Sin gastos en el período</td></tr>`;return;}
-  tb.innerHTML=rows.map(g=>`<tr>
-    <td class="muted">${fmtF(g.fecha)}</td>
-    <td><span class="badge badge-rojo">${esc(g.categoria||'—')}</span></td>
-    <td class="muted">${esc(String(g.detalle||'').slice(0,28)||'—')}</td>
-    <td class="num">${fmt(g.importe)}</td>
-  </tr>`).join('');
+// ── Gráficos ───────────────────────────────────────────────
+function destroyChart(k) { if (charts[k]) { charts[k].destroy(); charts[k] = null; } }
+function sinDatos(id, hay) {
+  const caja = $(id).parentElement;
+  let v = caja.querySelector('.sa-vacio');
+  if (!hay && !v) { v = document.createElement('div'); v.className = 'sa-vacio'; v.textContent = 'Sin datos en el período.'; caja.append(v); }
+  if (hay && v) v.remove();
+  $(id).hidden = !hay;
 }
+const escalas = {
+  x: { grid: { display: false }, border: { display: false } },
+  y: { grid: { color: '#efe6d8' }, border: { display: false }, ticks: { callback: v => '$' + Math.round(v / 1000) + 'k' } }
+};
 
-function renderTablaCompras(compras,total){
-  const tb=document.getElementById('tbl-compras');
-  const rows=compras.slice(0,12);
-  if(!rows.length){tb.innerHTML=`<tr><td colspan="7" class="empty-msg">Sin compras en el período</td></tr>`;return;}
-  tb.innerHTML=rows.map(c=>`<tr>
-    <td class="muted">${fmtF(c.fecha)}</td>
-    <td>${esc(c.proveedor||'—')}</td>
-    <td><span class="badge badge-azul">${esc(c.insumo||'—')}</span></td>
-    <td>${esc(String(c.descripcion||c.desc||'—').slice(0,30))}</td>
-    <td class="num">${esc(c.cantidad||'—')}</td>
-    <td class="num muted">${c.costo_unit?fmt(c.costo_unit):'—'}</td>
-    <td class="num">${fmt(c.total)}</td>
-  </tr>`).join('');
-}
-
-// ── Charts ─────────────────────────────────────────────────
-function destroyChart(k){if(charts[k]){charts[k].destroy();charts[k]=null;}}
-
-function renderChartMeses(){
+function renderChartMeses() {
   destroyChart('meses');
-  const vPM=Array(12).fill(0),gPM=Array(12).fill(0);
-  [...todosPedidos.filter(p=>ESTADOS_VENTA.includes(p.estado)&&new Date(p.fecha).getFullYear()===AÑO)
-    .map(p=>({fecha:p.fecha,importe:p.total||0})),
-   ...todasVentas.filter(v=>new Date(v.fecha).getFullYear()===AÑO)]
-    .forEach(v=>{const m=new Date(v.fecha).getMonth();vPM[m]+=v.importe||0;});
-  [...todosGastos.filter(g=>new Date(g.fecha).getFullYear()===AÑO).map(g=>({fecha:g.fecha,importe:g.importe||0})),
-   ...todasCompras.filter(c=>new Date(c.fecha).getFullYear()===AÑO).map(c=>({fecha:c.fecha,importe:c.total||0}))]
-    .forEach(g=>{const m=new Date(g.fecha).getMonth();gPM[m]+=g.importe||0;});
-  charts.meses=new Chart(document.getElementById('chart-meses').getContext('2d'),{
-    type:'bar',data:{labels:MESES.map(m=>m.slice(0,3)),datasets:[
-      {label:'Ventas',data:vPM.map(Math.round),backgroundColor:'rgba(80,122,58,.85)',borderRadius:6,borderSkipped:false},
-      {label:'Gastos+Compras',data:gPM.map(Math.round),backgroundColor:'rgba(192,57,43,.7)',borderRadius:6,borderSkipped:false}
-    ]},options:{responsive:true,maintainAspectRatio:true,
-      plugins:{legend:{labels:{font:{family:'Montserrat',size:11},boxWidth:12,boxHeight:12}}},
-      scales:{x:{grid:{display:false},ticks:{font:{family:'Montserrat',size:10}}},
-              y:{grid:{color:'#f0ebe3'},ticks:{font:{family:'Montserrat',size:10},callback:v=>'$'+Math.round(v/1000)+'k'}}}}
+  const vPM = Array(12).fill(0), gPM = Array(12).fill(0);
+  const delAño = f => { const d = fechaLocal(f); return !isNaN(d) && d.getFullYear() === AÑO; };
+  [...todosPedidos.filter(p => ESTADOS_VENTA.includes(p.estado) && delAño(p.fecha)).map(p => ({ fecha: p.fecha, importe: num(p.total) })),
+   ...todasVentas.filter(v => delAño(v.fecha))]
+    .forEach(v => { vPM[fechaLocal(v.fecha).getMonth()] += num(v.importe); });
+  [...todosGastos.filter(g => delAño(g.fecha)).map(g => ({ fecha: g.fecha, importe: num(g.importe) })),
+   ...todasCompras.filter(c => delAño(c.fecha)).map(c => ({ fecha: c.fecha, importe: num(c.total) }))]
+    .forEach(g => { gPM[fechaLocal(g.fecha).getMonth()] += num(g.importe); });
+  charts.meses = new Chart($('chart-meses'), {
+    type: 'bar',
+    data: { labels: MESES.map(m => m.slice(0, 3)), datasets: [
+      { label: 'Ventas', data: vPM.map(Math.round), backgroundColor: '#182417', borderRadius: 5, borderSkipped: false, maxBarThickness: 26 },
+      { label: 'Gastos y compras', data: gPM.map(Math.round), backgroundColor: 'rgba(165, 67, 47, 0.75)', borderRadius: 5, borderSkipped: false, maxBarThickness: 26 }
+    ] },
+    options: { responsive: true, maintainAspectRatio: false, scales: escalas,
+      plugins: { legend: { align: 'end', labels: { boxWidth: 10, boxHeight: 10, useBorderRadius: true, borderRadius: 3 } },
+                 tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.raw)}` } } } }
   });
 }
 
-function renderChartPlat(ventas){
-  destroyChart('plat');
-  const map={};
-  ventas.forEach(v=>{const k=v.canal||'Otro';map[k]=(map[k]||0)+(v.importe||0);});
-  const entries=Object.entries(map).sort((a,b)=>b[1]-a[1]);
-  if(!entries.length) return;
-  charts.plat=new Chart(document.getElementById('chart-plat').getContext('2d'),{
-    type:'doughnut',data:{labels:entries.map(([k])=>k),
-      datasets:[{data:entries.map(([,v])=>Math.round(v)),backgroundColor:COLORS,borderWidth:2,borderColor:'#fff'}]},
-    options:{responsive:true,maintainAspectRatio:true,
-      plugins:{legend:{position:'right',labels:{font:{family:'Montserrat',size:10},boxWidth:12,padding:8}},
-               tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)}}}}
+function dona(clave, id, entries) {
+  destroyChart(clave);
+  sinDatos(id, entries.length > 0);
+  if (!entries.length) return;
+  const angosto = matchMedia('(max-width: 600px)').matches;
+  charts[clave] = new Chart($(id), {
+    type: 'doughnut',
+    data: { labels: entries.map(([k]) => k), datasets: [{ data: entries.map(([, v]) => Math.round(v)), backgroundColor: PALETA, borderWidth: 2, borderColor: '#fffdf8' }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: { legend: { position: angosto ? 'bottom' : 'right', labels: { boxWidth: 10, boxHeight: 10, padding: 10 } },
+                 tooltip: { callbacks: { label: ctx => ' ' + fmt(ctx.raw) } } } }
   });
 }
-
-function renderChartGastos(gastos,compras){
-  destroyChart('gastos');
-  const map={};
-  gastos.forEach(g=>{const k=g.categoria||'Otros';map[k]=(map[k]||0)+(g.importe||0);});
-  compras.forEach(c=>{const k='Mercadería';map[k]=(map[k]||0)+(c.total||0);});
-  const entries=Object.entries(map).sort((a,b)=>b[1]-a[1]);
-  if(!entries.length) return;
-  charts.gastos=new Chart(document.getElementById('chart-gastos').getContext('2d'),{
-    type:'doughnut',data:{labels:entries.map(([k])=>k),
-      datasets:[{data:entries.map(([,v])=>Math.round(v)),
-        backgroundColor:['#1a5276','#c0392b','#e67e22','#7c3aed','#2563eb','#16a085','#d35400'],
-        borderWidth:2,borderColor:'#fff'}]},
-    options:{responsive:true,maintainAspectRatio:true,
-      plugins:{legend:{position:'right',labels:{font:{family:'Montserrat',size:10},boxWidth:12,padding:8}},
-               tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)}}}}
-  });
+function renderChartPlat(ventas) {
+  const map = {};
+  ventas.forEach(v => { const k = v.canal || 'Otro'; map[k] = (map[k] || 0) + num(v.importe); });
+  dona('plat', 'chart-plat', Object.entries(map).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]));
 }
-
-function renderChartStock(vars){
+function renderChartGastos(gastos, compras) {
+  const map = {};
+  gastos.forEach(g => { const k = g.categoria || 'Otros'; map[k] = (map[k] || 0) + num(g.importe); });
+  compras.forEach(c => { map['Mercadería'] = (map['Mercadería'] || 0) + num(c.total); });
+  dona('gastos', 'chart-gastos', Object.entries(map).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]));
+}
+function renderChartStock(vars) {
   destroyChart('stock');
-  const map={};
-  vars.forEach(v=>{const k=v.categoria;map[k]=(map[k]||0)+v.stock;});
-  const entries=Object.entries(map).sort((a,b)=>b[1]-a[1]);
-  if(!entries.length) return;
-  charts.stock=new Chart(document.getElementById('chart-stock').getContext('2d'),{
-    type:'bar',data:{labels:entries.map(([k])=>k),
-      datasets:[{label:'Unidades',data:entries.map(([,v])=>v),
-        backgroundColor:COLORS.map(c=>c+'cc'),borderRadius:6,borderSkipped:false}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:true,
-      plugins:{legend:{display:false}},
-      scales:{x:{grid:{color:'#f0ebe3'},ticks:{font:{family:'Montserrat',size:10}}},
-              y:{grid:{display:false},ticks:{font:{family:'Montserrat',size:10}}}}}
+  const map = {};
+  vars.forEach(v => { map[v.categoria] = (map[v.categoria] || 0) + v.stock; });
+  const entries = Object.entries(map).sort((a, b) => b[1] - a[1]);
+  sinDatos('chart-stock', entries.length > 0);
+  if (!entries.length) return;
+  charts.stock = new Chart($('chart-stock'), {
+    type: 'bar',
+    data: { labels: entries.map(([k]) => k), datasets: [{ label: 'Unidades', data: entries.map(([, v]) => v), backgroundColor: '#507a3a', borderRadius: 5, borderSkipped: false, maxBarThickness: 22 }] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw} unidades` } } },
+      scales: { x: { grid: { color: '#efe6d8' }, border: { display: false } }, y: { grid: { display: false }, border: { display: false } } } }
   });
 }
 
-// ── Selects ────────────────────────────────────────────────
-function llenarSelectProductos(){
-  const vars=getAllVariants();
-  document.getElementById('v-producto').innerHTML=
-    '<option value="">— Sin descontar del stock —</option>'+
-    vars.map(v=>`<option value="${v.id}" data-precio="${v.precio}" data-stock="${v.stock}">${v.nombre} — ${v.variante} (${v.stock} ud · $${v.precio})</option>`).join('');
-  document.getElementById('c-producto').innerHTML=
-    '<option value="">— No vincular al stock —</option>'+
-    vars.map(v=>`<option value="${v.id}" data-stock="${v.stock}">${v.nombre} — ${v.variante} (stock: ${v.stock})</option>`).join('');
+// ── Formularios ────────────────────────────────────────────
+function llenarSelectProductos() {
+  const vars = getAllVariants();
+  const elegidoV = $('v-producto').value, elegidoC = $('c-producto').value;
+  $('v-producto').innerHTML = '<option value="">No descontar del stock</option>' +
+    vars.map(v => `<option value="${esc(v.id)}">${esc(v.nombre)} ${esc(v.variante)} (${v.stock} en stock, ${fmt(v.precio)})</option>`).join('');
+  $('c-producto').innerHTML = '<option value="">No vincular al stock</option>' +
+    vars.map(v => `<option value="${esc(v.id)}">${esc(v.nombre)} ${esc(v.variante)} (${v.stock} en stock)</option>`).join('');
+  $('v-producto').value = elegidoV;
+  $('c-producto').value = elegidoC;
+}
+const varianteElegida = id => getAllVariants().find(v => v.id === id);
+
+function onVentaProductoChange() {
+  const v = varianteElegida($('v-producto').value);
+  $('v-detalle-stock').hidden = !v;
+  if (!v) return;
+  const disp = $('v-stock-disp');
+  if (v.stock === 0) { disp.textContent = 'No queda stock de este color.'; disp.className = 'nota rojo'; }
+  else if (v.stock <= POCO_STOCK) { disp.textContent = v.stock === 1 ? 'Queda 1 sola unidad.' : `Quedan ${v.stock} unidades.`; disp.className = 'nota ambar'; }
+  else { disp.textContent = `Hay ${v.stock} unidades.`; disp.className = 'nota verde'; }
+  if (v.precio > 0 && !$('v-importe').value) $('v-importe').value = v.precio * (parseInt($('v-cantidad').value, 10) || 1);
+}
+function onVentaCantidadChange() {
+  const v = varianteElegida($('v-producto').value);
+  if (v && v.precio > 0) $('v-importe').value = v.precio * (parseInt($('v-cantidad').value, 10) || 1);
+}
+function onCompraProductoChange() {
+  const v = varianteElegida($('c-producto').value);
+  $('c-stock-disp').hidden = !v;
+  if (v) $('c-stock-disp').textContent = (v.stock === 0 ? 'Hoy no hay stock.' : `Hoy hay ${v.stock} ${v.stock === 1 ? 'unidad' : 'unidades'}.`) + ' Al confirmar se suma lo que compraste.';
+}
+function calcTotalCompra() {
+  const cant = parseFloat($('c-cantidad').value) || 0;
+  const unit = parseFloat($('c-costo-unit').value) || 0;
+  if (cant && unit) $('c-total').value = Math.round(cant * unit * 100) / 100;
 }
 
-function onVentaProductoChange(){
-  const sel=document.getElementById('v-producto');
-  const grp=document.getElementById('v-cantidad-group');
-  const disp=document.getElementById('v-stock-disp');
-  if(!sel.value){grp.style.display='none';return;}
-  grp.style.display='block';
-  const opt=sel.options[sel.selectedIndex];
-  const s=parseInt(opt.dataset.stock)||0, p=parseFloat(opt.dataset.precio)||0;
-  disp.style.display='block';
-  if(s===0){disp.textContent='⚠ Sin stock disponible';disp.className='stock-disp sin';}
-  else if(s<=2){disp.textContent=`⚠ Stock bajo: ${s} unidad${s>1?'es':''}`;disp.className='stock-disp bajo';}
-  else{disp.textContent=`✓ ${s} unidades disponibles`;disp.className='stock-disp';}
-  if(p>0&&!document.getElementById('v-importe').value) document.getElementById('v-importe').value=p;
+const TITULOS = { venta: ['Nueva venta', 'Guardar venta'], gasto: ['Nuevo gasto', 'Guardar gasto'], compra: ['Compra de mercadería', 'Confirmar compra'] };
+function abrirRegistro(tipo) {
+  tipoRegistro = tipo;
+  ['venta', 'gasto', 'compra'].forEach(t => { $('form-' + t).hidden = t !== tipo; });
+  $('registro-titulo').textContent = TITULOS[tipo][0];
+  $('btn-guardar-registro').querySelector('span').textContent = TITULOS[tipo][1];
+  const form = $('form-' + tipo);
+  form.reset();
+  form.querySelector('input[type="date"]').value = hoyTexto();
+  if (tipo === 'venta') { $('v-detalle-stock').hidden = true; }
+  if (tipo === 'compra') { $('c-stock-disp').hidden = true; }
+  $('registro').classList.add('abierto');
+  $('velo-registro').classList.add('visible');
+  form.querySelector('input[type="number"]').focus({ preventScroll: true });
+}
+function cerrarRegistro() {
+  $('registro').classList.remove('abierto');
+  $('velo-registro').classList.remove('visible');
 }
 
-function onVentaCantidadChange(){
-  const sel=document.getElementById('v-producto');
-  if(!sel.value) return;
-  const cant=parseInt(document.getElementById('v-cantidad').value)||1;
-  const p=parseFloat(sel.options[sel.selectedIndex].dataset.precio)||0;
-  if(p>0) document.getElementById('v-importe').value=p*cant;
-}
+function falta(texto, campo) { panel.aviso(texto, true); if (campo) campo.focus(); }
 
-function onCompraProductoChange(){
-  const sel=document.getElementById('c-producto');
-  const disp=document.getElementById('c-stock-disp');
-  if(!sel.value){disp.style.display='none';return;}
-  const s=parseInt(sel.options[sel.selectedIndex].dataset.stock)||0;
-  disp.style.display='block';
-  disp.textContent=`Stock actual: ${s} unidades`;
-  disp.className='stock-disp';
-}
-
-function calcTotalCompra(){
-  const cant=parseFloat(document.getElementById('c-cantidad').value)||0;
-  const unit=parseFloat(document.getElementById('c-costo-unit').value)||0;
-  if(cant&&unit) document.getElementById('c-total').value=(cant*unit).toFixed(2);
-}
-
-// ── Firebase ───────────────────────────────────────────────
-db.ref('pedidos').on('value',snap=>{
-  todosPedidos=[];snap.forEach(c=>todosPedidos.push({id:c.key,...c.val()}));renderTodo();
-});
-db.ref('ventas_manual').on('value',snap=>{
-  todasVentas=[];snap.forEach(c=>todasVentas.push({id:c.key,...c.val()}));renderTodo();
-});
-db.ref('gastos').on('value',snap=>{
-  todosGastos=[];snap.forEach(c=>todosGastos.push({id:c.key,...c.val()}));renderTodo();
-});
-db.ref('compras').on('value',snap=>{
-  todasCompras=[];snap.forEach(c=>todasCompras.push({id:c.key,...c.val()}));renderTodo();
-});
-db.ref('productos').on('value',snap=>{
-  productosFirebase={};snap.forEach(c=>{productosFirebase[c.key]={id:c.key,...c.val()};});renderStockUI();
-});
-db.ref('stock').on('value',snap=>{
-  stockData=snap.val()||{};renderStockUI();
-});
-
-// ── Panel ─────────────────────────────────────────────────
-function abrirPanel(tipo){
-  ['venta','gasto','compra'].forEach(t=>document.getElementById('form-'+t).style.display='none');
-  document.getElementById('form-'+tipo).style.display='block';
-  document.getElementById('panel-title').textContent={venta:'Nueva venta',gasto:'Nuevo gasto',compra:'Compra de mercadería'}[tipo];
-  const hoy=new Date().toISOString().split('T')[0];
-  if(tipo==='venta'){
-    document.getElementById('v-fecha').value=hoy;
-    document.getElementById('v-importe').value='';document.getElementById('v-desc').value='';
-    document.getElementById('v-producto').value='';document.getElementById('v-cantidad').value=1;
-    document.getElementById('v-desc2').value='';
-    document.getElementById('v-cantidad-group').style.display='none';
-    document.getElementById('v-stock-disp').style.display='none';
+async function guardarVenta() {
+  const fecha = $('v-fecha').value;
+  const imp = parseFloat($('v-importe').value);
+  const desc = $('v-desc').value.trim();
+  const canal = $('v-canal').value;
+  const pago = $('v-pago').value;
+  const prodId = $('v-producto').value;
+  const cant = parseInt($('v-cantidad').value, 10) || 1;
+  const desc2 = parseFloat($('v-desc2').value) || 0;
+  if (!fecha) return falta('Elegí la fecha de la venta.', $('v-fecha'));
+  if (!(imp > 0)) return falta('Escribí el importe de la venta.', $('v-importe'));
+  if (prodId && getStock(prodId) < cant) {
+    const v = varianteElegida(prodId);
+    const si = await panel.confirmar({
+      titulo: 'Hay menos stock que lo vendido',
+      texto: `Quedan ${getStock(prodId)} de ${v ? v.nombre + ' ' + v.variante : 'ese producto'}. Si guardás igual, el stock queda en 0.`,
+      boton: 'Guardar igual'
+    });
+    if (!si) return;
   }
-  if(tipo==='gasto'){
-    document.getElementById('g-fecha').value=hoy;
-    document.getElementById('g-importe').value='';document.getElementById('g-detalle').value='';
-    document.getElementById('g-prov').value='';
+  await db.ref('ventas_manual').push({ fecha, importe: imp, desc, canal, forma_pago: pago, descuento: desc2, tipo: 'manual', ...(prodId ? { productoId: prodId, cantidad: cant } : {}) });
+  if (prodId) await db.ref('stock/' + prodId).transaction(v => Math.max(0, (v || 0) - cant));
+  cerrarRegistro();
+  panel.aviso(prodId ? 'Venta guardada y stock descontado' : 'Venta guardada');
+}
+
+async function guardarGasto() {
+  const fecha = $('g-fecha').value;
+  const imp = parseFloat($('g-importe').value);
+  if (!fecha) return falta('Elegí la fecha del gasto.', $('g-fecha'));
+  if (!(imp > 0)) return falta('Escribí el importe del gasto.', $('g-importe'));
+  await db.ref('gastos').push({ fecha, importe: imp, categoria: $('g-cat').value, detalle: $('g-detalle').value.trim(), proveedor: $('g-prov').value.trim(), forma_pago: $('g-pago').value });
+  cerrarRegistro();
+  panel.aviso('Gasto guardado');
+}
+
+async function guardarCompra() {
+  const fecha = $('c-fecha').value;
+  const desc = $('c-desc').value.trim();
+  const cant = parseInt($('c-cantidad').value, 10) || 1;
+  const costoUnit = parseFloat($('c-costo-unit').value) || 0;
+  const total = parseFloat($('c-total').value) || costoUnit * cant;
+  const prodId = $('c-producto').value;
+  if (!fecha) return falta('Elegí la fecha de la compra.', $('c-fecha'));
+  if (!desc) return falta('Escribí qué compraste.', $('c-desc'));
+  await db.ref('compras').push({ fecha, proveedor: $('c-prov').value, forma_pago: $('c-pago').value, insumo: $('c-insumo').value, descripcion: desc, cantidad: cant, costo_unit: costoUnit, total, ...(prodId ? { productoId: prodId } : {}) });
+  if (prodId) await db.ref('stock/' + prodId).transaction(v => (v || 0) + cant);
+  cerrarRegistro();
+  panel.aviso(prodId ? 'Compra guardada y stock sumado' : 'Compra guardada');
+}
+
+async function guardarRegistro() {
+  const btn = $('btn-guardar-registro');
+  btn.disabled = true;
+  try {
+    await ({ venta: guardarVenta, gasto: guardarGasto, compra: guardarCompra })[tipoRegistro]();
+  } catch (e) {
+    panel.aviso('No se pudo guardar. Revisá la conexión y probá de nuevo.', true);
+  } finally {
+    btn.disabled = false;
   }
-  if(tipo==='compra'){
-    document.getElementById('c-fecha').value=hoy;
-    document.getElementById('c-desc').value='';document.getElementById('c-cantidad').value=1;
-    document.getElementById('c-costo-unit').value='';document.getElementById('c-total').value='';
-    document.getElementById('c-producto').value='';
-    document.getElementById('c-stock-disp').style.display='none';
-  }
-  document.getElementById('add-panel').classList.add('open');
-  document.getElementById('panel-overlay').classList.add('open');
-}
-function cerrarPanel(){
-  document.getElementById('add-panel').classList.remove('open');
-  document.getElementById('panel-overlay').classList.remove('open');
 }
 
-// ── Guardar ────────────────────────────────────────────────
-async function guardarVenta(){
-  const fecha=document.getElementById('v-fecha').value;
-  const imp=parseFloat(document.getElementById('v-importe').value);
-  const desc=document.getElementById('v-desc').value.trim();
-  const canal=document.getElementById('v-canal').value;
-  const pago=document.getElementById('v-pago').value;
-  const prodId=document.getElementById('v-producto').value;
-  const cant=parseInt(document.getElementById('v-cantidad').value)||1;
-  const desc2=parseFloat(document.getElementById('v-desc2').value)||0;
-  if(!fecha||!imp){alert('Completá la fecha y el importe.');return;}
-  if(prodId&&getStock(prodId)<cant)
-    if(!confirm(`⚠ Solo hay ${getStock(prodId)} unidades. ¿Guardar igual?`)) return;
-  await db.ref('ventas_manual').push({fecha,importe:imp,desc,canal,forma_pago:pago,descuento:desc2,tipo:'manual',...(prodId?{productoId:prodId,cantidad:cant}:{})});
-  if(prodId) await db.ref('stock/'+prodId).transaction(v=>(v||0)-cant);
-  cerrarPanel();
+// ── Importar Excel ────────────────────────────────────────
+function normRows(sheet) {
+  return XLSX.utils.sheet_to_json(sheet, { defval: '', cellDates: true })
+    .map(row => { const n = {}; for (const k of Object.keys(row)) n[k.toString().trim().toUpperCase()] = row[k]; return n; });
 }
-
-async function guardarGasto(){
-  const fecha=document.getElementById('g-fecha').value;
-  const imp=parseFloat(document.getElementById('g-importe').value);
-  const cat=document.getElementById('g-cat').value;
-  const detalle=document.getElementById('g-detalle').value.trim();
-  const prov=document.getElementById('g-prov').value.trim();
-  const pago=document.getElementById('g-pago').value;
-  if(!fecha||!imp){alert('Completá la fecha y el importe.');return;}
-  await db.ref('gastos').push({fecha,importe:imp,categoria:cat,detalle,proveedor:prov,forma_pago:pago});
-  cerrarPanel();
-}
-
-async function guardarCompra(){
-  const fecha=document.getElementById('c-fecha').value;
-  const prov=document.getElementById('c-prov').value;
-  const pago=document.getElementById('c-pago').value;
-  const insumo=document.getElementById('c-insumo').value;
-  const desc=document.getElementById('c-desc').value.trim();
-  const cant=parseInt(document.getElementById('c-cantidad').value)||1;
-  const costoUnit=parseFloat(document.getElementById('c-costo-unit').value)||0;
-  const total=parseFloat(document.getElementById('c-total').value)||costoUnit*cant;
-  const prodId=document.getElementById('c-producto').value;
-  if(!fecha||!desc){alert('Completá la fecha y la descripción.');return;}
-  await db.ref('compras').push({fecha,proveedor:prov,forma_pago:pago,insumo,descripcion:desc,cantidad:cant,costo_unit:costoUnit,total,...(prodId?{productoId:prodId}:{})});
-  if(prodId) await db.ref('stock/'+prodId).transaction(v=>(v||0)+cant);
-  cerrarPanel();
-}
-
-// ── Import Excel ──────────────────────────────────────────
-function abrirImport(){document.getElementById('modal-import').classList.add('open');}
-function cerrarImport(){
-  document.getElementById('modal-import').classList.remove('open');
-  document.getElementById('import-file').value='';
-  document.getElementById('import-progress').style.display='none';
-}
-function normRows(sheet){
-  return XLSX.utils.sheet_to_json(sheet,{defval:'',cellDates:true})
-    .map(row=>{const n={};for(const k of Object.keys(row))n[k.toString().trim().toUpperCase()]=row[k];return n;});
-}
-async function procesarImport(file){
-  if(!file) return;
-  const prog=document.getElementById('import-progress');
-  prog.style.display='block';prog.textContent='Leyendo archivo...';
-  const soloCompras=document.querySelector('input[name="import-tipo"]:checked')?.value==='compras';
-  const reader=new FileReader();
-  reader.onload=async function(e){
-    try{
-      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
-      const toISO=raw=>{
-        if(raw instanceof Date&&!isNaN(raw))return raw.toISOString().split('T')[0];
-        if(raw){const d=new Date(raw);if(!isNaN(d))return d.toISOString().split('T')[0];}
+async function procesarImport(file) {
+  if (!file) return;
+  const prog = $('importar-progreso');
+  prog.hidden = false;
+  prog.textContent = 'Leyendo el archivo…';
+  const soloCompras = document.querySelector('input[name="importar-tipo"]:checked')?.value === 'compras';
+  const reader = new FileReader();
+  reader.onload = async function (e) {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+      const toISO = raw => {
+        if (raw instanceof Date && !isNaN(raw)) return raw.toISOString().split('T')[0];
+        if (raw) { const d = new Date(raw); if (!isNaN(d)) return d.toISOString().split('T')[0]; }
         return null;
       };
-      let cv=0,cg=0,cc=0;
+      let cv = 0, cg = 0, cc = 0;
 
-      if(!soloCompras){
+      if (!soloCompras) {
         // Ventas
-        const shV=wb.SheetNames.find(n=>n.toUpperCase().includes('VENTA')&&!n.toUpperCase().includes('2025'));
-        if(shV){
-          for(const row of normRows(wb.Sheets[shV])){
-            const imp=parseFloat(row['SUBTOTAL VENTAS']||row['SUBTOTAL']||0);
-            const fecha=toISO(row['FECHA']);
-            if(!imp||!fecha) continue;
+        const shV = wb.SheetNames.find(n => n.toUpperCase().includes('VENTA') && !n.toUpperCase().includes('2025'));
+        if (shV) {
+          for (const row of normRows(wb.Sheets[shV])) {
+            const imp = parseFloat(row['SUBTOTAL VENTAS'] || row['SUBTOTAL'] || 0);
+            const fecha = toISO(row['FECHA']);
+            if (!imp || !fecha) continue;
             await db.ref('ventas_manual').push({
-              fecha,importe:imp,
-              desc:[row['ARTICULO'],row['GRUPO']].filter(Boolean).join(' — ')||'Importado',
-              canal:String(row['PLATAFORMA DE COMPRA']||row['PLATAFORMA']||'Excel').trim(),
-              forma_pago:String(row['FORMA DE PAGO']||'').trim(),
-              grupo:String(row['GRUPO']||'').trim(),
-              comprador:String(row['COMPRADOR']||'').trim(),
-              descuento:parseFloat(row['DESCUENTOS']||0)||0,tipo:'manual',importado:true
+              fecha, importe: imp,
+              desc: [row['ARTICULO'], row['GRUPO']].filter(Boolean).join(' — ') || 'Importado',
+              canal: String(row['PLATAFORMA DE COMPRA'] || row['PLATAFORMA'] || 'Excel').trim(),
+              forma_pago: String(row['FORMA DE PAGO'] || '').trim(),
+              grupo: String(row['GRUPO'] || '').trim(),
+              comprador: String(row['COMPRADOR'] || '').trim(),
+              descuento: parseFloat(row['DESCUENTOS'] || 0) || 0, tipo: 'manual', importado: true
             });
             cv++;
-            if(cv%10===0)prog.textContent=`Ventas: ${cv}...`;
+            if (cv % 10 === 0) prog.textContent = `Ventas: ${cv}…`;
           }
         }
         // Gastos
-        const shG=wb.SheetNames.find(n=>n.toUpperCase().includes('GASTO'));
-        if(shG){
-          for(const row of normRows(wb.Sheets[shG])){
-            const imp=parseFloat(row['TOTAL']||0);
-            const fecha=toISO(row['FECHA']);
-            if(!imp||!fecha) continue;
+        const shG = wb.SheetNames.find(n => n.toUpperCase().includes('GASTO'));
+        if (shG) {
+          for (const row of normRows(wb.Sheets[shG])) {
+            const imp = parseFloat(row['TOTAL'] || 0);
+            const fecha = toISO(row['FECHA']);
+            if (!imp || !fecha) continue;
             await db.ref('gastos').push({
-              fecha,importe:imp,
-              categoria:String(row['GRUPO']||'Varios').trim(),
-              detalle:String(row['DETALLE DEL GASTO']||row['DETALLE']||'').trim(),
-              proveedor:String(row['PROVEEDOR']||'').trim(),
-              forma_pago:String(row['FORMA DE PAGO']||'').trim(),importado:true
+              fecha, importe: imp,
+              categoria: String(row['GRUPO'] || 'Varios').trim(),
+              detalle: String(row['DETALLE DEL GASTO'] || row['DETALLE'] || '').trim(),
+              proveedor: String(row['PROVEEDOR'] || '').trim(),
+              forma_pago: String(row['FORMA DE PAGO'] || '').trim(), importado: true
             });
             cg++;
           }
         }
       }
 
-      // Compra de mercadería (siempre se puede importar)
-      const shC=wb.SheetNames.find(n=>n.toUpperCase().includes('COMPRA'));
-      if(shC){
-        for(const row of normRows(wb.Sheets[shC])){
-          const cant=parseFloat(row['CANTIDAD']||0);
-          const fecha=toISO(row['FECHA']);
-          if(!cant||!fecha) continue;
-          const costoUnit=parseFloat(row['COSTO UNIT']||row['COSTO UNITARIO']||0);
-          const total=parseFloat(row['COSTO TOTAL']||row['TOTAL']||0)||costoUnit*cant;
+      // Compras de mercadería (siempre se pueden importar)
+      const shC = wb.SheetNames.find(n => n.toUpperCase().includes('COMPRA'));
+      if (shC) {
+        for (const row of normRows(wb.Sheets[shC])) {
+          const cant = parseFloat(row['CANTIDAD'] || 0);
+          const fecha = toISO(row['FECHA']);
+          if (!cant || !fecha) continue;
+          const costoUnit = parseFloat(row['COSTO UNIT'] || row['COSTO UNITARIO'] || 0);
+          const total = parseFloat(row['COSTO TOTAL'] || row['TOTAL'] || 0) || costoUnit * cant;
           await db.ref('compras').push({
             fecha,
-            proveedor:String(row['PROVEEDOR']||'').trim(),
-            forma_pago:String(row['FORMA DE']||row['FORMA DE PAGO']||'').trim(),
-            insumo:String(row['INSUMO']||'').trim(),
-            descripcion:String(row['DESCRIPCIÓN']||row['DESCRIPCION']||'').trim(),
-            cantidad:cant,costo_unit:costoUnit,total,importado:true
+            proveedor: String(row['PROVEEDOR'] || '').trim(),
+            forma_pago: String(row['FORMA DE'] || row['FORMA DE PAGO'] || '').trim(),
+            insumo: String(row['INSUMO'] || '').trim(),
+            descripcion: String(row['DESCRIPCIÓN'] || row['DESCRIPCION'] || '').trim(),
+            cantidad: cant, costo_unit: costoUnit, total, importado: true
           });
           cc++;
-          if(cc%10===0)prog.textContent=`Compras: ${cc}...`;
+          if (cc % 10 === 0) prog.textContent = `Compras: ${cc}…`;
         }
       }
 
-      const msg=soloCompras
-        ?`✅ Listo! ${cc} compras importadas.`
-        :`✅ Listo! ${cv} ventas, ${cg} gastos, ${cc} compras importadas.`;
-      prog.textContent=msg;
-    }catch(err){prog.textContent='⚠️ Error: '+err.message;}
+      const cuenta = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
+      prog.textContent = soloCompras
+        ? `Listo: ${cuenta(cc, 'compra importada', 'compras importadas')}.`
+        : `Listo: se importaron ${cuenta(cv, 'venta', 'ventas')}, ${cuenta(cg, 'gasto', 'gastos')} y ${cuenta(cc, 'compra', 'compras')}.`;
+    } catch (err) {
+      prog.textContent = 'No se pudo importar: ' + err.message;
+    }
   };
   reader.readAsArrayBuffer(file);
 }
+
+// ── Eventos ────────────────────────────────────────────────
+$('meses').addEventListener('click', e => {
+  const b = e.target.closest('[data-mes]');
+  if (!b) return;
+  mesFiltro = Number(b.dataset.mes);
+  renderPills();
+  renderTodo();
+});
+document.querySelectorAll('[data-registrar]').forEach(b => b.addEventListener('click', () => abrirRegistro(b.dataset.registrar)));
+document.querySelectorAll('[data-cerrar-registro]').forEach(b => b.addEventListener('click', cerrarRegistro));
+$('velo-registro').addEventListener('click', cerrarRegistro);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && $('registro').classList.contains('abierto') && !document.querySelector('dialog[open]')) cerrarRegistro();
+});
+$('btn-guardar-registro').addEventListener('click', guardarRegistro);
+['form-venta', 'form-gasto', 'form-compra'].forEach(id => $(id).addEventListener('submit', e => { e.preventDefault(); guardarRegistro(); }));
+$('v-producto').addEventListener('change', onVentaProductoChange);
+$('v-cantidad').addEventListener('input', onVentaCantidadChange);
+$('c-producto').addEventListener('change', onCompraProductoChange);
+$('c-cantidad').addEventListener('input', calcTotalCompra);
+$('c-costo-unit').addEventListener('input', calcTotalCompra);
+
+$('btn-importar').addEventListener('click', () => $('dialogo-importar').showModal());
+$('btn-cerrar-importar').addEventListener('click', () => $('dialogo-importar').close());
+$('dialogo-importar').addEventListener('close', () => { $('importar-archivo').value = ''; $('importar-progreso').hidden = true; });
+$('importar-archivo').addEventListener('change', e => procesarImport(e.target.files[0]));
+['dragenter', 'dragover'].forEach(t => $('soltar-excel').addEventListener(t, e => { e.preventDefault(); $('soltar-excel').classList.add('encima'); }));
+['dragleave', 'drop'].forEach(t => $('soltar-excel').addEventListener(t, () => $('soltar-excel').classList.remove('encima')));
+$('soltar-excel').addEventListener('drop', e => { e.preventDefault(); procesarImport(e.dataTransfer.files[0]); });
+
+// ── Datos en vivo ──────────────────────────────────────────
+const lista = snap => { const items = []; snap.forEach(c => { const v = c.val(); if (v && typeof v === 'object') items.push({ ...v, id: c.key }); }); return items; };
+db.ref('pedidos').on('value', snap => { todosPedidos = lista(snap); renderTodo(); });
+db.ref('ventas_manual').on('value', snap => { todasVentas = lista(snap); renderTodo(); });
+db.ref('gastos').on('value', snap => { todosGastos = lista(snap); renderTodo(); });
+db.ref('compras').on('value', snap => { todasCompras = lista(snap); renderTodo(); });
+db.ref('productos').on('value', snap => {
+  productosFirebase = {};
+  snap.forEach(c => { const v = c.val(); if (v && typeof v === 'object') productosFirebase[c.key] = { ...v, id: c.key }; });
+  renderStockUI();
+});
+db.ref('stock').on('value', snap => { stockData = snap.val() || {}; renderStockUI(); });
 
 renderPills();
 </script>

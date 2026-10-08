@@ -7,634 +7,512 @@
   <link rel="icon" type="image/png" href="../img/logo.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Sendera Admin" />
-  <meta name="theme-color" content="#f2ede6" />
-  <title>Sendera - Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <meta name="theme-color" content="#182417" />
+  <title>Sendera - Inicio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="../firebase-config.js"></script>
-  <script src="admin-auth.js"></script>
+  <script src="admin-auth.js?v=2"></script>
+  <link rel="stylesheet" href="admin.css?v=1" />
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="admin-ui.js?v=1"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { min-height: 100vh; font-size: 14px; line-height: 1.5; }
 
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background: #f2ede6;
-      color: #3a3026;
-      min-height: 100vh;
+    .en-vivo { display: inline-flex; align-items: center; gap: 7px; font-size: 0.78rem; color: var(--sa-tinta-2); white-space: nowrap; }
+    .en-vivo i { width: 8px; height: 8px; border-radius: 50%; background: var(--sa-verde); box-shadow: 0 0 0 4px var(--sa-verde-fondo); }
+
+    /* Caja y sierra de ventas */
+    .caja-cifras { display: flex; align-items: flex-end; gap: 40px; flex-wrap: wrap; }
+    .caja-hoy small { display: block; color: var(--sa-tinta-2); font-weight: 500; margin-bottom: 6px; }
+    .caja-hoy strong { font: 600 3.8rem/0.9 var(--sa-serif); letter-spacing: -0.02em; }
+    .caja-hoy strong sup { font-size: 0.45em; vertical-align: 0.9em; margin-right: 2px; color: var(--sa-tinta-2); }
+    .caja-datos { display: flex; gap: 30px; padding-bottom: 6px; flex-wrap: wrap; }
+    .caja-datos small { display: block; color: var(--sa-tinta-3); font-size: 0.78rem; }
+    .caja-datos b { font-size: 1.15rem; font-weight: 600; }
+    .sierra { position: relative; margin-top: 22px; }
+    .sierra svg { width: 100%; height: auto; display: block; overflow: visible; }
+    .sierra .cresta { fill: var(--sa-noche); }
+    .sierra .cresta.entrada { animation: subir 1.1s cubic-bezier(.2, .7, .2, 1) both; }
+    .sierra .antes { fill: none; stroke: #a89880; stroke-width: 1.6; stroke-dasharray: 4 4; stroke-linejoin: round; }
+    .sierra .marca-hoy { stroke: var(--sa-ambar); stroke-width: 1.5; }
+    .sierra .punto-hoy { fill: var(--sa-ambar); stroke: var(--sa-papel); stroke-width: 2; }
+    .sierra-eje { display: flex; justify-content: space-between; margin-top: 8px; color: var(--sa-tinta-3); font-size: 0.74rem; }
+    .leyenda { display: flex; gap: 18px; margin-top: 14px; font-size: 0.76rem; color: var(--sa-tinta-2); flex-wrap: wrap; }
+    .leyenda span { display: inline-flex; align-items: center; gap: 7px; }
+    .leyenda i { width: 14px; height: 8px; border-radius: 2px; background: var(--sa-noche); }
+    .leyenda i.antes { height: 0; border-top: 2px dashed #a89880; background: none; border-radius: 0; }
+    .burbuja {
+      position: absolute; pointer-events: none; transform: translate(-50%, -110%); z-index: 2;
+      background: var(--sa-noche); color: #fff; font-size: 0.76rem; padding: 6px 10px; border-radius: 8px;
+      white-space: nowrap; opacity: 0; transition: opacity 0.12s;
     }
+    .burbuja.visible { opacity: 1; }
+    .burbuja b { display: block; font-size: 0.9rem; }
+    @keyframes subir { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 
-    /* NAVBAR */
-    .navbar {
-      background: #fff;
-      border-bottom: 2px solid #e8dfd2;
-      padding: 0 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      height: 60px;
-      box-shadow: 0 2px 8px rgba(80,60,30,0.06);
+    /* Para hacer hoy */
+    .tarea { display: flex; gap: 14px; align-items: flex-start; padding: 14px 0; border-top: 1px solid var(--sa-linea-2); }
+    .tarea:first-child { border-top: 0; padding-top: 4px; }
+    .tarea .icono { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--sa-ambar-fondo); color: var(--sa-ambar-oscuro); flex-shrink: 0; }
+    .tarea .icono.agua { background: var(--sa-agua-fondo); color: var(--sa-agua); }
+    .tarea .icono.rojo { background: var(--sa-rojo-fondo); color: var(--sa-rojo); }
+    .tarea .icono.estrella { background: #f3ecd8; color: #8a6b12; }
+    .tarea div { flex: 1; min-width: 0; }
+    .tarea b { display: block; font-weight: 600; }
+    .tarea p { color: var(--sa-tinta-2); font-size: 0.82rem; margin-top: 2px; }
+    .tarea .sa-boton-sec { align-self: center; padding: 7px 12px; font-size: 0.8rem; white-space: nowrap; }
+
+    /* Más vendidos */
+    .ranking li { list-style: none; display: grid; grid-template-columns: 22px 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--sa-linea-2); }
+    .ranking li:first-child { border-top: 0; padding-top: 0; }
+    .ranking li.sa-vacio { display: block; }
+    .ranking .pos { font: 600 1.35rem/1 var(--sa-serif); color: var(--sa-tinta-3); text-align: center; }
+    .ranking img, .sin-foto { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; background: var(--sa-papel-2); display: block; }
+    .ranking b { font-weight: 600; display: block; }
+    .ranking .barra { height: 4px; border-radius: 4px; background: var(--sa-linea-2); margin-top: 7px; overflow: hidden; }
+    .ranking .barra i { display: block; height: 100%; background: var(--sa-noche); border-radius: 4px; }
+    .ranking .monto { text-align: right; }
+    .ranking .monto small { display: block; color: var(--sa-tinta-3); font-size: 0.76rem; }
+
+    /* Stock por reponer */
+    .stock-lista li { list-style: none; display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--sa-linea-2); }
+    .stock-lista li:first-child { border-top: 0; padding-top: 0; }
+    .stock-lista li.sa-vacio { display: block; }
+    .stock-lista img, .stock-lista .sin-foto { width: 36px; height: 36px; border-radius: 9px; }
+    .stock-lista .nombre { flex: 1; min-width: 0; }
+    .stock-lista .nombre small { display: block; color: var(--sa-tinta-3); font-size: 0.78rem; }
+    .stock-lista .cant { font-weight: 600; font-size: 0.8rem; padding: 3px 9px; border-radius: 999px; background: var(--sa-rojo-fondo); color: var(--sa-rojo); white-space: nowrap; }
+    .stock-lista .cant.poco { background: var(--sa-ambar-fondo); color: var(--sa-ambar-oscuro); }
+    .lista-larga { max-height: 360px; overflow-y: auto; }
+
+    /* Códigos de descuento */
+    .codigos li { list-style: none; display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--sa-linea-2); }
+    .codigos li:first-child { border-top: 0; padding-top: 0; }
+    .codigos li.sa-vacio { display: block; }
+    .codigos .codigo { font-weight: 700; letter-spacing: 0.04em; padding: 5px 10px; border: 1px dashed var(--sa-tinta-3); border-radius: 8px; background: var(--sa-papel-2); }
+    .codigos .detalle { flex: 1; min-width: 0; color: var(--sa-tinta-2); font-size: 0.8rem; }
+    .codigos .detalle b { display: block; color: var(--sa-tinta); font-weight: 600; font-size: 0.88rem; }
+
+    /* Reseñas */
+    .resena { background: var(--sa-papel-2); border: 1px solid var(--sa-linea-2); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .estrellas { color: var(--sa-ambar); letter-spacing: 2px; }
+    .resena p { margin: 8px 0 10px; line-height: 1.55; }
+    .resena small { color: var(--sa-tinta-3); }
+    .resena .sa-acciones { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .resumen-resenas { display: flex; gap: 26px; margin: 4px 0 14px; }
+    .resumen-resenas b { font: 600 1.8rem/1 var(--sa-serif); display: block; }
+    .resumen-resenas small { color: var(--sa-tinta-3); font-size: 0.78rem; }
+    .publicadas li { list-style: none; display: flex; gap: 10px; align-items: flex-start; padding: 12px 0; border-top: 1px solid var(--sa-linea-2); }
+    .publicadas li.sa-vacio { display: block; }
+    .publicadas li div { flex: 1; min-width: 0; }
+    .publicadas li b { font-weight: 600; }
+    .publicadas li p { color: var(--sa-tinta-2); font-size: 0.84rem; margin-top: 3px; }
+
+    @media (max-width: 900px) {
+      .sa-grilla .tareas-panel { order: -1; }
+      .caja-hoy strong { font-size: 3.2rem; }
+      .caja-datos { gap: 20px; }
+      .en-vivo { display: none; }
     }
-
-    .navbar .logo {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.4rem;
-      color: #3a3026;
-      letter-spacing: 0.12em;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .nav-links { display: flex; align-items: center; gap: 4px; }
-
-    .nav-links a {
-      color: #7a6e62;
-      text-decoration: none;
-      font-size: 0.75rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 8px 14px;
-      border-radius: 8px;
-      transition: all 0.2s;
-      font-weight: 500;
-    }
-
-    .nav-links a:hover { background: #f2ede6; color: #3a3026; }
-    .nav-links a.active { background: #507a3a; color: #fff; }
-
-    .btn-logout {
-      font-size: 0.72rem;
-      color: #9a8f82;
-      cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      background: none;
-      border: 1px solid #ddd5c8;
-      border-radius: 8px;
-      padding: 7px 14px;
-      margin-left: 8px;
-      transition: all 0.2s;
-    }
-    .btn-logout:hover { background: #f2ede6; color: #3a3026; }
-    .btn-logout-top { display: none; background: none; border: none; cursor: pointer; font-size: 1rem; color: #9a8f82; padding: 2px 6px; margin-left: 6px; vertical-align: middle; transition: color 0.2s; }
-    .btn-logout-top:hover { color: #3a3026; }
-
-    /* MOBILE NAV */
-    .mobile-nav {
-      display: none;
-      background: #fff;
-      border-top: 2px solid #e8dfd2;
-      position: fixed;
-      bottom: 0;
-      left: 0; right: 0;
-      z-index: 10;
-      padding: 8px 0 12px;
-    }
-
-    .mobile-nav-links {
-      display: flex;
-      justify-content: space-around;
-    }
-
-    .mobile-nav-links a {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      text-decoration: none;
-      color: #9a8f82;
-      font-size: 0.6rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 6px 12px;
-      border-radius: 10px;
-      transition: all 0.2s;
-    }
-
-    .mobile-nav-links a .icon { font-size: 1.3rem; }
-    .mobile-nav-links a.active { color: #507a3a; }
-    .mobile-nav-links a.active .icon { transform: scale(1.1); }
-
-    /* CONTAINER */
-    .container { max-width: 960px; margin: 0 auto; padding: 28px 20px 80px; }
-
-    /* HEADER */
-    .page-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      margin-bottom: 28px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .page-header h1 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2rem;
-      color: #3a3026;
-    }
-
-    .page-header p {
-      color: #9a8f82;
-      font-size: 0.78rem;
-      margin-top: 3px;
-      text-transform: capitalize;
-    }
-
-    .badge-live {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: #edf7e8;
-      border: 1px solid #b8dba8;
-      border-radius: 20px;
-      padding: 5px 12px;
-      font-size: 0.68rem;
-      color: #507a3a;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-    }
-
-    .dot-live {
-      width: 7px; height: 7px;
-      background: #507a3a;
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.8); }
-    }
-
-    /* SECCIÓN */
-    .seccion-titulo {
-      font-size: 0.7rem;
-      color: #9a8f82;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      font-weight: 600;
-      padding-bottom: 10px;
-      border-bottom: 2px solid #e8dfd2;
-      margin: 32px 0 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    /* CARDS MÉTRICAS */
-    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
-
-    .card {
-      background: #fff;
-      border-radius: 14px;
-      padding: 22px 18px;
-      text-align: center;
-      border: 1.5px solid #e8dfd2;
-      box-shadow: 0 2px 8px rgba(80,60,30,0.05);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(80,60,30,0.1); }
-
-    .card .icon { font-size: 1.6rem; margin-bottom: 8px; }
-    .card .num { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; color: #3a3026; line-height: 1; }
-    .card .num.verde { color: #507a3a; }
-    .card .num.naranja { color: #c2692b; }
-    .card .lbl { font-size: 0.68rem; color: #9a8f82; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 6px; }
-
-    /* RANKING */
-    .ranking-wrap {
-      background: #fff;
-      border-radius: 14px;
-      border: 1.5px solid #e8dfd2;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(80,60,30,0.05);
-    }
-
-    .ranking-item {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 14px 18px;
-      border-bottom: 1px solid #f0ebe3;
-      transition: background 0.15s;
-    }
-
-    .ranking-item:last-child { border-bottom: none; }
-    .ranking-item:hover { background: #faf8f4; }
-
-    .ranking-pos {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.5rem;
-      color: #ddd5c8;
-      width: 28px;
-      text-align: center;
-      flex-shrink: 0;
-    }
-
-    .ranking-item:nth-child(1) .ranking-pos { color: #c2692b; }
-    .ranking-item:nth-child(2) .ranking-pos { color: #9a8f82; }
-    .ranking-item:nth-child(3) .ranking-pos { color: #a07d45; }
-
-    .ranking-nombre { flex: 1; font-size: 0.85rem; color: #3a3026; font-weight: 500; }
-    .ranking-qty {
-      font-size: 0.8rem;
-      color: #507a3a;
-      font-weight: 600;
-      background: #edf7e8;
-      border-radius: 20px;
-      padding: 3px 10px;
-    }
-
-    /* ALERTAS */
-    .alerta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 18px;
-      margin-bottom: 10px;
-      border-radius: 12px;
-      border-left: 4px solid;
-      gap: 12px;
-    }
-
-    .alerta.bajo { background: #fff5f5; border-color: #e74c3c; }
-    .alerta.medio { background: #fffbeb; border-color: #c2692b; }
-
-    .alerta-nombre { font-size: 0.85rem; color: #3a3026; font-weight: 500; }
-    .alerta-variante { font-size: 0.75rem; color: #9a8f82; margin-top: 2px; }
-
-    .alerta-stock {
-      font-size: 0.82rem;
-      font-weight: 700;
-      border-radius: 20px;
-      padding: 4px 12px;
-      white-space: nowrap;
-    }
-
-    .alerta.bajo .alerta-stock { color: #b91c1c; background: #fee2e2; }
-    .alerta.medio .alerta-stock { color: #92400e; background: #fef3c7; }
-
-    .empty {
-      text-align: center;
-      padding: 28px;
-      color: #9a8f82;
-      font-size: 0.82rem;
-      background: #fff;
-      border-radius: 14px;
-      border: 1.5px solid #e8dfd2;
-    }
-
-    /* RESPONSIVE */
-    @media (max-width: 600px) {
-      .cards { grid-template-columns: repeat(2, 1fr); }
-      .nav-links, .btn-logout { display: none; }
-      .btn-logout-top { display: inline-block; }
-      .mobile-nav { display: block; }
-      .container { padding-bottom: 90px; }
-      .page-header h1 { font-size: 1.6rem; }
+    @media (prefers-reduced-motion: reduce) {
+      .sierra .cresta.entrada { animation: none; }
     }
   </style>
 </head>
 <body>
 
-<div class="navbar">
-  <div class="logo">SENDERA <button class="btn-logout-top" onclick="logout()" title="Salir">↩</button></div>
-  <div class="nav-links">
-    <a href="dashboard.html" class="active">Dashboard</a>
-    <a href="pedidos.html">Pedidos</a>
-    <a href="productos.html">Productos</a>
-    <a href="stock.html">Stock</a>
-    <a href="colecciones.html">Colecciones</a>
-    <a href="lookbook.html">Lookbook</a>
-    <a href="finanzas.html">Finanzas</a>
-    <a href="https://analytics.google.com" target="_blank">Analytics</a>
-    <button class="btn-logout" onclick="logout()">↩ Salir</button>
-  </div>
-</div>
-
-<div class="container">
-  <div class="page-header">
+<main class="sa-pagina">
+  <header class="sa-encabezado">
     <div>
-      <h1>Dashboard 🌿</h1>
+      <h1>Hola, Sendera</h1>
       <p id="fecha-hoy"></p>
     </div>
-    <div class="badge-live"><div class="dot-live"></div> En vivo</div>
-  </div>
+    <span class="en-vivo"><i></i>Actualizado en vivo</span>
+  </header>
 
-  <div class="seccion-titulo">💰 Caja</div>
-  <div class="cards">
-    <div class="card">
-      <div class="icon">📈</div>
-      <div class="num verde" id="caja-hoy">$0</div>
-      <div class="lbl">Vendido hoy</div>
-    </div>
-    <div class="card">
-      <div class="icon">🗓️</div>
-      <div class="num" id="caja-mes">$0</div>
-      <div class="lbl">Este mes</div>
-    </div>
-    <div class="card">
-      <div class="icon">🛍️</div>
-      <div class="num" id="pedidos-hoy">0</div>
-      <div class="lbl">Pedidos hoy</div>
-    </div>
-    <div class="card">
-      <div class="icon">⏳</div>
-      <div class="num naranja" id="pedidos-pendientes">0</div>
-      <div class="lbl">Pendientes</div>
-    </div>
-  </div>
-
-  <div class="seccion-titulo">🏆 Más vendidos</div>
-  <div id="ranking-lista"><div class="empty">Sin pedidos todavía</div></div>
-
-  <div class="seccion-titulo">⚠️ Alertas de stock</div>
-  <div id="alertas-lista"><div class="empty">✅ Todo el stock en orden</div></div>
-
-  <!-- CÓDIGOS DE DESCUENTO -->
-  <div class="seccion-titulo">🏷️ Códigos de descuento</div>
-  <div id="codigos-lista" style="margin-bottom:12px"></div>
-  <div style="background:#fff;border:1.5px solid #e8dfd2;border-radius:12px;padding:18px;margin-bottom:16px">
-    <div style="font-size:0.78rem;font-weight:600;color:#3a3026;margin-bottom:12px">➕ Crear código</div>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <input id="cd-codigo" placeholder="Código (ej: SENDERA10)" style="padding:10px;border:1.5px solid #e8dfd2;border-radius:8px;font-family:inherit;font-size:0.82rem;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" />
-      <div style="display:flex;gap:10px">
-        <select id="cd-tipo" style="flex:1;padding:10px;border:1.5px solid #e8dfd2;border-radius:8px;font-family:inherit;font-size:0.82rem;color:#3a3026">
-          <option value="porcentaje">% Porcentaje</option>
-          <option value="fijo">$ Monto fijo</option>
-        </select>
-        <input id="cd-descuento" type="number" placeholder="Valor (ej: 10)" min="1" style="flex:1;padding:10px;border:1.5px solid #e8dfd2;border-radius:8px;font-family:inherit;font-size:0.82rem" />
+  <div class="sa-grilla">
+    <section class="sa-panel">
+      <div class="sa-panel-titulo"><h2>Caja</h2></div>
+      <div class="caja-cifras">
+        <div class="caja-hoy">
+          <small>Vendido hoy</small>
+          <strong class="sa-num"><sup>$</sup><span id="caja-hoy">0</span></strong>
+        </div>
+        <div class="caja-datos">
+          <div><small>Este mes</small><b class="sa-num" id="caja-mes">$0</b></div>
+          <div><small>Pedidos hoy</small><b class="sa-num" id="pedidos-hoy">0</b></div>
+          <div><small>Ticket promedio del mes</small><b class="sa-num" id="ticket">—</b></div>
+        </div>
       </div>
-      <button onclick="crearCodigo()" style="background:#507a3a;color:#fff;border:none;border-radius:8px;padding:10px;font-family:inherit;font-size:0.78rem;cursor:pointer;letter-spacing:0.08em;text-transform:uppercase">Crear código</button>
-    </div>
+      <div class="sierra">
+        <svg id="sierra-svg" viewBox="0 0 720 190" role="img" aria-label="Ventas por día de las últimas dos semanas, comparadas con las dos anteriores"></svg>
+        <div class="burbuja" id="burbuja"></div>
+        <div class="sierra-eje" id="sierra-eje"></div>
+        <div class="leyenda"><span><i></i>Últimos 14 días</span><span><i class="antes"></i>Los 14 días anteriores</span></div>
+      </div>
+    </section>
+
+    <section class="sa-panel tareas-panel">
+      <div class="sa-panel-titulo"><h2>Para hacer hoy</h2></div>
+      <div id="tareas"></div>
+    </section>
   </div>
 
-  <!-- RESEÑAS -->
-  <div class="seccion-titulo">⭐ Reseñas</div>
-
-  <!-- Pendientes de aprobación -->
-  <div id="resenas-pendientes-wrap" style="display:none;background:#fffdf5;border:1.5px solid #f0c040;border-radius:12px;padding:16px 18px;margin-bottom:16px">
-    <div style="font-size:0.78rem;font-weight:600;color:#7a5f00;margin-bottom:12px">⏳ Pendientes de aprobación</div>
-    <div id="resenas-pendientes-lista"></div>
+  <div class="sa-grilla">
+    <section class="sa-panel">
+      <div class="sa-panel-titulo"><h2>Más vendidos este mes</h2><a class="sa-enlace" href="productos.html">Productos <i data-lucide="chevron-right"></i></a></div>
+      <ol class="ranking" id="ranking"></ol>
+    </section>
+    <section class="sa-panel">
+      <div class="sa-panel-titulo"><h2>Stock por reponer</h2><a class="sa-enlace" href="stock.html">Stock <i data-lucide="chevron-right"></i></a></div>
+      <ul class="stock-lista lista-larga" id="stock-lista"></ul>
+    </section>
   </div>
 
-  <!-- Reseñas publicadas -->
-  <div id="resenas-publicadas-lista" style="max-height:400px;overflow-y:auto;"></div>
+  <div class="sa-grilla">
+    <section class="sa-panel">
+      <div class="sa-panel-titulo"><h2>Códigos de descuento</h2><button type="button" class="sa-boton-sec" id="btn-codigo"><i data-lucide="plus"></i>Crear código</button></div>
+      <form class="sa-formulario" id="form-codigo" hidden>
+        <input class="sa-campo" id="cd-codigo" placeholder="Código, por ejemplo SENDERA10" autocomplete="off" maxlength="40" />
+        <div class="sa-fila-campos">
+          <select class="sa-campo" id="cd-tipo"><option value="porcentaje">Porcentaje</option><option value="fijo">Monto fijo en pesos</option></select>
+          <input class="sa-campo" id="cd-descuento" type="number" min="1" placeholder="Valor, por ejemplo 10" />
+        </div>
+        <div class="sa-acciones"><button type="button" class="sa-boton-sec" data-cerrar="form-codigo">Cancelar</button><button type="submit" class="sa-boton">Crear código</button></div>
+      </form>
+      <ul class="codigos" id="codigos"></ul>
+    </section>
 
-  <!-- Agregar reseña manual -->
-  <div style="background:#fff;border:1.5px solid #e8dfd2;border-radius:12px;padding:18px;margin-top:16px">
-    <div style="font-size:0.78rem;font-weight:600;color:#3a3026;margin-bottom:12px">➕ Agregar reseña manualmente</div>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <select id="r-estrellas" style="padding:10px;border:1.5px solid #e8dfd2;border-radius:8px;font-family:inherit;font-size:0.82rem;color:#3a3026">
-        <option value="">Puntuación...</option>
-        <option value="5">★★★★★ (5 estrellas)</option>
-        <option value="4">★★★★☆ (4 estrellas)</option>
-        <option value="3">★★★☆☆ (3 estrellas)</option>
-        <option value="2">★★☆☆☆ (2 estrellas)</option>
-        <option value="1">★☆☆☆☆ (1 estrella)</option>
-      </select>
-      <input id="r-nombre" placeholder="Nombre" style="padding:10px;border:1.5px solid #e8dfd2;border-radius:8px;font-family:inherit;font-size:0.82rem" />
-      <input id="r-ciudad" placeholder="Ciudad (opcional)" style="padding:10px;border:1.5px solid #e8dfd2;border-radius:8px;font-family:inherit;font-size:0.82rem" />
-      <textarea id="r-texto" placeholder="Texto de la reseña..." rows="3" style="padding:10px;border:1.5px solid #e8dfd2;border-radius:8px;font-family:inherit;font-size:0.82rem;resize:none"></textarea>
-      <button onclick="agregarResena()" style="background:#507a3a;color:#fff;border:none;border-radius:8px;padding:10px;font-family:inherit;font-size:0.78rem;cursor:pointer;letter-spacing:0.08em;text-transform:uppercase">Publicar reseña</button>
-    </div>
+    <section class="sa-panel" id="resenas-panel">
+      <div class="sa-panel-titulo"><h2>Reseñas</h2><button type="button" class="sa-boton-sec" id="btn-resena"><i data-lucide="plus"></i>Agregar</button></div>
+      <form class="sa-formulario" id="form-resena" hidden>
+        <select class="sa-campo" id="r-estrellas">
+          <option value="">Puntuación</option>
+          <option value="5">5 estrellas</option>
+          <option value="4">4 estrellas</option>
+          <option value="3">3 estrellas</option>
+          <option value="2">2 estrellas</option>
+          <option value="1">1 estrella</option>
+        </select>
+        <div class="sa-fila-campos">
+          <input class="sa-campo" id="r-nombre" placeholder="Nombre" maxlength="40" />
+          <input class="sa-campo" id="r-ciudad" placeholder="Ciudad (opcional)" maxlength="40" />
+        </div>
+        <textarea class="sa-campo" id="r-texto" placeholder="Lo que dijo el cliente" maxlength="300"></textarea>
+        <div class="sa-acciones"><button type="button" class="sa-boton-sec" data-cerrar="form-resena">Cancelar</button><button type="submit" class="sa-boton">Publicar reseña</button></div>
+      </form>
+      <div id="resenas-pendientes"></div>
+      <div class="resumen-resenas" id="resumen-resenas"></div>
+      <ul class="publicadas lista-larga" id="resenas-publicadas"></ul>
+    </section>
   </div>
-</div>
-
-<!-- Mobile nav -->
-<div class="mobile-nav">
-  <div class="mobile-nav-links">
-    <a href="dashboard.html" class="active"><span class="icon">📊</span>Dashboard</a>
-    <a href="pedidos.html"><span class="icon">📦</span>Pedidos</a>
-    <a href="productos.html"><span class="icon">🛍️</span>Productos</a>
-    <a href="stock.html"><span class="icon">🏷️</span>Stock</a>
-    <a href="https://analytics.google.com" target="_blank"><span class="icon">📈</span>Analytics</a>
-    <a href="#" onclick="logout()"><span class="icon">↩️</span>Salir</a>
-  </div>
-</div>
+</main>
 
 <script>
+  const estado = { pedidos: [], productos: [], stock: {}, resenasPendientes: [], resenas: [], codigos: {} };
+  const $ = id => document.getElementById(id);
+  const pesos = n => '$' + num(n).toLocaleString('es-UY');
+  const plural = (n, uno, varios) => n === 1 ? uno : varios.replace('#', n);
+  const nombreCorto = n => esc(String(n || 'Cliente').trim().split(/\s+/)[0]);
+  const enumerar = (items, max = 2) => items.length <= max ? items.join(' y ') : items.slice(0, max).join(', ') + ` y ${items.length - max} más`;
+  const estrellas = n => Math.min(5, Math.max(1, parseInt(n, 10) || 5));
+  const delMes = (f, ahora) => f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear();
 
-  const hoy = new Date();
-  document.getElementById('fecha-hoy').textContent = hoy.toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const miniatura = f => f ? `<img src="${esc(f)}" alt="" loading="lazy" />` : '<span class="sin-foto"></span>';
 
-  db.ref('pedidos').on('value', snapshot => {
-    const pedidos = [];
-    snapshot.forEach(c => { pedidos.push({ id: c.key, ...c.val() }); });
+  const fecha = new Date().toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'long' }).replace(',', '');
+  $('fecha-hoy').textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
 
-    const hoyStr = new Date().toDateString();
-    const mesActual = new Date().getMonth();
-    const anioActual = new Date().getFullYear();
-
-    let cajaHoy = 0, cajaMes = 0, pedidosHoy = 0, pendientes = 0;
-    const ventas = {};
-
-    pedidos.forEach(p => {
-      const fecha = new Date(p.fecha);
-      if (fecha.toDateString() === hoyStr) { cajaHoy += num(p.total); pedidosHoy++; }
-      if (fecha.getMonth() === mesActual && fecha.getFullYear() === anioActual) cajaMes += num(p.total);
-      if (p.estado === 'pendiente') pendientes++;
-      if (p.productos) {
-        p.productos.forEach(pr => {
-          const key = pr.nombre + ' · ' + pr.variante;
-          ventas[key] = (ventas[key] || 0) + num(pr.qty);
-        });
-      }
+  // ── Caja ───────────────────────────────────────
+  function dibujarCaja() {
+    const ahora = new Date();
+    let hoy = 0, mes = 0, pedidosHoy = 0, pedidosMes = 0;
+    estado.pedidos.forEach(p => {
+      const f = new Date(p.fecha);
+      if (isNaN(f)) return;
+      if (f.toDateString() === ahora.toDateString()) { hoy += num(p.total); pedidosHoy++; }
+      if (delMes(f, ahora)) { mes += num(p.total); pedidosMes++; }
     });
+    $('caja-hoy').textContent = hoy.toLocaleString('es-UY');
+    $('caja-mes').textContent = pesos(mes);
+    $('pedidos-hoy').textContent = pedidosHoy;
+    $('ticket').textContent = pedidosMes ? pesos(Math.round(mes / pedidosMes)) : '—';
+    dibujarSierra();
+  }
 
-    document.getElementById('caja-hoy').textContent = '$' + cajaHoy.toLocaleString();
-    document.getElementById('caja-mes').textContent = '$' + cajaMes.toLocaleString();
-    document.getElementById('pedidos-hoy').textContent = pedidosHoy;
-    document.getElementById('pedidos-pendientes').textContent = pendientes;
+  // Ventas por día, de la más vieja a la de hoy; "desde" son los días que se saltean hacia atrás
+  function ventasPorDia(desde, dias) {
+    const totales = new Array(dias).fill(0);
+    const base = new Date();
+    base.setHours(0, 0, 0, 0);
+    estado.pedidos.forEach(p => {
+      const f = new Date(p.fecha);
+      if (isNaN(f)) return;
+      f.setHours(0, 0, 0, 0);
+      const atras = Math.round((base - f) / 86400000) - desde;
+      if (atras >= 0 && atras < dias) totales[dias - 1 - atras] += num(p.total);
+    });
+    return totales;
+  }
 
-    const ranking = Object.entries(ventas).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    const rankingEl = document.getElementById('ranking-lista');
-    rankingEl.innerHTML = ranking.length === 0
-      ? '<div class="empty">Sin pedidos todavía 🏕️</div>'
-      : `<div class="ranking-wrap">${ranking.map(([nombre, qty], i) => `
-          <div class="ranking-item">
-            <div class="ranking-pos">${i + 1}</div>
-            <div class="ranking-nombre">${esc(nombre)}</div>
-            <div class="ranking-qty">${qty} uds</div>
-          </div>`).join('')}</div>`;
+  let sierraDibujada = false;
+  function dibujarSierra() {
+    const ultimos = ventasPorDia(0, 14);
+    const anteriores = ventasPorDia(14, 14);
+    const W = 720, H = 190, base = 182, techo = 26, margen = 10;
+    const max = Math.max(1, ...ultimos, ...anteriores);
+    const x = i => margen + (i / 13) * (W - margen * 2);
+    const y = v => base - (v / max) * (base - techo);
+    const linea = d => d.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+    const svg = $('sierra-svg');
+    svg.innerHTML = `
+      <path class="cresta${sierraDibujada ? '' : ' entrada'}" d="M${margen},${base} ${linea(ultimos).replace(/^M/, 'L')} L${W - margen},${base} Z"/>
+      <path class="antes" d="${linea(anteriores)}"/>
+      <line class="marca-hoy" x1="${x(13)}" y1="${y(ultimos[13]) - 4}" x2="${x(13)}" y2="${y(ultimos[13]) - 22}"/>
+      <circle class="punto-hoy" cx="${x(13)}" cy="${y(ultimos[13])}" r="5.5"/>
+      ${ultimos.map((_, i) => `<rect data-i="${i}" x="${x(i) - W / 28}" y="0" width="${W / 14}" height="${H}" fill="transparent"/>`).join('')}`;
+    sierraDibujada = true;
+    const dia = i => { const d = new Date(); d.setDate(d.getDate() - (13 - i)); return d; };
+    const corto = d => d.toLocaleDateString('es-UY', { day: 'numeric', month: 'short' }).replace('.', '');
+    $('sierra-eje').innerHTML = `<span>${corto(dia(0))}</span><span>${corto(dia(7))}</span><span>Hoy</span>`;
+    const burbuja = $('burbuja');
+    svg.querySelectorAll('rect').forEach(r => {
+      r.addEventListener('mouseenter', () => {
+        const i = +r.dataset.i;
+        const caja = svg.getBoundingClientRect();
+        burbuja.innerHTML = `${i === 13 ? 'Hoy' : corto(dia(i))}<b>${pesos(ultimos[i])}</b>`;
+        burbuja.style.left = (x(i) / W) * caja.width + 'px';
+        burbuja.style.top = (y(ultimos[i]) / H) * caja.height + 'px';
+        burbuja.classList.add('visible');
+      });
+      r.addEventListener('mouseleave', () => burbuja.classList.remove('visible'));
+    });
+  }
+
+  // ── Stock ──────────────────────────────────────
+  function variantesConStock() {
+    const lista = [];
+    estado.productos.forEach(p => (p.variantes || []).forEach((v, i) => {
+      if (!v) return;
+      const id = v.stockId || p.id + '-' + i;
+      lista.push({ producto: p.nombre || '', variante: v.nombre || '', foto: fotoVariante(v), cant: num(estado.stock[id]) });
+    }));
+    return lista;
+  }
+
+  function dibujarStock() {
+    const bajos = variantesConStock().filter(v => v.cant <= 3).sort((a, b) => a.cant - b.cant);
+    $('stock-lista').innerHTML = bajos.length
+      ? bajos.map(v => `
+        <li>${miniatura(v.foto)}
+          <span class="nombre">${esc(v.producto)}<small>${esc(v.variante)}</small></span>
+          <span class="cant ${v.cant > 0 ? 'poco' : ''}">${v.cant > 0 ? 'Quedan ' + v.cant : 'Sin stock'}</span>
+        </li>`).join('')
+      : '<li class="sa-vacio"><i data-lucide="circle-check"></i>Todo el stock en orden.</li>';
+    panel.iconos();
+  }
+
+  // ── Para hacer hoy ─────────────────────────────
+  function dibujarTareas() {
+    const de = e => estado.pedidos.filter(p => p.estado === e);
+    const transf = de('pendiente-transferencia');
+    const efectivo = de('pendiente-efectivo');
+    const sinPago = de('pendiente');
+    const revisar = de('revisar-monto');
+    const sinStock = variantesConStock().filter(v => v.cant <= 0);
+    const resenas = estado.resenasPendientes;
+    const tareas = [];
+    if (revisar.length) tareas.push({ icono: 'circle-alert', clase: 'rojo', titulo: plural(revisar.length, 'Revisar 1 pago incompleto', 'Revisar # pagos incompletos'),
+      texto: `Mercado Pago cobró menos que el total en ${revisar.length === 1 ? 'el pedido' : 'los pedidos'} de ${enumerar(revisar.map(p => nombreCorto(p.cliente)))}.`, boton: 'Revisar', href: 'pedidos.html#revisar-monto' });
+    if (transf.length) tareas.push({ icono: 'landmark', titulo: plural(transf.length, 'Confirmar 1 transferencia', 'Confirmar # transferencias'),
+      texto: `De ${enumerar(transf.map(p => nombreCorto(p.cliente)))}. Revisá que el pago haya llegado.`, boton: 'Revisar', href: 'pedidos.html#pendiente-transferencia' });
+    if (efectivo.length) tareas.push({ icono: 'banknote', clase: 'agua', titulo: plural(efectivo.length, 'Coordinar 1 retiro en efectivo', 'Coordinar # retiros en efectivo'),
+      texto: `${enumerar(efectivo.map(p => nombreCorto(p.cliente)))} ${efectivo.length === 1 ? 'paga' : 'pagan'} al retirar en Cordón.`, boton: 'Ver', href: 'pedidos.html#pendiente-efectivo' });
+    if (sinPago.length) tareas.push({ icono: 'clock', titulo: plural(sinPago.length, '1 pedido sin pago confirmado', '# pedidos sin pago confirmado'),
+      texto: 'Mercado Pago todavía no confirmó el pago.', boton: 'Ver', href: 'pedidos.html#pendiente' });
+    if (sinStock.length) tareas.push({ icono: 'triangle-alert', clase: 'rojo', titulo: plural(sinStock.length, 'Reponer 1 color sin stock', 'Reponer # colores sin stock'),
+      texto: enumerar(sinStock.map(v => esc(`${v.producto} ${v.variante}`))) + '.', boton: 'Ver stock', href: 'stock.html#sin' });
+    if (resenas.length) tareas.push({ icono: 'star', clase: 'estrella', titulo: plural(resenas.length, 'Aprobar 1 reseña', 'Aprobar # reseñas'),
+      texto: resenas.length === 1
+        ? `${esc(resenas[0].nombre || 'Alguien')}${resenas[0].ciudad ? ', de ' + esc(resenas[0].ciudad) + ',' : ''} dejó ${estrellas(resenas[0].estrellas)} estrellas.`
+        : 'Esperan tu aprobación para aparecer en la tienda.', boton: 'Leer', href: '#resenas-panel' });
+    $('tareas').innerHTML = tareas.length
+      ? tareas.map(t => `
+        <div class="tarea">
+          <span class="icono ${t.clase || ''}"><i data-lucide="${t.icono}"></i></span>
+          <div><b>${t.titulo}</b><p>${t.texto}</p></div>
+          <a class="sa-boton-sec" href="${t.href}">${t.boton}</a>
+        </div>`).join('')
+      : '<div class="sa-vacio"><i data-lucide="circle-check"></i>Todo al día. No hay nada pendiente.</div>';
+    panel.pendientes(transf.length + efectivo.length + sinPago.length + revisar.length);
+    panel.iconos();
+  }
+
+  // ── Más vendidos del mes ───────────────────────
+  function dibujarRanking() {
+    const ahora = new Date();
+    const porProducto = {};
+    estado.pedidos.forEach(p => {
+      const f = new Date(p.fecha);
+      if (isNaN(f) || !delMes(f, ahora)) return;
+      (p.productos || []).forEach(pr => {
+        const nombre = String(pr.nombre || '').trim();
+        if (!nombre) return;
+        const r = porProducto[nombre] || (porProducto[nombre] = { nombre, unidades: 0, total: 0 });
+        r.unidades += num(pr.qty);
+        r.total += num(pr.qty) * num(pr.precio);
+      });
+    });
+    const top = Object.values(porProducto).sort((a, b) => b.unidades - a.unidades || b.total - a.total).slice(0, 5);
+    if (!top.length) { $('ranking').innerHTML = '<li class="sa-vacio">Todavía no hay ventas este mes.</li>'; return; }
+    const max = top[0].unidades || 1;
+    $('ranking').innerHTML = top.map((r, i) => {
+      const prod = estado.productos.find(p => p.nombre === r.nombre);
+      return `
+        <li>
+          <span class="pos">${i + 1}</span>
+          ${miniatura(prod ? fotoVariante((prod.variantes || [])[0]) : '')}
+          <div><b>${esc(r.nombre)}</b><div class="barra"><i style="width:${Math.round(r.unidades / max * 100)}%"></i></div></div>
+          <div class="monto"><b class="sa-num">${pesos(r.total)}</b><small class="sa-num">${r.unidades} ${r.unidades === 1 ? 'vendido' : 'vendidos'}</small></div>
+        </li>`;
+    }).join('');
+  }
+
+  // ── Códigos de descuento ───────────────────────
+  function dibujarCodigos() {
+    const entradas = Object.entries(estado.codigos);
+    $('codigos').innerHTML = entradas.length
+      ? entradas.map(([codigo, d]) => `
+        <li>
+          <span class="codigo">${esc(codigo)}</span>
+          <span class="detalle"><b>${d.tipo === 'porcentaje' ? num(d.descuento) + '% en toda la compra' : pesos(d.descuento) + ' de descuento'}</b>${d.activo ? 'Activo' : 'Pausado'}</span>
+          <button type="button" class="sa-interruptor" role="switch" aria-checked="${!!d.activo}" aria-label="Activar ${esc(codigo)}" data-codigo="${esc(codigo)}"></button>
+          <button type="button" class="sa-icono-btn" data-borrar-codigo="${esc(codigo)}" aria-label="Borrar ${esc(codigo)}"><i data-lucide="trash-2"></i></button>
+        </li>`).join('')
+      : '<li class="sa-vacio">Todavía no hay códigos. Creá uno para tus promociones.</li>';
+    panel.iconos();
+  }
+
+  $('codigos').addEventListener('click', async e => {
+    const interruptor = e.target.closest('[data-codigo]');
+    const borrar = e.target.closest('[data-borrar-codigo]');
+    if (interruptor) {
+      const codigo = interruptor.dataset.codigo;
+      const activo = !(estado.codigos[codigo] && estado.codigos[codigo].activo);
+      await db.ref('codigos_descuento/' + codigo + '/activo').set(activo);
+      panel.aviso(`${codigo} ${activo ? 'activado' : 'pausado'}`);
+    }
+    if (borrar) {
+      const codigo = borrar.dataset.borrarCodigo;
+      const ok = await panel.confirmar({ titulo: `¿Borrar el código ${codigo}?`, texto: 'Quien lo tenga ya no va a poder usarlo.', boton: 'Borrar código', peligro: true });
+      if (!ok) return;
+      await db.ref('codigos_descuento/' + codigo).remove();
+      panel.aviso(`Código ${codigo} borrado`);
+    }
   });
 
-  // ── RESEÑAS ───────────────────────────────────────────────
-  function agregarResena() {
-    const nombre = document.getElementById('r-nombre').value.trim();
-    const ciudad = document.getElementById('r-ciudad').value.trim();
-    const texto = document.getElementById('r-texto').value.trim();
-    const estrellas = parseInt(document.getElementById('r-estrellas').value);
-    if (!nombre || !texto || !estrellas) { alert('Completá nombre, texto y puntuación.'); return; }
-    db.ref('resenas').push({ nombre, ciudad, texto, estrellas, fecha: new Date().toISOString(), orden: Date.now() });
-    document.getElementById('r-nombre').value = '';
-    document.getElementById('r-ciudad').value = '';
-    document.getElementById('r-texto').value = '';
-    document.getElementById('r-estrellas').value = '';
-  }
+  $('form-codigo').addEventListener('submit', async e => {
+    e.preventDefault();
+    const codigo = $('cd-codigo').value.trim().toUpperCase();
+    const tipo = $('cd-tipo').value;
+    const descuento = parseFloat($('cd-descuento').value);
+    // Mismo formato que acepta el servidor al cobrar (api/_pedido.js)
+    if (!/^[A-Z0-9_-]{1,40}$/.test(codigo)) return panel.aviso('El código solo puede tener letras, números, guiones o guiones bajos, sin espacios.', true);
+    if (!(descuento > 0) || (tipo === 'porcentaje' && descuento > 100)) return panel.aviso(tipo === 'porcentaje' ? 'El porcentaje tiene que ser entre 1 y 100.' : 'Poné un monto mayor a 0.', true);
+    await db.ref('codigos_descuento/' + codigo).set({ tipo, descuento, activo: true });
+    e.target.reset();
+    e.target.hidden = true;
+    panel.aviso(`Código ${codigo} creado`);
+  });
 
-  function aprobarResena(id) {
-    db.ref('resenas_pendientes/' + id).once('value', snap => {
-      const data = snap.val();
-      if (!data) return;
-      db.ref('resenas').push({
-        nombre: data.nombre,
-        ciudad: data.ciudad || '',
-        texto: data.texto,
-        estrellas: data.estrellas || 5,
-        fecha: data.fecha,
-        orden: Date.now(),
-        aprobada: true
-      }).then(() => db.ref('resenas_pendientes/' + id).remove());
-    });
-  }
-
-  function rechazarResena(id) {
-    if (confirm('¿Eliminar esta reseña?')) db.ref('resenas_pendientes/' + id).remove();
-  }
-
-  function eliminarResena(id) {
-    if (confirm('¿Eliminar esta reseña publicada?')) {
-      db.ref('resenas/' + id).remove().then(() => renderResenas());
-    }
-  }
-
-  db.ref('resenas_pendientes').on('value', snap => {
-    const items = [];
-    snap.forEach(c => items.push({ id: c.key, ...c.val() }));
-    const wrap = document.getElementById('resenas-pendientes-wrap');
-    const lista = document.getElementById('resenas-pendientes-lista');
-    if (items.length === 0) { wrap.style.display = 'none'; return; }
-    wrap.style.display = 'block';
-    // Las reseñas pendientes las escribe cualquiera: todo pasa por esc()/jsArg() antes de mostrarse
-    lista.innerHTML = items.map(r => `
-      <div style="background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:10px;border:1px solid #e8dfd2">
-        <div style="font-size:0.8rem;font-weight:600;color:#3a3026">${esc(r.nombre)}${r.ciudad ? ' · ' + esc(r.ciudad) : ''} — ${'★'.repeat(Math.min(5, Math.max(1, parseInt(r.estrellas) || 5)))}</div>
-        <div style="font-size:0.8rem;color:#5a4f44;margin:6px 0;font-style:italic">"${esc(r.texto)}"</div>
-        <div style="display:flex;gap:8px">
-          <button onclick="aprobarResena(${jsArg(r.id)})" style="background:#507a3a;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:0.72rem;cursor:pointer">✅ Aprobar</button>
-          <button onclick="rechazarResena(${jsArg(r.id)})" style="background:#e74c3c;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:0.72rem;cursor:pointer">🗑️ Rechazar</button>
+  // ── Reseñas ────────────────────────────────────
+  function dibujarResenas() {
+    $('resenas-pendientes').innerHTML = estado.resenasPendientes.map(r => `
+      <div class="resena">
+        <span class="estrellas">${'★'.repeat(estrellas(r.estrellas))}</span>
+        <p>“${esc(r.texto)}”</p>
+        <small>${esc(r.nombre || 'Sin nombre')}${r.ciudad ? ', ' + esc(r.ciudad) : ''}. Espera tu aprobación.</small>
+        <div class="sa-acciones">
+          <button type="button" class="sa-boton" data-aprobar="${esc(r.id)}"><i data-lucide="check"></i>Publicar</button>
+          <button type="button" class="sa-boton-sec" data-descartar="${esc(r.id)}">Descartar</button>
         </div>
       </div>`).join('');
-  });
+    const publicadas = estado.resenas.slice().sort((a, b) => num(b.orden) - num(a.orden));
+    const promedio = publicadas.length ? publicadas.reduce((s, r) => s + estrellas(r.estrellas), 0) / publicadas.length : 0;
+    $('resumen-resenas').innerHTML = `
+      <div><b class="sa-num">${publicadas.length}</b><small>publicadas</small></div>
+      <div><b class="sa-num">${publicadas.length ? promedio.toLocaleString('es-UY', { maximumFractionDigits: 1 }) : '—'}</b><small>de promedio</small></div>`;
+    $('resenas-publicadas').innerHTML = publicadas.length
+      ? publicadas.map(r => `
+        <li>
+          <div><b>${esc(r.nombre || 'Sin nombre')}</b>${r.ciudad ? ', ' + esc(r.ciudad) : ''} <span class="estrellas">${'★'.repeat(estrellas(r.estrellas))}</span><p>“${esc(r.texto || '')}”</p></div>
+          <button type="button" class="sa-icono-btn" data-borrar-resena="${esc(r.id)}" aria-label="Borrar reseña"><i data-lucide="trash-2"></i></button>
+        </li>`).join('')
+      : '<li class="sa-vacio">Todavía no hay reseñas publicadas.</li>';
+    panel.iconos();
+  }
 
-  // Cargar reseñas publicadas con child_added
-  const listaResenas = document.getElementById('resenas-publicadas-lista');
-  db.ref('resenas').on('child_added', snap => {
-    listaResenas.querySelector('.empty') && (listaResenas.innerHTML = '');
-    const r = { id: snap.key, ...snap.val() };
-    const stars = Math.min(5, Math.max(0, parseInt(r.estrellas) || 5));
-    const ciudad = r.ciudad ? ' · ' + esc(r.ciudad) : '';
-    const texto = esc(r.texto || '');
-    const div = document.createElement('div');
-    div.id = 'resena-' + r.id;
-    div.style.cssText = 'background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;border:1.5px solid #e8dfd2;display:flex;justify-content:space-between;align-items:flex-start;gap:10px';
-    div.innerHTML = `<div>
-      <div style="font-size:0.8rem;font-weight:600;color:#3a3026">${esc(r.nombre || '')}${ciudad} — <span style="color:#c9b07a">${'★'.repeat(stars)}</span></div>
-      <div style="font-size:0.78rem;color:#5a4f44;margin-top:4px;font-style:italic">"${texto}"</div>
-    </div>
-    <button onclick="eliminarResena(${jsArg(r.id)})" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:1rem;flex-shrink:0">🗑️</button>`;
-    listaResenas.appendChild(div);
-  });
-
-  db.ref('resenas').on('child_removed', snap => {
-    const el = document.getElementById('resena-' + snap.key);
-    if (el) el.remove();
-    if (!listaResenas.children.length) listaResenas.innerHTML = '<div class="empty">No hay reseñas publicadas.</div>';
-  });
-
-  db.ref('productos').on('value', snapProds => {
-    const variantes = [];
-    snapProds.forEach(c => {
-      const prod = { id: c.key, ...c.val() };
-      (prod.variantes || []).forEach((v, i) => {
-        variantes.push({ id: prod.id + '-' + i, nombre: prod.nombre, variante: v.nombre });
-      });
-    });
-
-    db.ref('stock').on('value', snapshot => {
-      const stock = snapshot.val() || {};
-      const alertasEl = document.getElementById('alertas-lista');
-      const alertas = variantes.filter(p => {
-        const s = stock[p.id] !== undefined ? stock[p.id] : 0;
-        return s <= 3;
-      });
-      alertasEl.innerHTML = alertas.length === 0
-        ? '<div class="empty">✅ Todo el stock en orden</div>'
-        : alertas.map(p => {
-            const s = stock[p.id] !== undefined ? stock[p.id] : 0;
-            return `<div class="alerta ${s === 0 ? 'bajo' : 'medio'}">
-              <div>
-                <div class="alerta-nombre">${p.nombre}</div>
-                <div class="alerta-variante">${p.variante}</div>
-              </div>
-              <div class="alerta-stock">${s === 0 ? '❌ Sin stock' : '⚠️ ' + s + ' uds'}</div>
-            </div>`;
-          }).join('');
-    });
-  });
-
-  // ── Códigos de descuento ──────────────────────────────────
-  function renderCodigos(codigos) {
-    const el = document.getElementById('codigos-lista');
-    const entries = Object.entries(codigos);
-    if (entries.length === 0) {
-      el.innerHTML = '<div class="empty">No hay códigos creados.</div>';
-      return;
+  $('resenas-panel').addEventListener('click', async e => {
+    const aprobar = e.target.closest('[data-aprobar]');
+    const descartar = e.target.closest('[data-descartar]');
+    const borrar = e.target.closest('[data-borrar-resena]');
+    if (aprobar) {
+      const id = aprobar.dataset.aprobar;
+      const r = estado.resenasPendientes.find(x => x.id === id);
+      if (!r) return;
+      aprobar.disabled = true;
+      await db.ref('resenas').push({ nombre: r.nombre, ciudad: r.ciudad || '', texto: r.texto, estrellas: estrellas(r.estrellas), fecha: r.fecha || new Date().toISOString(), orden: Date.now(), aprobada: true });
+      await db.ref('resenas_pendientes/' + id).remove();
+      panel.aviso('Reseña publicada');
     }
-    el.innerHTML = entries.map(([codigo, d]) => `
-      <div style="background:#fff;border:1.5px solid #e8dfd2;border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:12px">
-        <div>
-          <div style="font-weight:700;font-size:0.88rem;letter-spacing:0.05em">${codigo}</div>
-          <div style="font-size:0.75rem;color:#7a6e62;margin-top:2px">
-            ${d.tipo === 'porcentaje' ? d.descuento + '% de descuento' : '$' + d.descuento + ' de descuento'}
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:0.72rem;font-weight:600;padding:3px 10px;border-radius:20px;background:${d.activo ? '#dcfce7' : '#fee2e2'};color:${d.activo ? '#166534' : '#991b1b'}">
-            ${d.activo ? 'Activo' : 'Inactivo'}
-          </span>
-          <button onclick="toggleCodigo('${codigo}', ${d.activo})" style="font-size:0.72rem;padding:4px 10px;border:1.5px solid #e8dfd2;border-radius:8px;background:#fff;cursor:pointer">
-            ${d.activo ? 'Desactivar' : 'Activar'}
-          </button>
-          <button onclick="eliminarCodigo('${codigo}')" style="font-size:0.72rem;padding:4px 10px;border:1.5px solid #fca5a5;border-radius:8px;background:#fff;color:#b91c1c;cursor:pointer">
-            Borrar
-          </button>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  async function crearCodigo() {
-    const codigo = document.getElementById('cd-codigo').value.trim().toUpperCase();
-    const tipo = document.getElementById('cd-tipo').value;
-    const descuento = parseFloat(document.getElementById('cd-descuento').value);
-    if (!codigo || !descuento || descuento <= 0) { alert('Completá el código y el valor.'); return; }
-    await db.ref('codigos_descuento/' + codigo).set({ tipo, descuento, activo: true });
-    document.getElementById('cd-codigo').value = '';
-    document.getElementById('cd-descuento').value = '';
-  }
-
-  function toggleCodigo(codigo, activo) {
-    db.ref('codigos_descuento/' + codigo + '/activo').set(!activo);
-  }
-
-  function eliminarCodigo(codigo) {
-    if (!confirm('¿Borrar el código ' + codigo + '?')) return;
-    db.ref('codigos_descuento/' + codigo).remove();
-  }
-
-  db.ref('codigos_descuento').on('value', snap => {
-    renderCodigos(snap.val() || {});
+    if (descartar) {
+      const ok = await panel.confirmar({ titulo: '¿Descartar esta reseña?', texto: 'No se publica y se borra de la lista.', boton: 'Descartar', peligro: true });
+      if (!ok) return;
+      await db.ref('resenas_pendientes/' + descartar.dataset.descartar).remove();
+      panel.aviso('Reseña descartada');
+    }
+    if (borrar) {
+      const ok = await panel.confirmar({ titulo: '¿Borrar esta reseña?', texto: 'Deja de aparecer en la tienda.', boton: 'Borrar reseña', peligro: true });
+      if (!ok) return;
+      await db.ref('resenas/' + borrar.dataset.borrarResena).remove();
+      panel.aviso('Reseña borrada');
+    }
   });
 
+  $('form-resena').addEventListener('submit', async e => {
+    e.preventDefault();
+    const nombre = $('r-nombre').value.trim();
+    const ciudad = $('r-ciudad').value.trim();
+    const texto = $('r-texto').value.trim();
+    const puntos = parseInt($('r-estrellas').value, 10);
+    if (!nombre || !texto || !puntos) return panel.aviso('Completá la puntuación, el nombre y el texto.', true);
+    await db.ref('resenas').push({ nombre, ciudad, texto, estrellas: puntos, fecha: new Date().toISOString(), orden: Date.now() });
+    e.target.reset();
+    e.target.hidden = true;
+    panel.aviso('Reseña publicada');
+  });
+
+  // Botones para mostrar y cerrar los formularios
+  $('btn-codigo').addEventListener('click', () => { $('form-codigo').hidden = false; $('cd-codigo').focus(); });
+  $('btn-resena').addEventListener('click', () => { $('form-resena').hidden = false; $('r-estrellas').focus(); });
+  document.querySelectorAll('[data-cerrar]').forEach(b => b.addEventListener('click', () => {
+    const f = $(b.dataset.cerrar);
+    f.reset();
+    f.hidden = true;
+  }));
+
+  // ── Datos en vivo ──────────────────────────────
+  const lista = snap => { const items = []; snap.forEach(c => { items.push({ id: c.key, ...c.val() }); }); return items; };
+  db.ref('pedidos').on('value', snap => { estado.pedidos = lista(snap); dibujarCaja(); dibujarRanking(); dibujarTareas(); });
+  db.ref('productos').on('value', snap => { estado.productos = lista(snap); dibujarRanking(); dibujarStock(); dibujarTareas(); });
+  db.ref('stock').on('value', snap => { estado.stock = snap.val() || {}; dibujarStock(); dibujarTareas(); });
+  db.ref('resenas_pendientes').on('value', snap => { estado.resenasPendientes = lista(snap); dibujarResenas(); dibujarTareas(); });
+  db.ref('resenas').on('value', snap => { estado.resenas = lista(snap); dibujarResenas(); });
+  db.ref('codigos_descuento').on('value', snap => { estado.codigos = snap.val() || {}; dibujarCodigos(); });
 </script>
 </body>
 </html>

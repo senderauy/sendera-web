@@ -7,788 +7,644 @@
   <link rel="icon" type="image/png" href="../img/logo.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Sendera Admin" />
-  <meta name="theme-color" content="#f2ede6" />
+  <meta name="theme-color" content="#182417" />
   <title>Sendera - Productos</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="../firebase-config.js"></script>
-  <script src="admin-auth.js"></script>
+  <script src="admin-auth.js?v=2"></script>
+  <link rel="stylesheet" href="admin.css?v=1" />
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="admin-ui.js?v=1"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Montserrat', sans-serif; background: #f2ede6; color: #3a3026; min-height: 100vh; }
+    [hidden] { display: none !important; }
+    body { min-height: 100vh; font-size: 14px; line-height: 1.5; }
+    button, input, select, textarea { font-family: inherit; }
 
-    /* NAVBAR */
-    .navbar {
-      background: #fff; border-bottom: 2px solid #e8dfd2;
-      padding: 0 24px; display: flex; align-items: center;
-      justify-content: space-between; position: sticky; top: 0; z-index: 100;
-      height: 60px; box-shadow: 0 2px 8px rgba(80,60,30,0.06);
+    .herramientas { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    /* Catálogo */
+    .catalogo { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; }
+    .catalogo > .sa-vacio { grid-column: 1 / -1; background: var(--sa-papel); border: 1px solid var(--sa-linea); border-radius: 16px; }
+    .catalogo > .sa-vacio .sa-boton { margin-top: 12px; }
+    .producto { display: flex; flex-direction: column; padding: 0; text-align: left; border: 1px solid var(--sa-linea); border-radius: 16px; background: var(--sa-papel); overflow: hidden; cursor: pointer; color: inherit; font-size: inherit; transition: border-color 0.15s; }
+    .producto:hover { border-color: var(--sa-tinta-3); }
+    .producto .foto { position: relative; display: block; aspect-ratio: 4 / 3; overflow: hidden; background: var(--sa-papel-2); }
+    .producto .foto img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .producto .sin-foto { display: grid; place-items: center; height: 100%; color: var(--sa-tinta-3); }
+    .producto .sin-foto .lucide { width: 28px; height: 28px; }
+    .etiquetas { position: absolute; left: 10px; top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .etiqueta { padding: 3px 9px; border-radius: 999px; background: rgba(255, 253, 248, 0.94); color: var(--sa-tinta); font-size: 0.72rem; font-weight: 600; }
+    .etiqueta.oferta { background: var(--sa-ambar); color: #fff; }
+    .producto .info { display: flex; flex-direction: column; gap: 3px; padding: 14px 16px 16px; }
+    .producto .info small { color: var(--sa-tinta-3); font-size: 0.76rem; }
+    .producto .info b { font-size: 0.98rem; font-weight: 600; }
+    .muestras { display: flex; align-items: center; margin-top: 6px; }
+    .muestras img, .muestras .punto { width: 22px; height: 22px; margin-right: -5px; border-radius: 50%; object-fit: cover; border: 2px solid var(--sa-papel); background: var(--sa-linea-2); }
+    .muestras em { margin-left: 12px; font-style: normal; font-size: 0.76rem; color: var(--sa-tinta-3); }
+    .producto .precio { margin-top: 8px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .producto .precio s { margin-right: 6px; color: var(--sa-tinta-3); font-weight: 400; }
+
+    /* Editor */
+    .velo-editor { position: fixed; inset: 0; z-index: 40; background: rgba(24, 20, 14, 0.32); opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .velo-editor.visible { opacity: 1; pointer-events: auto; }
+    .editor {
+      position: fixed; top: 0; right: 0; bottom: 0; z-index: 50; width: min(560px, 100%);
+      display: flex; flex-direction: column; background: var(--sa-papel); border-left: 1px solid var(--sa-linea);
+      transform: translateX(100%); visibility: hidden;
+      transition: transform 0.28s cubic-bezier(.2, .8, .2, 1), visibility 0s linear 0.28s;
     }
-    .navbar .logo { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: #3a3026; letter-spacing: 0.12em; }
-    .nav-links { display: flex; align-items: center; gap: 4px; }
-    .nav-links a { color: #7a6e62; text-decoration: none; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 14px; border-radius: 8px; transition: all 0.2s; font-weight: 500; }
-    .nav-links a:hover { background: #f2ede6; color: #3a3026; }
-    .nav-links a.active { background: #507a3a; color: #fff; }
-    .btn-logout { font-size: 0.72rem; color: #9a8f82; cursor: pointer; text-transform: uppercase; letter-spacing: 0.08em; background: none; border: 1px solid #ddd5c8; border-radius: 8px; padding: 7px 14px; margin-left: 8px; transition: all 0.2s; }
-    .btn-logout:hover { background: #f2ede6; }
-    .btn-logout-top { display: none; background: none; border: none; cursor: pointer; font-size: 1rem; color: #9a8f82; padding: 2px 6px; margin-left: 6px; vertical-align: middle; transition: color 0.2s; }
-    .btn-logout-top:hover { color: #3a3026; }
+    .editor.abierto { transform: translateX(0); visibility: visible; transition: transform 0.28s cubic-bezier(.2, .8, .2, 1), visibility 0s; }
+    .editor > header { display: flex; align-items: center; gap: 12px; padding: 22px 24px 16px; border-bottom: 1px solid var(--sa-linea-2); }
+    .editor > header > div { min-width: 0; }
+    .editor h2 { font: 600 1.6rem/1.1 var(--sa-serif); overflow-wrap: anywhere; }
+    .editor > header a { display: inline-flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 0.8rem; color: var(--sa-tinta-2); text-decoration: none; }
+    .editor > header a:hover { color: var(--sa-tinta); }
+    .editor > header a .lucide { width: 14px; height: 14px; }
+    .editor .cerrar { margin-left: auto; color: var(--sa-tinta-2); }
+    .editor .cerrar:hover { color: var(--sa-tinta); }
+    .editor .cuerpo { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 20px 24px 28px; display: flex; flex-direction: column; gap: 28px; }
+    .editor section { display: flex; flex-direction: column; gap: 12px; }
+    .editor h3 { font-size: 0.8rem; font-weight: 600; color: var(--sa-tinta-3); }
+    .campo > span { display: block; margin-bottom: 6px; font-size: 0.8rem; font-weight: 500; color: var(--sa-tinta-2); }
+    .campo > span i { font-style: normal; font-weight: 400; color: var(--sa-tinta-3); }
+    .ayuda { display: block; margin-top: 5px; font-size: 0.76rem; color: var(--sa-tinta-3); }
+    .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .opcion { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 10px 0; border-top: 1px solid var(--sa-linea-2); font-size: 0.88rem; cursor: pointer; }
+    .opcion small { display: block; color: var(--sa-tinta-3); font-size: 0.76rem; }
+    .titulo-seccion { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .boton-chico { padding: 7px 12px; font-size: 0.8rem; }
 
-    /* MOBILE NAV */
-    .mobile-nav { display: none; background: #fff; border-top: 2px solid #e8dfd2; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; padding: 8px 0 12px; }
-    .mobile-nav-links { display: flex; justify-content: space-around; }
-    .mobile-nav-links a { display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: #9a8f82; font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 10px; border-radius: 10px; }
-    .mobile-nav-links a .icon { font-size: 1.3rem; }
-    .mobile-nav-links a.active { color: #507a3a; }
+    .ambiente { display: flex; align-items: center; gap: 14px; }
+    .ambiente img, .ambiente .vacia { width: 96px; height: 72px; border-radius: 10px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--sa-linea); }
+    .ambiente .vacia { display: grid; place-items: center; background: var(--sa-papel-2); color: var(--sa-tinta-3); }
+    .ambiente > div { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
 
-    /* CONTAINER */
-    .container { max-width: 960px; margin: 0 auto; padding: 28px 20px 100px; }
+    .variante { display: flex; flex-direction: column; gap: 12px; padding: 14px; border: 1px solid var(--sa-linea); border-radius: 14px; background: var(--sa-papel-2); }
+    .variante-datos { display: grid; grid-template-columns: minmax(0, 1fr) 104px 84px 34px; gap: 10px; align-items: end; }
+    .variante-datos .sa-icono-btn { margin-bottom: 2px; }
+    .fotos { display: flex; flex-wrap: wrap; gap: 8px; }
+    .foto-tile { position: relative; width: 68px; height: 68px; border-radius: 10px; overflow: hidden; border: 1px solid var(--sa-linea); background: var(--sa-papel); }
+    .foto-tile img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .foto-tile button { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(24, 20, 14, 0.72); color: #fff; cursor: pointer; }
+    .foto-tile button .lucide { width: 13px; height: 13px; }
+    .foto-tile .principal { position: absolute; left: 4px; bottom: 4px; padding: 1px 6px; border-radius: 999px; background: rgba(24, 20, 14, 0.72); color: #fff; font-size: 0.62rem; font-weight: 600; }
+    .agregar-foto { width: 68px; height: 68px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 1px dashed var(--sa-tinta-3); border-radius: 10px; background: var(--sa-papel); color: var(--sa-tinta-2); font-size: 0.68rem; font-weight: 600; cursor: pointer; }
+    .agregar-foto:hover { border-color: var(--sa-tinta); color: var(--sa-tinta); }
+    .agregar-foto .lucide { width: 18px; height: 18px; }
+    .enlace-foto { display: flex; gap: 8px; }
+    .enlace-foto .sa-campo { flex: 1; min-width: 0; }
+    .archivo { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
-    /* HEADER */
-    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
-    .page-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: #3a3026; }
-    .page-header p { color: #9a8f82; font-size: 0.78rem; margin-top: 3px; }
+    .editor > footer { display: flex; align-items: center; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--sa-linea-2); background: var(--sa-papel); }
+    .editor > footer .eliminar { display: inline-flex; align-items: center; gap: 6px; padding: 8px 6px; border: 0; border-radius: 8px; background: none; color: var(--sa-rojo); font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+    .editor > footer .eliminar:hover { background: var(--sa-rojo-fondo); }
+    .editor > footer .derecha { display: flex; gap: 10px; margin-left: auto; }
 
-    .btn-nuevo {
-      display: flex; align-items: center; gap: 8px;
-      background: #507a3a; color: #fff; border: none; border-radius: 10px;
-      padding: 11px 20px; font-family: 'Montserrat', sans-serif;
-      font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em;
-      text-transform: uppercase; cursor: pointer; transition: all 0.2s;
+    @media (max-width: 900px) {
+      .herramientas { width: 100%; }
+      .herramientas .sa-buscador { flex: 1; }
+      .catalogo { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+      .producto .info { padding: 12px; }
+      .editor { width: 100%; border-left: 0; }
+      .editor > header { padding-top: calc(18px + env(safe-area-inset-top, 0px)); }
+      .editor .cuerpo { padding: 18px 18px 24px; }
+      .editor > footer { padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px)); }
     }
-    .btn-nuevo:hover { background: #5c8b44; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(80,122,58,0.3); }
-
-    /* RESUMEN */
-    .resumen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
-    .res-card { background: #fff; border-radius: 14px; border: 1.5px solid #e8dfd2; padding: 18px 16px; text-align: center; box-shadow: 0 2px 6px rgba(80,60,30,0.04); }
-    .res-card .num { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: #3a3026; }
-    .res-card .lbl { font-size: 0.68rem; color: #9a8f82; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
-
-    /* FILTRO CATEGORÍAS */
-    .filtros { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-    .filtro-btn { padding: 7px 16px; border: 1.5px solid #e8dfd2; background: #fff; color: #7a6e62; font-family: 'Montserrat', sans-serif; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; border-radius: 20px; transition: all 0.2s; font-weight: 500; }
-    .filtro-btn.active, .filtro-btn:hover { background: #507a3a; color: #fff; border-color: #507a3a; }
-
-    /* GRID PRODUCTOS */
-    .productos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
-
-    .prod-card {
-      background: #fff; border-radius: 14px; border: 1.5px solid #e8dfd2;
-      overflow: hidden; box-shadow: 0 2px 8px rgba(80,60,30,0.05);
-      transition: all 0.2s;
+    @media (max-width: 480px) {
+      .dos { grid-template-columns: minmax(0, 1fr); }
+      .variante-datos { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 34px; grid-template-areas: "nombre nombre quitar" "precio stock ."; }
+      .variante-datos .v-nombre { grid-area: nombre; }
+      .variante-datos .v-precio { grid-area: precio; }
+      .variante-datos .v-stock { grid-area: stock; }
+      .variante-datos .sa-icono-btn { grid-area: quitar; }
+      .texto-eliminar { display: none; }
     }
-    .prod-card:hover { border-color: #b8dba8; box-shadow: 0 6px 20px rgba(80,60,30,0.1); transform: translateY(-2px); }
-
-    .prod-foto {
-      width: 100%; height: 180px; object-fit: cover; background: #f0ebe3;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 3rem; color: #ddd5c8;
-    }
-    .prod-foto img { width: 100%; height: 180px; object-fit: cover; }
-
-    .prod-body { padding: 16px; }
-    .prod-cat { font-size: 0.65rem; color: #9a8f82; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 4px; }
-    .prod-nombre { font-size: 1rem; font-weight: 600; color: #3a3026; margin-bottom: 6px; }
-
-    .prod-variantes { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
-    .prod-variante-chip {
-      font-size: 0.65rem; padding: 3px 10px; border-radius: 20px;
-      background: #f2ede6; color: #7a6e62; font-weight: 500;
-    }
-
-    .prod-precio { font-size: 0.85rem; color: #507a3a; font-weight: 700; margin-bottom: 14px; }
-
-    .prod-acciones { display: flex; gap: 8px; }
-    .btn-edit {
-      flex: 1; padding: 8px; border: 1.5px solid #e8dfd2; background: #fff;
-      color: #7a6e62; border-radius: 8px; font-family: 'Montserrat', sans-serif;
-      font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
-      text-transform: uppercase; letter-spacing: 0.06em;
-    }
-    .btn-edit:hover { background: #f2ede6; border-color: #507a3a; color: #507a3a; }
-    .btn-del {
-      padding: 8px 12px; border: 1.5px solid #fee2e2; background: #fff;
-      color: #b91c1c; border-radius: 8px; font-family: 'Montserrat', sans-serif;
-      font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
-    }
-    .btn-del:hover { background: #fee2e2; }
-
-    .empty-state { text-align: center; padding: 60px 20px; color: #9a8f82; grid-column: 1/-1; }
-    .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
-
-    /* ===== MODAL ===== */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(58,48,38,0.5);
-      backdrop-filter: blur(4px); z-index: 200;
-      display: none; align-items: flex-start; justify-content: center;
-      padding: 20px; overflow-y: auto;
-    }
-    .modal-overlay.open { display: flex; }
-
-    .modal {
-      background: #fff; border-radius: 20px; width: 100%; max-width: 600px;
-      margin: auto; box-shadow: 0 20px 60px rgba(58,48,38,0.2);
-      overflow: hidden;
-    }
-
-    .modal-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 20px 24px; border-bottom: 2px solid #f0ebe3;
-    }
-    .modal-header h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: #3a3026; }
-    .modal-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #9a8f82; padding: 4px; }
-
-    .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
-
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .form-group { margin-bottom: 18px; }
-    .form-group label { display: block; font-size: 0.72rem; color: #6b5f54; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 7px; font-weight: 600; }
-
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      width: 100%; padding: 11px 14px; background: #faf8f4;
-      border: 1.5px solid #ddd5c8; border-radius: 10px; color: #3a3026;
-      font-family: 'Montserrat', sans-serif; font-size: 0.88rem;
-      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus {
-      border-color: #507a3a; box-shadow: 0 0 0 3px rgba(80,122,58,0.1);
-    }
-    .form-group textarea { resize: vertical; min-height: 70px; }
-
-    /* VARIANTES */
-    .variantes-section { margin-bottom: 18px; }
-    .variantes-label {
-      font-size: 0.72rem; color: #6b5f54; letter-spacing: 0.1em;
-      text-transform: uppercase; font-weight: 600; margin-bottom: 10px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .btn-add-var {
-      display: flex; align-items: center; gap: 5px;
-      background: #edf7e8; color: #507a3a; border: 1.5px solid #b8dba8;
-      border-radius: 8px; padding: 5px 12px; font-size: 0.72rem;
-      font-weight: 600; cursor: pointer; transition: all 0.2s;
-      font-family: 'Montserrat', sans-serif;
-    }
-    .btn-add-var:hover { background: #507a3a; color: #fff; }
-
-    .variante-item {
-      background: #faf8f4; border: 1.5px solid #e8dfd2; border-radius: 12px;
-      padding: 16px; margin-bottom: 12px; position: relative;
-    }
-
-    .variante-row { display: grid; grid-template-columns: 1fr 100px; gap: 10px; margin-bottom: 10px; }
-
-    .foto-preview-wrap { position: relative; }
-    .foto-input-row { display: flex; gap: 8px; align-items: center; }
-    .foto-input { flex: 1; }
-    .btn-examinar {
-      display: flex; align-items: center; gap: 5px; white-space: nowrap;
-      background: #f2ede6; color: #507a3a; border: 1.5px solid #b8dba8;
-      border-radius: 8px; padding: 8px 12px; font-size: 0.72rem;
-      font-weight: 600; cursor: pointer; transition: all 0.2s;
-      font-family: 'Montserrat', sans-serif;
-    }
-    .btn-examinar:hover { background: #507a3a; color: #fff; border-color: #507a3a; }
-    .file-input-hidden { display: none; }
-    .foto-preview {
-      width: 100%; height: 120px; object-fit: cover; border-radius: 10px;
-      margin-top: 8px; border: 1.5px solid #e8dfd2;
-      display: none;
-    }
-    .foto-preview.visible { display: block; }
-
-    .btn-del-var {
-      position: absolute; top: 10px; right: 10px;
-      background: #fee2e2; color: #b91c1c; border: none; border-radius: 6px;
-      width: 26px; height: 26px; font-size: 0.9rem; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-    }
-
-    /* MODAL FOOTER */
-    .modal-footer {
-      padding: 16px 24px; border-top: 2px solid #f0ebe3;
-      display: flex; gap: 10px; justify-content: flex-end;
-    }
-    .btn-cancel {
-      padding: 11px 20px; border: 1.5px solid #ddd5c8; background: #fff;
-      color: #7a6e62; border-radius: 10px; font-family: 'Montserrat', sans-serif;
-      font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
-    }
-    .btn-cancel:hover { background: #f2ede6; }
-    .btn-guardar {
-      padding: 11px 24px; background: #507a3a; color: #fff; border: none;
-      border-radius: 10px; font-family: 'Montserrat', sans-serif;
-      font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
-    }
-    .btn-guardar:hover { background: #5c8b44; }
-    .btn-guardar:disabled { background: #b8dba8; cursor: not-allowed; }
-
-    /* TOAST */
-    .toast {
-      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-      background: #507a3a; color: #fff; padding: 10px 24px; border-radius: 20px;
-      font-size: 0.8rem; font-weight: 600; opacity: 0; transition: opacity 0.3s;
-      pointer-events: none; box-shadow: 0 4px 12px rgba(80,122,58,0.3); z-index: 300;
-    }
-
-    @media (max-width: 600px) {
-      .nav-links, .btn-logout { display: none; }
-      .btn-logout-top { display: inline-block; }
-      .mobile-nav { display: block; }
-      .resumen { grid-template-columns: repeat(2, 1fr); }
-      .form-row { grid-template-columns: 1fr; }
-      .variante-row { grid-template-columns: 1fr; }
-      .page-header h1 { font-size: 1.6rem; }
+    @media (prefers-reduced-motion: reduce) {
+      .editor, .editor.abierto, .velo-editor { transition: none; }
     }
   </style>
 </head>
 <body>
 
-<div class="navbar">
-  <div class="logo">SENDERA <button class="btn-logout-top" onclick="logout()" title="Salir">↩</button></div>
-  <div class="nav-links">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="pedidos.html">Pedidos</a>
-    <a href="productos.html" class="active">Productos</a>
-    <a href="stock.html">Stock</a>
-    <a href="colecciones.html">Colecciones</a>
-    <a href="lookbook.html">Lookbook</a>
-    <a href="finanzas.html">Finanzas</a>
-    <a href="https://analytics.google.com" target="_blank">Analytics</a>
-    <button class="btn-logout" onclick="logout()">↩ Salir</button>
-  </div>
-</div>
-
-<div class="container">
-  <div class="page-header">
+<main class="sa-pagina">
+  <header class="sa-encabezado">
     <div>
-      <h1>Productos 🛍️</h1>
-      <p>Administrá tu catálogo completo</p>
+      <h1>Productos</h1>
+      <p>Tocá un producto para editarlo.</p>
     </div>
-    <button class="btn-nuevo" onclick="abrirModal()">＋ Nuevo producto</button>
-  </div>
-
-  <div class="resumen">
-    <div class="res-card"><div class="num" id="r-total">0</div><div class="lbl">Productos</div></div>
-    <div class="res-card"><div class="num" id="r-variantes">0</div><div class="lbl">Variantes</div></div>
-    <div class="res-card"><div class="num" id="r-cats">0</div><div class="lbl">Categorías</div></div>
-  </div>
-
-  <div class="filtros" id="filtros-cats">
-    <button class="filtro-btn active" onclick="filtrar('todos', this)">Todos</button>
-  </div>
-
-  <div class="productos-grid" id="productos-grid">
-    <div class="empty-state"><div class="icon">📦</div><p>Cargando productos...</p></div>
-  </div>
-</div>
-
-<!-- MOBILE NAV -->
-<div class="mobile-nav">
-  <div class="mobile-nav-links">
-    <a href="dashboard.html"><span class="icon">📊</span>Dashboard</a>
-    <a href="pedidos.html"><span class="icon">📦</span>Pedidos</a>
-    <a href="productos.html" class="active"><span class="icon">🛍️</span>Productos</a>
-    <a href="stock.html"><span class="icon">🏷️</span>Stock</a>
-    <a href="https://analytics.google.com" target="_blank"><span class="icon">📈</span>Analytics</a>
-    <a href="#" onclick="logout()"><span class="icon">↩️</span>Salir</a>
-  </div>
-</div>
-
-<!-- MODAL -->
-<div class="modal-overlay" id="modal-overlay">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 id="modal-titulo">Nuevo producto</h2>
-      <button class="modal-close" onclick="cerrarModal()">✕</button>
+    <div class="herramientas">
+      <label class="sa-buscador"><i data-lucide="search"></i><input id="buscar" type="search" placeholder="Producto o color" aria-label="Buscar producto o color" autocomplete="off" /></label>
+      <button type="button" class="sa-boton" id="btn-nuevo" aria-label="Nuevo producto"><i data-lucide="plus"></i><span>Nuevo<span class="sa-solo-ancho"> producto</span></span></button>
     </div>
-    <div class="modal-body">
-      <input type="hidden" id="prod-id" />
+  </header>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label>Nombre del producto *</label>
-          <input type="text" id="prod-nombre" placeholder="Ej: Go One More" />
-        </div>
-        <div class="form-group">
-          <label>Categoría *</label>
-          <input type="text" id="prod-categoria" placeholder="Ej: Gorros Visera" list="cats-list" />
-          <datalist id="cats-list"></datalist>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Subgrupo <span style="font-weight:400;color:#b0a598">(opcional)</span></label>
-        <input type="text" id="prod-subgrupo" placeholder="Ej: Trail Running · Si hay varios modelos dentro de la categoría" />
-      </div>
-
-      <div class="form-group">
-        <label>Orden <span style="font-weight:400;color:#b0a598">(1 = primero, dejar vacío = sin prioridad)</span></label>
-        <input type="number" id="prod-orden" placeholder="Ej: 1" min="1" style="width:120px" />
-      </div>
-
-      <div class="form-group">
-        <label>Descuento % <span style="font-weight:400;color:#b0a598">(para todos los colores · vacío = sin descuento)</span></label>
-        <input type="number" id="prod-descuento" placeholder="Ej: 20" min="1" max="90" style="width:120px" />
-      </div>
-
-      <div class="form-group">
-        <label>Destacar en el inicio</label>
-        <label style="display:flex;align-items:center;gap:8px;font-weight:500;text-transform:none;letter-spacing:0;margin:6px 0">
-          <input type="checkbox" id="prod-nuevo" style="width:18px;height:18px" /> Mostrar en "Lo nuevo"
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;font-weight:500;text-transform:none;letter-spacing:0;margin:6px 0">
-          <input type="checkbox" id="prod-mas-vendido" style="width:18px;height:18px" /> Mostrar en "Lo más vendido"
-        </label>
-      </div>
-
-      <div class="form-group">
-        <label>Descripción</label>
-        <textarea id="prod-descripcion" placeholder="Descripción del producto (opcional)"></textarea>
-      </div>
-
-      <div class="form-group">
-        <label>Foto lifestyle <span style="font-weight:400;color:#b0a598">(opcional — aparece desenfocada de fondo en la página del producto)</span></label>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          <label class="btn-file" for="prod-avatar-file">📷 Subir foto</label>
-          <input type="file" id="prod-avatar-file" accept="image/*" onchange="onAvatarFileChange(this)" />
-          <span style="font-size:0.75rem;color:#9a8f82">o</span>
-          <input type="url" id="prod-avatar-url" placeholder="URL de imagen..." style="flex:1;min-width:180px;"
-                 oninput="onAvatarUrlInput()" />
-        </div>
-        <div id="prod-avatar-preview" style="display:none;margin-top:10px;border-radius:8px;overflow:hidden;max-height:160px;">
-          <img id="prod-avatar-preview-img" src="" style="width:100%;max-height:160px;object-fit:cover;display:block;" />
-        </div>
-        <button type="button" id="btn-borrar-avatar" onclick="borrarAvatar()" style="display:none;margin-top:6px;background:none;border:1px solid #fca5a5;color:#b91c1c;border-radius:6px;padding:4px 12px;font-size:0.72rem;cursor:pointer;">✕ Quitar foto</button>
-      </div>
-
-      <!-- VARIANTES -->
-      <div class="variantes-section">
-        <div class="variantes-label">
-          <span>Variantes *</span>
-          <button class="btn-add-var" onclick="agregarVariante()">＋ Agregar variante</button>
-        </div>
-        <div id="variantes-container"></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
-      <button class="btn-guardar" id="btn-guardar" onclick="guardarProducto()">💾 Guardar</button>
-    </div>
+  <div class="sa-cifras">
+    <div><small>Productos</small><b id="r-total">—</b></div>
+    <div><small>Colores</small><b id="r-variantes">—</b></div>
+    <div><small>Categorías</small><b id="r-cats">—</b></div>
   </div>
-</div>
 
-<div class="toast" id="toast"></div>
+  <div class="sa-filtros" id="filtros" aria-label="Filtrar por categoría"></div>
+
+  <div class="catalogo" id="catalogo"><div class="sa-vacio">Cargando productos…</div></div>
+</main>
+
+<div class="velo-editor" id="velo-editor"></div>
+<aside class="editor" id="editor" role="dialog" aria-labelledby="editor-titulo">
+  <header>
+    <div>
+      <h2 id="editor-titulo">Nuevo producto</h2>
+      <a id="ver-en-tienda" href="#" target="_blank" rel="noopener" hidden><i data-lucide="external-link"></i>Ver en la tienda</a>
+    </div>
+    <button type="button" class="sa-icono-btn cerrar" data-cerrar-editor aria-label="Cerrar"><i data-lucide="x"></i></button>
+  </header>
+
+  <form class="cuerpo" id="form-producto" novalidate>
+    <section>
+      <h3>Datos</h3>
+      <label class="campo"><span>Nombre</span><input class="sa-campo" id="prod-nombre" maxlength="120" placeholder="Ej: Go One More" /></label>
+      <div class="dos">
+        <label class="campo"><span>Categoría</span><input class="sa-campo" id="prod-categoria" list="lista-categorias" maxlength="80" placeholder="Ej: Gorros Visera" /></label>
+        <label class="campo"><span>Subgrupo <i>(opcional)</i></span><input class="sa-campo" id="prod-subgrupo" maxlength="80" placeholder="Ej: Trail Running" /></label>
+      </div>
+      <datalist id="lista-categorias"></datalist>
+      <label class="campo"><span>Descripción <i>(opcional)</i></span><textarea class="sa-campo" id="prod-descripcion" rows="3" placeholder="Cómo es, para qué sirve, qué lo hace especial"></textarea></label>
+    </section>
+
+    <section>
+      <h3>En la tienda</h3>
+      <div class="dos">
+        <label class="campo"><span>Orden <i>(opcional)</i></span><input class="sa-campo" id="prod-orden" type="number" inputmode="numeric" min="1" placeholder="Ej: 1" /><small class="ayuda">El 1 aparece primero.</small></label>
+        <label class="campo"><span>Descuento % <i>(opcional)</i></span><input class="sa-campo" id="prod-descuento" type="number" inputmode="numeric" min="1" max="90" placeholder="Ej: 20" /><small class="ayuda">Para todos los colores, de 1 a 90.</small></label>
+      </div>
+      <div>
+        <label class="opcion"><span>Mostrar en “Lo nuevo”<small>Aparece destacado en el inicio de la tienda.</small></span><button type="button" class="sa-interruptor" role="switch" aria-checked="false" id="prod-nuevo" aria-label="Mostrar en Lo nuevo"></button></label>
+        <label class="opcion"><span>Mostrar en “Lo más vendido”<small>Aparece en la sección de más vendidos.</small></span><button type="button" class="sa-interruptor" role="switch" aria-checked="false" id="prod-mas-vendido" aria-label="Mostrar en Lo más vendido"></button></label>
+      </div>
+    </section>
+
+    <section>
+      <h3>Foto de ambiente <span style="font-weight:400">(opcional)</span></h3>
+      <div class="ambiente">
+        <span id="ambiente-vista"></span>
+        <div>
+          <small class="ayuda" style="margin:0">Aparece desenfocada de fondo en la página del producto.</small>
+          <span style="display:flex;gap:8px;flex-wrap:wrap">
+            <label class="sa-boton-sec boton-chico" for="ambiente-archivo"><i data-lucide="upload"></i>Subir foto</label>
+            <button type="button" class="sa-boton-sec boton-chico" id="ambiente-quitar" hidden>Quitar</button>
+          </span>
+          <input class="archivo" type="file" id="ambiente-archivo" accept="image/*" />
+        </div>
+      </div>
+      <label class="campo"><span>O pegá el enlace de una foto</span><input class="sa-campo" id="ambiente-enlace" type="url" placeholder="https://…" /></label>
+    </section>
+
+    <section>
+      <div class="titulo-seccion">
+        <h3>Colores</h3>
+        <button type="button" class="sa-boton-sec boton-chico" id="btn-agregar-color"><i data-lucide="plus"></i>Agregar color</button>
+      </div>
+      <div id="variantes" style="display:flex;flex-direction:column;gap:12px"></div>
+    </section>
+  </form>
+
+  <footer>
+    <button type="button" class="eliminar" id="btn-eliminar" aria-label="Eliminar producto"><i data-lucide="trash-2"></i><span class="texto-eliminar">Eliminar</span></button>
+    <div class="derecha">
+      <button type="button" class="sa-boton-sec" data-cerrar-editor>Cancelar</button>
+      <button type="button" class="sa-boton" id="btn-guardar"><i data-lucide="check"></i>Guardar</button>
+    </div>
+  </footer>
+</aside>
 
 <script>
+  const $ = id => document.getElementById(id);
+  const pesos = n => '$' + num(n).toLocaleString('es-UY');
+  const normal = s => String(s ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
-  let todosProd = [];
-  let filtroActual = 'todos';
-  let editandoId = null;
+  const estado = { productos: [], cargado: false };
+  let filtro = 'todos';
+  let borrador = null;   // producto que se está editando: { id, fotoAvatar, variantes: [{ clave, nombre, precio, stock, fotos }] }
+  let sucio = false;     // hay cambios sin guardar
+  let siguienteClave = 0;
 
-  // ── Firebase ──────────────────────────────────────────
-  db.ref('productos').on('value', snapshot => {
-    todosProd = [];
-    snapshot.forEach(c => { todosProd.push({ id: c.key, ...c.val() }); });
-    renderResumen();
-    renderFiltros();
-    renderProductos();
-  });
-
-  // ── Resumen ───────────────────────────────────────────
-  function renderResumen() {
-    const cats = new Set(todosProd.map(p => p.categoria));
-    const vars = todosProd.reduce((s, p) => s + (p.variantes ? p.variantes.length : 0), 0);
-    document.getElementById('r-total').textContent = todosProd.length;
-    document.getElementById('r-variantes').textContent = vars;
-    document.getElementById('r-cats').textContent = cats.size;
+  const variantesDe = p => (Array.isArray(p.variantes) ? p.variantes : Object.values(p.variantes || {})).filter(v => v && typeof v === 'object');
+  const descuentoDe = p => Math.min(90, Math.max(0, parseInt(p.descuento, 10) || 0));
+  const fotosDe = v => (Array.isArray(v.fotos) && v.fotos.length ? v.fotos : (v.foto ? [v.foto] : [])).filter(f => typeof f === 'string' && f);
+  function imagen(foto, extra = '') {
+    const f = fotoLiviana(foto);
+    return f ? `<img src="${esc(f)}" alt=""${extra}${/^(blob|data):/.test(f) ? '' : ' loading="lazy"'} />` : '';
   }
 
-  // ── Filtros ───────────────────────────────────────────
-  function renderFiltros() {
-    const cats = [...new Set(todosProd.map(p => p.categoria).filter(Boolean))];
-    const cont = document.getElementById('filtros-cats');
-    const extra = cats.map(c =>
-      `<button class="filtro-btn ${filtroActual === c ? 'active' : ''}" onclick="filtrar('${c}', this)">${c}</button>`
-    ).join('');
-    cont.innerHTML = `<button class="filtro-btn ${filtroActual === 'todos' ? 'active' : ''}" onclick="filtrar('todos', this)">Todos</button>${extra}`;
-
-    // Datalist para categorías
-    const dl = document.getElementById('cats-list');
-    dl.innerHTML = cats.map(c => `<option value="${c}">`).join('');
+  // ── Catálogo ──────────────────────────────────
+  function precioTexto(p) {
+    const precios = variantesDe(p).map(v => num(v.precio)).filter(n => n > 0);
+    if (!precios.length) return 'Sin precio';
+    const min = Math.min(...precios), max = Math.max(...precios);
+    const rango = (a, b) => a === b ? pesos(a) : `${pesos(a)} – ${pesos(b)}`;
+    const dto = descuentoDe(p);
+    // Mismo cálculo que la tienda (precioFinal en cart.js)
+    const con = n => Math.round(n * (100 - dto) / 100);
+    return dto ? `<s>${rango(min, max)}</s>${rango(con(min), con(max))}` : rango(min, max);
   }
 
-  function filtrar(cat, btn) {
-    filtroActual = cat;
-    document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    renderProductos();
+  function tarjeta(p) {
+    const vars = variantesDe(p);
+    const principal = vars.map(v => fotoVariante(v)).find(Boolean);
+    const dto = descuentoDe(p);
+    const etiquetas = [
+      p.nuevo ? '<span class="etiqueta">Nuevo</span>' : '',
+      p.masVendido ? '<span class="etiqueta">Más vendido</span>' : '',
+      dto ? `<span class="etiqueta oferta">−${dto}%</span>` : ''
+    ].join('');
+    const muestras = vars.slice(0, 6).map(v => imagen(fotoVariante(v)) || '<span class="punto"></span>').join('');
+    return `
+      <button type="button" class="producto" data-id="${esc(p.id)}">
+        <span class="foto">${imagen(principal) || '<span class="sin-foto"><i data-lucide="image"></i></span>'}${etiquetas ? `<span class="etiquetas">${etiquetas}</span>` : ''}</span>
+        <span class="info">
+          <small>${esc([p.categoria, p.subgrupo].filter(Boolean).join(', ') || 'Sin categoría')}</small>
+          <b>${esc(p.nombre || 'Sin nombre')}</b>
+          <span class="muestras">${muestras}<em>${vars.length === 1 ? '1 color' : `${vars.length} colores`}</em></span>
+          <span class="precio">${precioTexto(p)}</span>
+        </span>
+      </button>`;
   }
 
-  // ── Render productos ──────────────────────────────────
-  function renderProductos() {
-    const grid = document.getElementById('productos-grid');
-    let prods = filtroActual === 'todos' ? todosProd : todosProd.filter(p => p.categoria === filtroActual);
+  function dibujarCatalogo() {
+    if (!estado.cargado) return;
+    const prods = estado.productos;
+    const cats = [...new Set(prods.map(p => p.categoria).filter(Boolean))];
+    $('r-total').textContent = prods.length;
+    $('r-variantes').textContent = prods.reduce((s, p) => s + variantesDe(p).length, 0);
+    $('r-cats').textContent = cats.length;
+    if (filtro !== 'todos' && !cats.includes(filtro)) filtro = 'todos';
+    $('filtros').innerHTML = [['todos', 'Todos', prods.length], ...cats.map(c => [c, c, prods.filter(p => p.categoria === c).length])]
+      .map(([f, t, n]) => `<button type="button" data-filtro="${esc(f)}" aria-pressed="${f === filtro}">${esc(t)} <em>${n}</em></button>`).join('');
+    $('lista-categorias').innerHTML = cats.map(c => `<option value="${esc(c)}"></option>`).join('');
 
-    if (prods.length === 0) {
-      grid.innerHTML = `<div class="empty-state"><div class="icon">📦</div><p>No hay productos todavía.<br>¡Agregá el primero!</p></div>`;
-      return;
-    }
+    const q = normal($('buscar').value.trim());
+    const visibles = prods.filter(p => (filtro === 'todos' || p.categoria === filtro) &&
+      (!q || normal([p.nombre, p.categoria, p.subgrupo, ...variantesDe(p).map(v => v.nombre)].join(' ')).includes(q)));
+    $('catalogo').innerHTML = visibles.length
+      ? visibles.map(tarjeta).join('')
+      : `<div class="sa-vacio">${prods.length
+          ? 'Ningún producto coincide con la búsqueda.'
+          : '<i data-lucide="package"></i>Todavía no hay productos.<br><button type="button" class="sa-boton" data-nuevo><i data-lucide="plus"></i>Agregar el primero</button>'}</div>`;
+    panel.iconos();
+  }
 
-    grid.innerHTML = prods.map(p => {
-      const vars = p.variantes || [];
-      const precios = vars.map(v => v.precio).filter(Boolean);
-      const minP = precios.length ? Math.min(...precios) : 0;
-      const maxP = precios.length ? Math.max(...precios) : 0;
-      const rango = (a, b) => a === b ? `$${a.toLocaleString()}` : `$${a.toLocaleString()} – $${b.toLocaleString()}`;
-      const dto = Math.min(90, Math.max(0, parseInt(p.descuento, 10) || 0));
-      const conDto = n => Math.round(n * (100 - dto) / 100);
-      const precioLabel = dto
-        ? `<s style="color:#b0a598;font-weight:500">${rango(minP, maxP)}</s> ${rango(conDto(minP), conDto(maxP))}`
-        : rango(minP, maxP);
-      const fotoUrl = vars.find(v => v.foto)?.foto || '';
+  // ── Editor ─────────────────────────────────────
+  function pintarAmbiente() {
+    const f = borrador.fotoAvatar;
+    $('ambiente-vista').innerHTML = f ? `<img src="${esc(f)}" alt="Foto de ambiente" />` : '<span class="vacia"><i data-lucide="image"></i></span>';
+    $('ambiente-quitar').hidden = !f;
+    $('ambiente-enlace').value = f && !f.startsWith('data:') ? f : '';
+    panel.iconos();
+  }
 
-      return `
-        <div class="prod-card">
-          <div class="prod-foto">
-            ${fotoUrl ? `<img src="${fotoUrl}" alt="${p.nombre}" onerror="this.style.display='none'" />` : '🏔️'}
+  function htmlFotos(v) {
+    return v.fotos.map((f, i) => `
+      <span class="foto-tile">${imagen(f)}${i === 0 && v.fotos.length > 1 ? '<span class="principal">Principal</span>' : ''}
+        <button type="button" data-quitar-foto="${i}" aria-label="Quitar esta foto"><i data-lucide="x"></i></button>
+      </span>`).join('') + `
+      <label class="agregar-foto"><i data-lucide="image-plus"></i>Agregar
+        <input class="archivo" type="file" accept="image/*" data-subir-foto />
+      </label>`;
+  }
+
+  function htmlVariante(v, i) {
+    return `
+      <div class="variante" data-clave="${v.clave}">
+        <div class="variante-datos">
+          <label class="campo v-nombre"><span>Color o modelo</span><input class="sa-campo" data-campo="nombre" maxlength="80" value="${esc(v.nombre)}" placeholder="Ej: Blanco, Azul, Talle M" /></label>
+          <label class="campo v-precio"><span>Precio</span><input class="sa-campo" data-campo="precio" type="number" inputmode="numeric" min="0" value="${esc(v.precio)}" placeholder="790" /></label>
+          <label class="campo v-stock"><span>Stock</span><input class="sa-campo" data-campo="stock" type="number" inputmode="numeric" min="0" value="${esc(v.stock)}" placeholder="0" /></label>
+          <button type="button" class="sa-icono-btn" data-quitar-variante aria-label="Quitar el color ${esc(v.nombre || i + 1)}"><i data-lucide="trash-2"></i></button>
+        </div>
+        <div class="fotos" data-fotos>${htmlFotos(v)}</div>
+        <div>
+          <button type="button" class="sa-enlace" data-mostrar-enlace>O pegá el enlace de una foto</button>
+          <div class="enlace-foto" data-enlace hidden>
+            <input class="sa-campo" type="url" placeholder="https://…" aria-label="Enlace de la foto" />
+            <button type="button" class="sa-boton-sec boton-chico" data-agregar-enlace>Agregar</button>
           </div>
-          <div class="prod-body">
-            <div class="prod-cat">${p.categoria || '—'}${p.nuevo ? ' · ✨ Nuevo' : ''}${p.masVendido ? ' · 🔥 Más vendido' : ''}${dto ? ` · 🏷️ ${dto}% OFF` : ''}</div>
-            <div class="prod-nombre">${p.nombre}</div>
-            <div class="prod-variantes">
-              ${vars.map(v => `<span class="prod-variante-chip">${v.nombre}</span>`).join('')}
-            </div>
-            <div class="prod-precio">${precioLabel}</div>
-            <div class="prod-acciones">
-              <button class="btn-edit" onclick="editarProducto('${p.id}')">✏️ Editar</button>
-              <button class="btn-del" onclick="eliminarProducto('${p.id}', '${p.nombre}')">🗑️</button>
-            </div>
-          </div>
-        </div>`;
-    }).join('');
+        </div>
+      </div>`;
   }
 
-  // ── Modal ─────────────────────────────────────────────
-  let varCount = 0;
-  let avatarData = '';
+  function pintarVariantes() {
+    $('variantes').innerHTML = borrador.variantes.map(htmlVariante).join('');
+    panel.iconos();
+  }
 
-  function onAvatarFileChange(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const img = new Image();
-      img.onload = function() {
-        const canvas = document.createElement('canvas');
-        const MAX = 1200;
-        let w = img.width, h = img.height;
-        if (w > MAX || h > MAX) {
-          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-          else { w = Math.round(w * MAX / h); h = MAX; }
-        }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        avatarData = canvas.toDataURL('image/jpeg', 0.82);
-        document.getElementById('prod-avatar-preview-img').src = avatarData;
-        document.getElementById('prod-avatar-preview').style.display = 'block';
-        document.getElementById('btn-borrar-avatar').style.display = 'inline-block';
-        document.getElementById('prod-avatar-url').value = '';
-      };
-      img.src = e.target.result;
+  const varianteDe = el => {
+    const caja = el.closest('[data-clave]');
+    return caja ? { caja, v: borrador.variantes.find(x => x.clave === Number(caja.dataset.clave)) } : {};
+  };
+  function pintarFotos(caja, v) {
+    caja.querySelector('[data-fotos]').innerHTML = htmlFotos(v);
+    panel.iconos();
+  }
+
+  async function abrirEditor(p) {
+    const vars = p ? variantesDe(p) : [];
+    let stock = {};
+    if (p && vars.length) {
+      try { stock = (await db.ref('stock').once('value')).val() || {}; } catch (e) { stock = {}; }
+    }
+    borrador = {
+      id: p ? p.id : null,
+      fotoAvatar: p && typeof p.fotoAvatar === 'string' ? p.fotoAvatar : '',
+      variantes: (vars.length ? vars : [{}]).map((v, i) => ({
+        clave: siguienteClave++,
+        nombre: v.nombre || '',
+        precio: v.precio ?? '',
+        // El stock se lee del mismo lugar que usa la tienda
+        stock: p && vars.length ? Math.max(0, num(stock[v.stockId || p.id + '-' + i])) : '',
+        fotos: fotosDe(v)
+      }))
     };
-    reader.readAsDataURL(file);
+    $('editor-titulo').textContent = p ? (p.nombre || 'Sin nombre') : 'Nuevo producto';
+    $('ver-en-tienda').hidden = !p;
+    if (p) $('ver-en-tienda').href = '/producto.html?id=' + encodeURIComponent(p.id);
+    $('btn-eliminar').hidden = !p;
+    $('prod-nombre').value = p?.nombre || '';
+    $('prod-categoria').value = p?.categoria || (filtro !== 'todos' ? filtro : '');
+    $('prod-subgrupo').value = p?.subgrupo || '';
+    $('prod-descripcion').value = p?.descripcion || '';
+    $('prod-orden').value = p?.orden ?? '';
+    $('prod-descuento').value = p?.descuento || '';
+    $('prod-nuevo').setAttribute('aria-checked', String(!!p?.nuevo));
+    $('prod-mas-vendido').setAttribute('aria-checked', String(!!p?.masVendido));
+    $('ambiente-archivo').value = '';
+    pintarAmbiente();
+    pintarVariantes();
+    $('form-producto').scrollTop = 0;
+    sucio = false;
+    $('editor').classList.add('abierto');
+    $('velo-editor').classList.add('visible');
+    (p ? $('editor').querySelector('[data-cerrar-editor]') : $('prod-nombre')).focus({ preventScroll: true });
   }
 
-  function onAvatarUrlInput() {
-    const url = document.getElementById('prod-avatar-url').value.trim();
-    avatarData = url;
-    if (url) {
-      document.getElementById('prod-avatar-preview-img').src = url;
-      document.getElementById('prod-avatar-preview').style.display = 'block';
-      document.getElementById('btn-borrar-avatar').style.display = 'inline-block';
-    } else {
-      borrarAvatar();
+  async function cerrarEditor(forzar) {
+    if (!borrador) return;
+    if (sucio && !forzar) {
+      const salir = await panel.confirmar({ titulo: '¿Salir sin guardar?', texto: 'Los cambios de este producto se pierden.', boton: 'Salir sin guardar', peligro: true });
+      if (!salir) return;
     }
+    const id = borrador.id;
+    borrador = null;
+    sucio = false;
+    $('editor').classList.remove('abierto');
+    $('velo-editor').classList.remove('visible');
+    const t = [...document.querySelectorAll('.producto')].find(x => x.dataset.id === id);
+    if (t) t.focus({ preventScroll: true });
   }
 
-  function borrarAvatar() {
-    avatarData = '';
-    document.getElementById('prod-avatar-url').value = '';
-    document.getElementById('prod-avatar-file').value = '';
-    document.getElementById('prod-avatar-preview').style.display = 'none';
-    document.getElementById('btn-borrar-avatar').style.display = 'none';
-  }
-
-  function abrirModal(prod = null) {
-    editandoId = prod ? prod.id : null;
-    document.getElementById('modal-titulo').textContent = prod ? '✏️ Editar producto' : '➕ Nuevo producto';
-    document.getElementById('prod-id').value = prod?.id || '';
-    document.getElementById('prod-nombre').value = prod?.nombre || '';
-    document.getElementById('prod-categoria').value = prod?.categoria || '';
-    document.getElementById('prod-subgrupo').value = prod?.subgrupo || '';
-    document.getElementById('prod-descripcion').value = prod?.descripcion || '';
-    document.getElementById('prod-orden').value = prod?.orden || '';
-    document.getElementById('prod-descuento').value = prod?.descuento || '';
-    document.getElementById('prod-nuevo').checked = !!prod?.nuevo;
-    document.getElementById('prod-mas-vendido').checked = !!prod?.masVendido;
-
-    // Foto avatar/lifestyle
-    avatarData = prod?.fotoAvatar || '';
-    document.getElementById('prod-avatar-url').value = '';
-    document.getElementById('prod-avatar-file').value = '';
-    const prev = document.getElementById('prod-avatar-preview');
-    const prevImg = document.getElementById('prod-avatar-preview-img');
-    const btnBorrar = document.getElementById('btn-borrar-avatar');
-    if (avatarData) {
-      prevImg.src = avatarData;
-      prev.style.display = 'block';
-      btnBorrar.style.display = 'inline-block';
-    } else {
-      prev.style.display = 'none';
-      btnBorrar.style.display = 'none';
-    }
-
-    // Variantes
-    const cont = document.getElementById('variantes-container');
-    cont.innerHTML = '';
-    varCount = 0;
-
-    const vars = prod?.variantes || [];
-    if (vars.length === 0) {
-      agregarVariante();
-      document.getElementById('modal-overlay').classList.add('open');
-      document.body.style.overflow = 'hidden';
-    } else if (!prod) {
-      agregarVariante();
-      document.getElementById('modal-overlay').classList.add('open');
-      document.body.style.overflow = 'hidden';
-    } else {
-      // Al editar: cargar stock actual de Firebase para cada variante
-      db.ref('stock').once('value', snapStock => {
-        const stockData = snapStock.val() || {};
-        vars.forEach((v, i) => {
-          const stockId = prod.id + '-' + i;
-          agregarVariante({ ...v, stockInicial: stockData[stockId] ?? 0 });
-        });
-        document.getElementById('modal-overlay').classList.add('open');
-        document.body.style.overflow = 'hidden';
-      });
-    }
-  }
-
-  function cerrarModal() {
-    document.getElementById('modal-overlay').classList.remove('open');
-    document.body.style.overflow = '';
-  }
-
-  function agregarVariante(data = null) {
-    const id = varCount++;
-    const cont = document.getElementById('variantes-container');
-    const div = document.createElement('div');
-    div.className = 'variante-item';
-    div.id = `var-${id}`;
-    div.innerHTML = `
-      <button class="btn-del-var" onclick="eliminarVariante(${id})" title="Eliminar variante">✕</button>
-      <div class="variante-row">
-        <div class="form-group" style="margin:0">
-          <label>Nombre variante</label>
-          <input type="text" id="var-nombre-${id}" placeholder="Ej: Blanco, Azul, Talle M..." value="${data?.nombre || ''}" />
-        </div>
-        <div class="form-group" style="margin:0">
-          <label>Precio ($)</label>
-          <input type="number" id="var-precio-${id}" placeholder="750" value="${data?.precio || ''}" min="0" />
-        </div>
-      </div>
-      <div class="variante-row">
-        <div class="form-group" style="margin:0">
-          <label>Stock inicial</label>
-          <input type="number" id="var-stock-${id}" placeholder="0" value="${data?.stockInicial ?? ''}" min="0" />
-        </div>
-        <div style="flex:1"></div>
-      </div>
-      <div class="form-group" style="margin:0">
-        <label style="display:flex;align-items:center;gap:10px;">📸 Fotos
-          <button type="button" onclick="agregarFotoVar(${id})" style="background:none;border:1px solid #507a3a;color:#507a3a;border-radius:6px;padding:2px 10px;font-size:0.7rem;cursor:pointer;font-family:inherit;font-weight:600;">＋ Agregar foto</button>
-        </label>
-        <div id="var-fotos-${id}"></div>
-      </div>
-    `;
-    cont.appendChild(div);
-    const fotosInit = data?.fotos?.length ? data.fotos : (data?.foto ? [data.foto] : []);
-    if (fotosInit.length === 0) agregarFotoVar(id, '');
-    else fotosInit.forEach(url => agregarFotoVar(id, url));
-  }
-
-  function eliminarVariante(id) {
-    const el = document.getElementById(`var-${id}`);
-    if (el) el.remove();
-  }
-
-  let _fotoRowCount = 0;
-
-  function agregarFotoVar(varId, url = '') {
-    const cont = document.getElementById(`var-fotos-${varId}`);
-    const fid = _fotoRowCount++;
-    const div = document.createElement('div');
-    div.className = 'foto-preview-wrap';
-    div.id = `foto-row-${fid}`;
-    div.style.marginBottom = '8px';
-    div.innerHTML = `
-      <div class="foto-input-row" style="align-items:center;gap:6px;">
-        <input type="url" class="foto-input" id="foto-url-${fid}" placeholder="URL de imagen..." value="${url.startsWith('data:') ? '' : url}" oninput="previewFotoVar(${fid})" />
-        <button type="button" class="btn-examinar" onclick="document.getElementById('foto-file-${fid}').click()">📁</button>
-        <input type="file" class="file-input-hidden" id="foto-file-${fid}" accept="image/*" onchange="cargarFotoVar(${fid}, this)" />
-        <button type="button" onclick="document.getElementById('foto-row-${fid}').remove()" style="background:none;border:1px solid #fca5a5;color:#b91c1c;border-radius:6px;padding:3px 8px;font-size:0.72rem;cursor:pointer;">✕</button>
-      </div>
-      <img class="foto-preview ${url ? 'visible' : ''}" id="foto-preview-${fid}" src="${url.startsWith('data:') ? url : (url || '')}" alt="preview" />
-    `;
-    if (url.startsWith('data:')) div.querySelector('input[type="url"]').dataset.base64 = url;
-    cont.appendChild(div);
-  }
-
-  function previewFotoVar(fid) {
-    const input = document.getElementById(`foto-url-${fid}`);
-    const img = document.getElementById(`foto-preview-${fid}`);
-    const url = input.value.trim();
-    img.src = url || '';
-    img.classList.toggle('visible', !!url);
-  }
-
-  function cargarFotoVar(fid, input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const original = new Image();
-      original.onload = function() {
-        const canvas = document.createElement('canvas');
-        const MAX = 800;
-        let w = original.width, h = original.height;
-        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-        if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(original, 0, 0, w, h);
-        const base64 = canvas.toDataURL('image/jpeg', 0.75);
-        const urlInput = document.getElementById(`foto-url-${fid}`);
-        urlInput.dataset.base64 = base64;
-        urlInput.value = '(foto cargada)';
-        const img = document.getElementById(`foto-preview-${fid}`);
-        img.src = base64;
-        img.classList.add('visible');
+  // Achica la foto antes de guardarla (en la base se guarda como texto base64)
+  function achicarFoto(archivo, maximo, calidad) {
+    return new Promise((resolver, rechazar) => {
+      const lector = new FileReader();
+      lector.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > maximo || h > maximo) {
+            if (w > h) { h = Math.round(h * maximo / w); w = maximo; }
+            else { w = Math.round(w * maximo / h); h = maximo; }
+          }
+          const lienzo = document.createElement('canvas');
+          lienzo.width = w; lienzo.height = h;
+          lienzo.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolver(lienzo.toDataURL('image/jpeg', calidad));
+        };
+        img.onerror = () => rechazar(new Error('No se pudo leer la foto'));
+        img.src = e.target.result;
       };
-      original.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  // ── Guardar ───────────────────────────────────────────
-  function guardarProducto() {
-    const nombre = document.getElementById('prod-nombre').value.trim();
-    const categoria = document.getElementById('prod-categoria').value.trim();
-    const subgrupo = document.getElementById('prod-subgrupo').value.trim();
-    const descripcion = document.getElementById('prod-descripcion').value.trim();
-    const ordenVal = document.getElementById('prod-orden').value.trim();
-    const orden = ordenVal ? parseInt(ordenVal) : null;
-
-    if (!nombre || !categoria) { showToast('⚠️ Completá nombre y categoría', true); return; }
-
-    const descuentoVal = document.getElementById('prod-descuento').value.trim();
-    const descuento = descuentoVal ? parseInt(descuentoVal, 10) : 0;
-    if (descuentoVal && !(descuento >= 1 && descuento <= 90)) { showToast('⚠️ El descuento tiene que ser entre 1 y 90%', true); return; }
-
-    // Recolectar variantes
-    const varItems = document.querySelectorAll('.variante-item');
-    const variantes = [];
-    varItems.forEach(item => {
-      const idNum = item.id.replace('var-', '');
-      const n = document.getElementById(`var-nombre-${idNum}`)?.value.trim();
-      const p = parseInt(document.getElementById(`var-precio-${idNum}`)?.value) || 0;
-      const s = parseInt(document.getElementById(`var-stock-${idNum}`)?.value) || 0;
-      // Recolectar array de fotos
-      const fotoCont = document.getElementById(`var-fotos-${idNum}`);
-      const fotos = [];
-      if (fotoCont) {
-        fotoCont.querySelectorAll('.foto-preview-wrap').forEach(row => {
-          const inp = row.querySelector('input[type="url"]');
-          const val = inp?.dataset.base64 || inp?.value.trim() || '';
-          if (val && val !== '(foto cargada)') fotos.push(val);
-          else if (inp?.dataset.base64) fotos.push(inp.dataset.base64);
-        });
-      }
-      const foto = fotos[0] || '';
-      if (n) variantes.push({ nombre: n, precio: p, foto, fotos, stockInicial: s });
+      lector.onerror = () => rechazar(new Error('No se pudo leer la foto'));
+      lector.readAsDataURL(archivo);
     });
+  }
 
-    if (variantes.length === 0) { showToast('⚠️ Agregá al menos una variante', true); return; }
+  const enlaceValido = u => /^(https:\/\/|\/)[^\s"'<>]+$/i.test(u) || /^[\w-][\w\-./]*\.(jpe?g|png|webp|gif|avif)$/i.test(u);
 
-    const btn = document.getElementById('btn-guardar');
-    btn.disabled = true;
-    btn.textContent = 'Guardando...';
+  async function guardar() {
+    const nombre = $('prod-nombre').value.trim();
+    const categoria = $('prod-categoria').value.trim();
+    const subgrupo = $('prod-subgrupo').value.trim();
+    const descripcion = $('prod-descripcion').value.trim();
+    const ordenTexto = $('prod-orden').value.trim();
+    const orden = ordenTexto ? parseInt(ordenTexto, 10) : null;
+    const descuentoTexto = $('prod-descuento').value.trim();
+    const descuento = descuentoTexto ? parseInt(descuentoTexto, 10) : 0;
+    const error = (texto, campo) => { panel.aviso(texto, true); if (campo) campo.focus(); };
+
+    if (!nombre) return error('Escribí el nombre del producto.', $('prod-nombre'));
+    if (!categoria) return error('Elegí o escribí una categoría.', $('prod-categoria'));
+    if (ordenTexto && !(orden >= 1)) return error('El orden tiene que ser un número desde 1.', $('prod-orden'));
+    if (descuentoTexto && !(descuento >= 1 && descuento <= 90)) return error('El descuento tiene que ser entre 1 y 90%.', $('prod-descuento'));
+
+    const variantes = borrador.variantes
+      .filter(v => String(v.nombre).trim())
+      .map(v => {
+        const fotos = v.fotos.slice();
+        return {
+          nombre: String(v.nombre).trim(),
+          precio: Math.max(0, parseInt(v.precio, 10) || 0),
+          foto: fotos[0] || '',
+          fotos,
+          stockInicial: Math.max(0, parseInt(v.stock, 10) || 0)
+        };
+      });
+    if (!variantes.length) return error('Agregá al menos un color con nombre.');
 
     const prod = { nombre, categoria, subgrupo, descripcion, variantes, actualizado: new Date().toISOString() };
     if (orden !== null) prod.orden = orden;
     if (descuento) prod.descuento = descuento;
-    if (document.getElementById('prod-nuevo').checked) prod.nuevo = true;
-    if (document.getElementById('prod-mas-vendido').checked) prod.masVendido = true;
-    if (avatarData) prod.fotoAvatar = avatarData;
+    if ($('prod-nuevo').getAttribute('aria-checked') === 'true') prod.nuevo = true;
+    if ($('prod-mas-vendido').getAttribute('aria-checked') === 'true') prod.masVendido = true;
+    if (borrador.fotoAvatar) prod.fotoAvatar = borrador.fotoAvatar;
 
-    const isNuevo = !editandoId;
-    const ref = editandoId ? db.ref('productos/' + editandoId) : db.ref('productos').push();
-    ref.set(prod).then(() => {
-      const prodId = editandoId || ref.key;
-
-      // Crear stock inicial solo para productos nuevos o variantes nuevas
-      variantes.forEach((v, i) => {
-        const stockId = prodId + '-' + i;
-        // Siempre guardar el stock (nuevo o editando)
-        db.ref('stock/' + stockId).set(v.stockInicial || 0);
-      });
-
-      cerrarModal();
-      showToast('✅ Producto guardado y stock creado');
+    const btn = $('btn-guardar');
+    btn.disabled = true;
+    btn.lastChild.textContent = 'Guardando…';
+    try {
+      const ref = borrador.id ? db.ref('productos/' + borrador.id) : db.ref('productos').push();
+      await ref.set(prod);
+      const prodId = borrador.id || ref.key;
+      // El stock de cada color queda con lo que dice el formulario (nuevo o editado)
+      await Promise.all(variantes.map((v, i) => db.ref('stock/' + prodId + '-' + i).set(v.stockInicial)));
+      cerrarEditor(true);
+      panel.aviso(`${nombre} guardado`);
+    } catch (e) {
+      panel.aviso('No se pudo guardar el producto. Revisá la conexión y probá de nuevo.', true);
+    } finally {
       btn.disabled = false;
-      btn.textContent = '💾 Guardar';
-    }).catch(e => {
-      showToast('❌ Error al guardar', true);
-      btn.disabled = false;
-      btn.textContent = '💾 Guardar';
+      btn.lastChild.textContent = 'Guardar';
+    }
+  }
+
+  async function eliminar() {
+    const p = estado.productos.find(x => x.id === borrador?.id);
+    if (!p) return;
+    const si = await panel.confirmar({
+      titulo: `¿Eliminar ${p.nombre || 'este producto'}?`,
+      texto: 'Deja de aparecer en la tienda y no se puede recuperar.',
+      boton: 'Eliminar producto',
+      peligro: true
     });
+    if (!si) return;
+    try {
+      await db.ref('productos/' + p.id).remove();
+      cerrarEditor(true);
+      panel.aviso(`${p.nombre || 'Producto'} eliminado`);
+    } catch (e) {
+      panel.aviso('No se pudo eliminar el producto. Probá de nuevo.', true);
+    }
   }
 
-  // ── Editar ────────────────────────────────────────────
-  function editarProducto(id) {
-    const prod = todosProd.find(p => p.id === id);
-    if (prod) abrirModal(prod);
-  }
+  // ── Eventos ────────────────────────────────────
+  $('btn-nuevo').addEventListener('click', () => abrirEditor(null));
+  $('catalogo').addEventListener('click', e => {
+    if (e.target.closest('[data-nuevo]')) return abrirEditor(null);
+    const t = e.target.closest('.producto');
+    if (t) abrirEditor(estado.productos.find(p => p.id === t.dataset.id));
+  });
+  $('filtros').addEventListener('click', e => {
+    const b = e.target.closest('[data-filtro]');
+    if (!b) return;
+    filtro = b.dataset.filtro;
+    dibujarCatalogo();
+  });
+  $('buscar').addEventListener('input', dibujarCatalogo);
 
-  // ── Eliminar ──────────────────────────────────────────
-  function eliminarProducto(id, nombre) {
-    if (!confirm(`¿Eliminás "${nombre}"?`)) return;
-    db.ref('productos/' + id).remove().then(() => {
-      showToast('🗑️ Producto eliminado');
-    });
-  }
+  $('editor').addEventListener('click', e => {
+    if (e.target.closest('[data-cerrar-editor]')) return cerrarEditor();
+  });
+  $('velo-editor').addEventListener('click', () => cerrarEditor());
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && borrador && !document.querySelector('dialog[open]')) cerrarEditor();
+  });
+  $('form-producto').addEventListener('submit', e => e.preventDefault());
+  $('form-producto').addEventListener('input', () => { sucio = true; });
+  $('btn-guardar').addEventListener('click', guardar);
+  $('btn-eliminar').addEventListener('click', eliminar);
 
-  // ── Toast ─────────────────────────────────────────────
-  function showToast(msg, error = false) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.style.background = error ? '#b91c1c' : '#507a3a';
-    t.style.opacity = 1;
-    clearTimeout(window._toast);
-    window._toast = setTimeout(() => t.style.opacity = 0, 2000);
-  }
+  ['prod-nuevo', 'prod-mas-vendido'].forEach(id => $(id).addEventListener('click', e => {
+    e.preventDefault();
+    const b = $(id);
+    b.setAttribute('aria-checked', String(b.getAttribute('aria-checked') !== 'true'));
+    sucio = true;
+  }));
 
-  // Cerrar modal al hacer click fuera
-  document.getElementById('modal-overlay').addEventListener('click', function(e) {
-    if (e.target === this) cerrarModal();
+  // Foto de ambiente
+  $('ambiente-archivo').addEventListener('change', async e => {
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+    try {
+      borrador.fotoAvatar = await achicarFoto(archivo, 1200, 0.82);
+      sucio = true;
+      pintarAmbiente();
+    } catch (err) {
+      panel.aviso('No se pudo leer esa foto. Probá con otra.', true);
+    }
+    e.target.value = '';
+  });
+  $('ambiente-enlace').addEventListener('change', e => {
+    const u = e.target.value.trim();
+    if (u && !enlaceValido(u)) { panel.aviso('Ese enlace no parece de una foto. Tiene que empezar con https://', true); return; }
+    borrador.fotoAvatar = u;
+    sucio = true;
+    pintarAmbiente();
+  });
+  $('ambiente-quitar').addEventListener('click', () => {
+    borrador.fotoAvatar = '';
+    sucio = true;
+    pintarAmbiente();
+  });
+
+  // Colores
+  $('btn-agregar-color').addEventListener('click', () => {
+    borrador.variantes.push({ clave: siguienteClave++, nombre: '', precio: borrador.variantes[borrador.variantes.length - 1]?.precio ?? '', stock: '', fotos: [] });
+    sucio = true;
+    pintarVariantes();
+    const cajas = $('variantes').querySelectorAll('.variante');
+    const ultima = cajas[cajas.length - 1];
+    ultima.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    ultima.querySelector('[data-campo="nombre"]').focus({ preventScroll: true });
+  });
+  $('variantes').addEventListener('input', e => {
+    const campo = e.target.dataset.campo;
+    if (!campo) return;
+    const { v } = varianteDe(e.target);
+    if (v) v[campo] = e.target.value;
+  });
+  $('variantes').addEventListener('click', e => {
+    const { caja, v } = varianteDe(e.target);
+    if (!v) return;
+    if (e.target.closest('[data-quitar-variante]')) {
+      borrador.variantes = borrador.variantes.filter(x => x !== v);
+      sucio = true;
+      return pintarVariantes();
+    }
+    const quitar = e.target.closest('[data-quitar-foto]');
+    if (quitar) {
+      v.fotos.splice(Number(quitar.dataset.quitarFoto), 1);
+      sucio = true;
+      return pintarFotos(caja, v);
+    }
+    if (e.target.closest('[data-mostrar-enlace]')) {
+      e.target.closest('[data-mostrar-enlace]').hidden = true;
+      const enlace = caja.querySelector('[data-enlace]');
+      enlace.hidden = false;
+      return enlace.querySelector('input').focus();
+    }
+    if (e.target.closest('[data-agregar-enlace]')) {
+      const input = caja.querySelector('[data-enlace] input');
+      const u = input.value.trim();
+      if (!u) return input.focus();
+      if (!enlaceValido(u)) return panel.aviso('Ese enlace no parece de una foto. Tiene que empezar con https://', true);
+      v.fotos.push(u);
+      input.value = '';
+      sucio = true;
+      pintarFotos(caja, v);
+    }
+  });
+  $('variantes').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.closest('[data-enlace]')) {
+      e.preventDefault();
+      e.target.closest('[data-enlace]').querySelector('[data-agregar-enlace]').click();
+    }
+  });
+  $('variantes').addEventListener('change', async e => {
+    if (!e.target.matches('[data-subir-foto]')) return;
+    const { caja, v } = varianteDe(e.target);
+    const archivos = [...e.target.files];
+    if (!v || !archivos.length) return;
+    for (const archivo of archivos) {
+      try {
+        v.fotos.push(await achicarFoto(archivo, 800, 0.75));
+        sucio = true;
+      } catch (err) {
+        panel.aviso('No se pudo leer esa foto. Probá con otra.', true);
+      }
+    }
+    pintarFotos(caja, v);
+  });
+
+  // ── Datos en vivo ──────────────────────────────
+  db.ref('productos').on('value', snap => {
+    const lista = [];
+    snap.forEach(c => { const v = c.val(); if (v && typeof v === 'object') lista.push({ ...v, id: c.key }); });
+    // Mismo orden que la tienda: por "orden" y después por nombre
+    lista.sort((a, b) => (num(a.orden) || 999) - (num(b.orden) || 999) || String(a.nombre || '').localeCompare(String(b.nombre || '')));
+    estado.productos = lista;
+    estado.cargado = true;
+    dibujarCatalogo();
   });
 </script>
 </body>
