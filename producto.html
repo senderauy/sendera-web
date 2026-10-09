@@ -733,10 +733,11 @@
     </div>
   </div>
 
+  <script src="pixel.js?v=1"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="firebase-config.js?v=2"></script>
-  <script src="cart.js?v=5"></script>
+  <script src="cart.js?v=6"></script>
   <script>
     // ── MAPAS DE COLOR ─────────────────────────────────────────────
     const COLOR_BG = {
@@ -922,6 +923,7 @@
           STOCK_MAP[productoActual.nombre + '-' + v.nombre] = v.stockId || (productoActual.id + '-' + i);
         });
         renderProducto(productoActual, initialVariant);
+        verProductoMeta(productoActual, variantActual);
         cargarRelacionados(productoActual);
         // Cargar stock en cadena, luego registrar listener en tiempo real
         db.ref('stock').once('value', stockSnap => {
@@ -1110,10 +1112,23 @@
 
       // Stock del botón
       actualizarBtnStock(v);
+      verProductoMeta(productoActual, idx);
 
       // Ocultar feedback
       const fb = document.getElementById('added-feedback');
       if (fb) fb.classList.remove('visible');
+    }
+
+    // Píxel de Meta: qué color está mirando (el id es el mismo código del catálogo)
+    function verProductoMeta(prod, idx) {
+      const v = prod && prod.variantes && prod.variantes[idx];
+      if (!v || !window.fbq) return;
+      try {
+        fbq('track', 'ViewContent', {
+          content_ids: [v.stockId || prod.id + '-' + idx], content_type: 'product',
+          content_name: `${prod.nombre} ${v.nombre}`, value: precioFinal(v.precio || prod.precio, prod.descuento), currency: 'UYU'
+        });
+      } catch (e) {}
     }
 
     // ── CARRITO ─────────────────────────────────────────────────────
@@ -1134,9 +1149,12 @@
       const stockId = STOCK_MAP[productoActual.nombre + '-' + v.nombre];
       if (stockId !== undefined && (!stockCargado || getStock(stockId) <= 0)) return;
       const existing = cart.find(i => i.name === productoActual.nombre && i.variant === v.nombre);
+      const idColor = v.stockId || productoActual.id + '-' + variantActual;
+      const precio = precioFinal(v.precio || productoActual.precio, productoActual.descuento);
       if (existing) { existing.qty++; } else {
-        cart.push({ name: productoActual.nombre, variant: v.nombre, price: precioFinal(v.precio || productoActual.precio, productoActual.descuento), qty: 1 });
+        cart.push({ name: productoActual.nombre, variant: v.nombre, price: precio, qty: 1, id: idColor });
       }
+      eventoCarritoMeta(idColor, productoActual.nombre, v.nombre, precio);
       saveCart();
       updateCartUI();
       const addBtn = document.querySelector('.btn-add-cart-detail');

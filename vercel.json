@@ -3,6 +3,10 @@
     {
       "source": "/__/auth/:path*",
       "destination": "https://sendera-34791.firebaseapp.com/__/auth/:path*"
+    },
+    {
+      "source": "/catalogo-meta.csv",
+      "destination": "/api/catalogo"
     }
   ]
 }

@@ -75,6 +75,8 @@
     .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .opcion { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 10px 0; border-top: 1px solid var(--sa-linea-2); font-size: 0.88rem; cursor: pointer; }
     .opcion small { display: block; color: var(--sa-tinta-3); font-size: 0.76rem; }
+    .titulo-anuncio { margin-top: -4px; font-size: 0.8rem; color: var(--sa-tinta-3); overflow-wrap: anywhere; }
+    .titulo-anuncio b { color: var(--sa-tinta); font-weight: 600; }
     .colores-destacados { padding: 2px 0 14px; }
     .colores-destacados > small { display: block; margin-bottom: 8px; font-size: 0.76rem; color: var(--sa-tinta-3); }
     .chips-colores { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -204,6 +206,12 @@
         <label class="opcion"><span>Mostrar en “Lo más vendido”<small>Aparece en la sección de más vendidos.</small></span><button type="button" class="sa-interruptor" role="switch" aria-checked="false" id="prod-mas-vendido" aria-label="Mostrar en Lo más vendido"></button></label>
         <div class="colores-destacados" id="colores-vendido" hidden></div>
       </div>
+    </section>
+
+    <section>
+      <h3>Anuncios de Instagram y Facebook</h3>
+      <label class="campo"><span>Frase para el anuncio <i>(opcional)</i></span><input class="sa-campo" id="prod-frase" maxlength="80" placeholder="Ej: Sombra sin peso para el sol de la tarde" /></label>
+      <p class="titulo-anuncio">Título en el catálogo: <b id="titulo-anuncio"></b></p>
     </section>
 
     <section>
@@ -374,7 +382,17 @@
   function pintarVariantes() {
     $('variantes').innerHTML = borrador.variantes.map(htmlVariante).join('');
     pintarDestacados();
+    pintarTituloAnuncio();
     panel.iconos();
+  }
+
+  // Título que va a tener cada color en el catálogo de Meta (mismo armado que api/catalogo.js)
+  function pintarTituloAnuncio() {
+    if (!borrador) return;
+    const nombre = $('prod-nombre').value.trim() || 'Nombre del producto';
+    const colores = borrador.variantes.map(v => String(v.nombre).trim()).filter(Boolean);
+    const frase = $('prod-frase').value.trim();
+    $('titulo-anuncio').textContent = `${nombre}${colores.length > 1 ? ' ' + colores[0] : ''}${frase ? ' | ' + frase : ''}`;
   }
 
   // "Lo nuevo" y "Lo más vendido": con el interruptor prendido se eligen los colores que aparecen
@@ -458,6 +476,7 @@
     $('prod-descripcion').value = p?.descripcion || '';
     $('prod-orden').value = p?.orden ?? '';
     $('prod-descuento').value = p?.descuento || '';
+    $('prod-frase').value = p?.fraseAnuncio || '';
     $('prod-nuevo').setAttribute('aria-checked', String(!!p?.nuevo));
     $('prod-mas-vendido').setAttribute('aria-checked', String(!!p?.masVendido));
     $('ambiente-archivo').value = '';
@@ -552,6 +571,8 @@
     const prod = { nombre, categoria, subgrupo, descripcion, variantes, actualizado: new Date().toISOString() };
     if (orden !== null) prod.orden = orden;
     if (descuento) prod.descuento = descuento;
+    const frase = $('prod-frase').value.trim();
+    if (frase) prod.fraseAnuncio = frase;
     if (esNuevo) prod.nuevo = true;
     if (esVendido) prod.masVendido = true;
     if (borrador.fotoAvatar) prod.fotoAvatar = borrador.fotoAvatar;
@@ -623,7 +644,10 @@
     cerrarEditor();
   });
   $('form-producto').addEventListener('submit', e => e.preventDefault());
-  $('form-producto').addEventListener('input', () => { sucio = true; });
+  $('form-producto').addEventListener('input', e => {
+    sucio = true;
+    if (e.target.id === 'prod-nombre' || e.target.id === 'prod-frase') pintarTituloAnuncio();
+  });
   $('btn-guardar').addEventListener('click', guardar);
   $('btn-eliminar').addEventListener('click', eliminar);
 
@@ -687,7 +711,7 @@
     if (!campo) return;
     const { v } = varianteDe(e.target);
     if (v) v[campo] = e.target.value;
-    if (campo === 'nombre') pintarDestacados();
+    if (campo === 'nombre') { pintarDestacados(); pintarTituloAnuncio(); }
   });
   $('variantes').addEventListener('click', e => {
     const { caja, v } = varianteDe(e.target);

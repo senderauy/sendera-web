@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sendera — Checkout</title>
+  <script src="pixel.js?v=1"></script>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -564,6 +565,20 @@
 
   renderResumen();
 
+  // Píxel de Meta: datos de la compra con los mismos códigos de color del catálogo
+  function datosMeta(total) {
+    const items = (pedidoData && pedidoData.items) || [];
+    return {
+      content_ids: items.map(i => i.id).filter(Boolean), content_type: 'product',
+      num_items: items.reduce((s, i) => s + (Number(i.qty) || 0), 0),
+      value: total ?? calcularTotal(), currency: 'UYU'
+    };
+  }
+  // Empezó la compra (no cuando vuelve de pagar en Mercado Pago)
+  try {
+    if (window.fbq && pedidoData && !new URLSearchParams(location.search).get('pago')) fbq('track', 'InitiateCheckout', datosMeta());
+  } catch (e) {}
+
   // Mostrar opción efectivo solo para pickup
   if (pedidoData?.envio?.tipo === 'pickup') {
     document.getElementById('btn-efectivo').style.display = '';
@@ -861,6 +876,7 @@
     if (email) pedido.email = email.slice(0, 120);
     if (comprobanteBase64) pedido.comprobante = comprobanteBase64;
     const refPedido = db.ref('pedidos').push(pedido);
+    try { if (window.fbq) fbq('track', 'Purchase', datosMeta(pedido.total)); } catch (e) {}
     // Cuando el pedido quedó guardado, el servidor lo lee y manda (una sola vez) la notificación a los admins
     // y al cliente el WhatsApp automático y el email. El navegador ya no manda mensajes directamente.
     refPedido.then(() => fetch('/api/confirmar-pedido', {

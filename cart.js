@@ -40,6 +40,16 @@ if (typeof db !== 'undefined') {
   });
 }
 
+// Píxel de Meta: alguien agregó un color al carrito (el id es el mismo código del catálogo)
+function eventoCarritoMeta(id, nombre, color, precio) {
+  try {
+    if (window.fbq) fbq('track', 'AddToCart', {
+      content_ids: id ? [id] : [], content_type: 'product',
+      content_name: `${nombre} ${color}`.trim(), value: Number(precio) || 0, currency: 'UYU'
+    });
+  } catch (e) {}
+}
+
 // Precio con el descuento del producto. Mismo cálculo que api/_pedido.js, que es el que cobra
 function precioFinal(precio, descuento) {
   const d = Math.min(90, Math.max(0, parseInt(descuento, 10) || 0));
@@ -101,9 +111,11 @@ function cardChangeQty(btn, delta) {
     if (existing) {
       existing.qty++;
     } else {
-      existing = { name, variant, price, qty: 1 };
+      // id: el código del color, el mismo del catálogo de Meta
+      existing = { name, variant, price, qty: 1, id: stockId || '' };
       cart.push(existing);
     }
+    eventoCarritoMeta(stockId, name, variant, price);
   } else {
     if (existing) {
       existing.qty--;
@@ -459,7 +471,7 @@ async function pagarMP() {
 
   // Guardar datos en sessionStorage y redirigir a checkout.html
   const checkoutData = {
-    items: cart.map(i => ({ name: i.name, variant: i.variant, qty: i.qty, precio: i.price })),
+    items: cart.map(i => ({ name: i.name, variant: i.variant, qty: i.qty, precio: i.price, id: i.id || STOCK_MAP[i.name + '-' + i.variant] || '' })),
     envio: { label: envioLabel, costo: envio.costo, tipo: envio.tipo }
   };
   localStorage.setItem('sendera_checkout', JSON.stringify(checkoutData));
