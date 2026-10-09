@@ -1414,17 +1414,26 @@ nav a:hover::after {
   position: relative;
 }
 
+/* Descuento: círculo rojo para que se vea de lejos (mismo rojo que "sin stock") */
 .badge-oferta {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  background-color: var(--amber);
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background-color: #c0392b;
   color: white;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  padding: 4px 10px;
-  text-transform: uppercase;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 12px rgba(192, 57, 43, 0.35);
+}
+@media (max-width: 600px) {
+  .badge-oferta { top: 8px; right: 8px; width: 46px; height: 46px; font-size: 0.74rem; }
 }
 
 .precio-antes {
