@@ -87,11 +87,20 @@
     .variante-datos { display: grid; grid-template-columns: minmax(0, 1fr) 104px 84px 34px; gap: 10px; align-items: end; }
     .variante-datos .sa-icono-btn { margin-bottom: 2px; }
     .fotos { display: flex; flex-wrap: wrap; gap: 8px; }
-    .foto-tile { position: relative; width: 68px; height: 68px; border-radius: 10px; overflow: hidden; border: 1px solid var(--sa-linea); background: var(--sa-papel); }
-    .foto-tile img { display: block; width: 100%; height: 100%; object-fit: cover; }
-    .foto-tile button { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(24, 20, 14, 0.72); color: #fff; cursor: pointer; }
-    .foto-tile button .lucide { width: 13px; height: 13px; }
-    .foto-tile .principal { position: absolute; left: 4px; bottom: 4px; padding: 1px 6px; border-radius: 999px; background: rgba(24, 20, 14, 0.72); color: #fff; font-size: 0.62rem; font-weight: 600; }
+    .foto-celda { position: relative; width: 68px; height: 68px; }
+    .foto-tile { display: block; width: 100%; height: 100%; border-radius: 10px; overflow: hidden; border: 1px solid var(--sa-linea); background: var(--sa-papel); cursor: pointer; transition: transform 0.15s; }
+    .foto-tile img { display: block; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    .foto-tile:focus-visible { outline: 2px solid var(--sa-ambar); outline-offset: 2px; }
+    .foto-celda.elegida .foto-tile { outline: 3px solid var(--sa-ambar); outline-offset: 2px; transform: scale(0.94); }
+    .foto-celda.encima .foto-tile { outline: 2px dashed var(--sa-tinta); outline-offset: 2px; }
+    .foto-celda.arrastrando { opacity: 0.4; }
+    .foto-celda .quitar { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(24, 20, 14, 0.72); color: #fff; cursor: pointer; }
+    .foto-celda .quitar .lucide { width: 13px; height: 13px; }
+    .foto-celda .principal { position: absolute; left: 4px; bottom: 4px; padding: 1px 6px; border-radius: 999px; background: rgba(24, 20, 14, 0.72); color: #fff; font-size: 0.62rem; font-weight: 600; pointer-events: none; }
+    [data-pista]:empty { display: none; }
+    .pista-fotos { margin-top: -4px; font-size: 0.76rem; color: var(--sa-tinta-3); }
+    .pista-fotos.activa { color: var(--sa-ambar-oscuro); font-weight: 600; }
+    .pista-fotos .sa-enlace { margin-left: 4px; font-size: 0.76rem; }
     .agregar-foto { width: 68px; height: 68px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 1px dashed var(--sa-tinta-3); border-radius: 10px; background: var(--sa-papel); color: var(--sa-tinta-2); font-size: 0.68rem; font-weight: 600; cursor: pointer; }
     .agregar-foto:hover { border-color: var(--sa-tinta); color: var(--sa-tinta); }
     .agregar-foto .lucide { width: 18px; height: 18px; }
@@ -231,6 +240,9 @@
   let borrador = null;   // producto que se está editando: { id, fotoAvatar, variantes: [{ clave, nombre, precio, stock, fotos }] }
   let sucio = false;     // hay cambios sin guardar
   let siguienteClave = 0;
+  let fotoElegida = null;  // foto tocada para cambiarla de lugar: { clave del color, posición }
+  let arrastre = null;     // foto que se está arrastrando (en la compu)
+  const arrastrable = matchMedia('(pointer: fine)').matches;
 
   const variantesDe = p => (Array.isArray(p.variantes) ? p.variantes : Object.values(p.variantes || {})).filter(v => v && typeof v === 'object');
   const descuentoDe = p => Math.min(90, Math.max(0, parseInt(p.descuento, 10) || 0));
@@ -307,13 +319,25 @@
   }
 
   function htmlFotos(v) {
+    const elegida = fotoElegida && fotoElegida.clave === v.clave ? fotoElegida.indice : -1;
     return v.fotos.map((f, i) => `
-      <span class="foto-tile">${imagen(f)}${i === 0 && v.fotos.length > 1 ? '<span class="principal">Principal</span>' : ''}
-        <button type="button" data-quitar-foto="${i}" aria-label="Quitar esta foto"><i data-lucide="x"></i></button>
+      <span class="foto-celda${i === elegida ? ' elegida' : ''}" data-indice="${i}"${arrastrable && v.fotos.length > 1 ? ' draggable="true"' : ''}>
+        <span class="foto-tile" role="button" tabindex="0" data-elegir-foto="${i}" aria-pressed="${i === elegida}" aria-label="Foto ${i + 1}${i === 0 ? ', la principal' : ''}">${imagen(f)}</span>
+        ${i === 0 && v.fotos.length > 1 ? '<span class="principal">Principal</span>' : ''}
+        <button type="button" class="quitar" data-quitar-foto="${i}" aria-label="Quitar la foto ${i + 1}"><i data-lucide="x"></i></button>
       </span>`).join('') + `
       <label class="agregar-foto"><i data-lucide="image-plus"></i>Agregar
-        <input class="archivo" type="file" accept="image/*" data-subir-foto />
+        <input class="archivo" type="file" accept="image/*" multiple data-subir-foto />
       </label>`;
+  }
+
+  // Ayuda para ordenar: tocar una foto y después otra las cambia de lugar
+  function htmlPista(v) {
+    if (v.fotos.length < 2) return '';
+    if (fotoElegida && fotoElegida.clave === v.clave) {
+      return '<p class="pista-fotos activa">Ahora tocá la foto con la que la querés cambiar.<button type="button" class="sa-enlace" data-cancelar-eleccion>Cancelar</button></p>';
+    }
+    return `<p class="pista-fotos">Para ordenarlas, tocá una foto y después otra${arrastrable ? ', o arrastralas' : ''}. La primera es la principal.</p>`;
   }
 
   function htmlVariante(v, i) {
@@ -326,6 +350,7 @@
           <button type="button" class="sa-icono-btn" data-quitar-variante aria-label="Quitar el color ${esc(v.nombre || i + 1)}"><i data-lucide="trash-2"></i></button>
         </div>
         <div class="fotos" data-fotos>${htmlFotos(v)}</div>
+        <div data-pista>${htmlPista(v)}</div>
         <div>
           <button type="button" class="sa-enlace" data-mostrar-enlace>O pegá el enlace de una foto</button>
           <div class="enlace-foto" data-enlace hidden>
@@ -347,10 +372,36 @@
   };
   function pintarFotos(caja, v) {
     caja.querySelector('[data-fotos]').innerHTML = htmlFotos(v);
+    caja.querySelector('[data-pista]').innerHTML = htmlPista(v);
     panel.iconos();
   }
 
+  function pintarFotosDe(clave) {
+    const caja = $('variantes').querySelector(`[data-clave="${clave}"]`);
+    const v = borrador && borrador.variantes.find(x => x.clave === clave);
+    if (caja && v) pintarFotos(caja, v);
+  }
+
+  // Primer toque: elige la foto. Segundo toque en otra del mismo color: se cambian de lugar.
+  function elegirFoto(caja, v, i) {
+    const anterior = fotoElegida;
+    if (anterior && anterior.clave === v.clave) {
+      fotoElegida = null;
+      if (anterior.indice !== i) {
+        [v.fotos[i], v.fotos[anterior.indice]] = [v.fotos[anterior.indice], v.fotos[i]];
+        sucio = true;
+      }
+    } else {
+      fotoElegida = { clave: v.clave, indice: i };
+      if (anterior) pintarFotosDe(anterior.clave);
+    }
+    pintarFotos(caja, v);
+    const tile = caja.querySelector(`[data-elegir-foto="${i}"]`);
+    if (tile) tile.focus({ preventScroll: true });
+  }
+
   async function abrirEditor(p) {
+    fotoElegida = null;
     const vars = p ? variantesDe(p) : [];
     let stock = {};
     if (p && vars.length) {
@@ -527,7 +578,13 @@
   });
   $('velo-editor').addEventListener('click', () => cerrarEditor());
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && borrador && !document.querySelector('dialog[open]')) cerrarEditor();
+    if (e.key !== 'Escape' || !borrador || document.querySelector('dialog[open]')) return;
+    if (fotoElegida) {
+      const clave = fotoElegida.clave;
+      fotoElegida = null;
+      return pintarFotosDe(clave);
+    }
+    cerrarEditor();
   });
   $('form-producto').addEventListener('submit', e => e.preventDefault());
   $('form-producto').addEventListener('input', () => { sucio = true; });
@@ -587,16 +644,24 @@
     const { caja, v } = varianteDe(e.target);
     if (!v) return;
     if (e.target.closest('[data-quitar-variante]')) {
+      if (fotoElegida && fotoElegida.clave === v.clave) fotoElegida = null;
       borrador.variantes = borrador.variantes.filter(x => x !== v);
       sucio = true;
       return pintarVariantes();
     }
     const quitar = e.target.closest('[data-quitar-foto]');
     if (quitar) {
+      if (fotoElegida && fotoElegida.clave === v.clave) fotoElegida = null;
       v.fotos.splice(Number(quitar.dataset.quitarFoto), 1);
       sucio = true;
       return pintarFotos(caja, v);
     }
+    if (e.target.closest('[data-cancelar-eleccion]')) {
+      fotoElegida = null;
+      return pintarFotos(caja, v);
+    }
+    const tile = e.target.closest('[data-elegir-foto]');
+    if (tile) return elegirFoto(caja, v, Number(tile.dataset.elegirFoto));
     if (e.target.closest('[data-mostrar-enlace]')) {
       e.target.closest('[data-mostrar-enlace]').hidden = true;
       const enlace = caja.querySelector('[data-enlace]');
@@ -615,6 +680,10 @@
     }
   });
   $('variantes').addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-elegir-foto]')) {
+      e.preventDefault();
+      return e.target.click();
+    }
     if (e.key === 'Enter' && e.target.closest('[data-enlace]')) {
       e.preventDefault();
       e.target.closest('[data-enlace]').querySelector('[data-agregar-enlace]').click();
@@ -634,6 +703,45 @@
       }
     }
     pintarFotos(caja, v);
+  });
+
+  // En la compu también se pueden arrastrar: la foto queda en el lugar donde se suelta
+  $('variantes').addEventListener('dragstart', e => {
+    const celda = e.target.closest('.foto-celda');
+    const { v } = celda ? varianteDe(celda) : {};
+    if (!v) return;
+    arrastre = { clave: v.clave, indice: Number(celda.dataset.indice) };
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', '');
+    celda.classList.add('arrastrando');
+  });
+  $('variantes').addEventListener('dragover', e => {
+    const celda = e.target.closest('.foto-celda');
+    const { v } = celda ? varianteDe(celda) : {};
+    if (!arrastre || !v || v.clave !== arrastre.clave) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    $('variantes').querySelectorAll('.foto-celda.encima').forEach(x => { if (x !== celda) x.classList.remove('encima'); });
+    celda.classList.add('encima');
+  });
+  $('variantes').addEventListener('drop', e => {
+    const celda = e.target.closest('.foto-celda');
+    const { caja, v } = celda ? varianteDe(celda) : {};
+    if (!arrastre || !v || v.clave !== arrastre.clave) return;
+    e.preventDefault();
+    const desde = arrastre.indice, hasta = Number(celda.dataset.indice);
+    arrastre = null;
+    if (desde !== hasta) {
+      const [foto] = v.fotos.splice(desde, 1);
+      v.fotos.splice(hasta, 0, foto);
+      sucio = true;
+    }
+    fotoElegida = null;
+    pintarFotos(caja, v);
+  });
+  $('variantes').addEventListener('dragend', () => {
+    arrastre = null;
+    $('variantes').querySelectorAll('.arrastrando, .encima').forEach(x => x.classList.remove('arrastrando', 'encima'));
   });
 
   // ── Datos en vivo ──────────────────────────────
