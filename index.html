@@ -926,16 +926,23 @@
       actualizar();
     }
     function renderDestacados(productos) {
-      const tarjetas = filtro => {
+      // campo: "nuevo" o "masVendido". Si en el panel se eligieron colores, van solo esos;
+      // los productos marcados antes (sin colores elegidos) muestran todos sus colores.
+      const tarjetas = (filtro, campo) => {
         const out = [];
-        productos.filter(filtro).forEach(p => (p.variantes || []).forEach((v, i) => {
-          const foto = fotoVariante(v);
-          if (foto) out.push({ p, v, i, foto });
-        }));
+        productos.filter(filtro).forEach(p => {
+          const vars = p.variantes || [];
+          const conEleccion = campo && vars.some(v => v && typeof v[campo] === 'boolean');
+          vars.forEach((v, i) => {
+            if (conEleccion && v[campo] !== true) return;
+            const foto = fotoVariante(v);
+            if (foto) out.push({ p, v, i, foto });
+          });
+        });
         return out;
       };
-      let nuevos = tarjetas(p => p.nuevo);
-      let vendidos = tarjetas(p => p.masVendido);
+      let nuevos = tarjetas(p => p.nuevo, 'nuevo');
+      let vendidos = tarjetas(p => p.masVendido, 'masVendido');
 
       // Solo en la vista previa local: si todavía no se marcó nada, mostrar un ejemplo
       const demo = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !nuevos.length && !vendidos.length;

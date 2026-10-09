@@ -75,6 +75,14 @@
     .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .opcion { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 10px 0; border-top: 1px solid var(--sa-linea-2); font-size: 0.88rem; cursor: pointer; }
     .opcion small { display: block; color: var(--sa-tinta-3); font-size: 0.76rem; }
+    .colores-destacados { padding: 2px 0 14px; }
+    .colores-destacados > small { display: block; margin-bottom: 8px; font-size: 0.76rem; color: var(--sa-tinta-3); }
+    .chips-colores { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip-color { display: inline-flex; align-items: center; gap: 7px; padding: 4px 12px 4px 4px; border-radius: 999px; border: 1px solid var(--sa-linea); background: var(--sa-papel); color: var(--sa-tinta-2); font-size: 0.8rem; font-weight: 500; cursor: pointer; }
+    .chip-color:not(:has(img)) { padding-left: 12px; }
+    .chip-color img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
+    .chip-color:hover { border-color: var(--sa-tinta-3); }
+    .chip-color[aria-pressed="true"] { background: var(--sa-noche); border-color: var(--sa-noche); color: #fff; }
     .titulo-seccion { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .boton-chico { padding: 7px 12px; font-size: 0.8rem; }
 
@@ -192,7 +200,9 @@
       </div>
       <div>
         <label class="opcion"><span>Mostrar en “Lo nuevo”<small>Aparece destacado en el inicio de la tienda.</small></span><button type="button" class="sa-interruptor" role="switch" aria-checked="false" id="prod-nuevo" aria-label="Mostrar en Lo nuevo"></button></label>
+        <div class="colores-destacados" id="colores-nuevo" hidden></div>
         <label class="opcion"><span>Mostrar en “Lo más vendido”<small>Aparece en la sección de más vendidos.</small></span><button type="button" class="sa-interruptor" role="switch" aria-checked="false" id="prod-mas-vendido" aria-label="Mostrar en Lo más vendido"></button></label>
+        <div class="colores-destacados" id="colores-vendido" hidden></div>
       </div>
     </section>
 
@@ -363,7 +373,23 @@
 
   function pintarVariantes() {
     $('variantes').innerHTML = borrador.variantes.map(htmlVariante).join('');
+    pintarDestacados();
     panel.iconos();
+  }
+
+  // "Lo nuevo" y "Lo más vendido": con el interruptor prendido se eligen los colores que aparecen
+  const DESTACADOS = [['nuevo', 'prod-nuevo', 'colores-nuevo'], ['masVendido', 'prod-mas-vendido', 'colores-vendido']];
+  const prendido = id => $(id).getAttribute('aria-checked') === 'true';
+  function pintarDestacados() {
+    if (!borrador) return;
+    DESTACADOS.forEach(([campo, interruptor, lugar]) => {
+      const colores = borrador.variantes.filter(v => String(v.nombre).trim());
+      const caja = $(lugar);
+      caja.hidden = !prendido(interruptor) || !colores.length;
+      if (caja.hidden) return;
+      caja.innerHTML = '<small>Tocá los colores que aparecen ahí:</small><div class="chips-colores">' + colores.map(v => `
+        <button type="button" class="chip-color" data-destacar="${campo}" data-clave="${v.clave}" aria-pressed="${!!v[campo]}">${imagen(v.fotos[0])}<span>${esc(String(v.nombre).trim())}</span></button>`).join('') + '</div>';
+    });
   }
 
   const varianteDe = el => {
@@ -373,6 +399,7 @@
   function pintarFotos(caja, v) {
     caja.querySelector('[data-fotos]').innerHTML = htmlFotos(v);
     caja.querySelector('[data-pista]').innerHTML = htmlPista(v);
+    pintarDestacados();
     panel.iconos();
   }
 
@@ -416,7 +443,9 @@
         precio: v.precio ?? '',
         // El stock se lee del mismo lugar que usa la tienda
         stock: p && vars.length ? Math.max(0, num(stock[v.stockId || p.id + '-' + i])) : '',
-        fotos: fotosDe(v)
+        fotos: fotosDe(v),
+        nuevo: typeof v.nuevo === 'boolean' ? v.nuevo : !!(p && p.nuevo),
+        masVendido: typeof v.masVendido === 'boolean' ? v.masVendido : !!(p && p.masVendido)
       }))
     };
     $('editor-titulo').textContent = p ? (p.nombre || 'Sin nombre') : 'Nuevo producto';
@@ -499,25 +528,32 @@
     if (ordenTexto && !(orden >= 1)) return error('El orden tiene que ser un número desde 1.', $('prod-orden'));
     if (descuentoTexto && !(descuento >= 1 && descuento <= 90)) return error('El descuento tiene que ser entre 1 y 90%.', $('prod-descuento'));
 
-    const variantes = borrador.variantes
-      .filter(v => String(v.nombre).trim())
-      .map(v => {
-        const fotos = v.fotos.slice();
-        return {
-          nombre: String(v.nombre).trim(),
-          precio: Math.max(0, parseInt(v.precio, 10) || 0),
-          foto: fotos[0] || '',
-          fotos,
-          stockInicial: Math.max(0, parseInt(v.stock, 10) || 0)
-        };
-      });
+    const esNuevo = prendido('prod-nuevo');
+    const esVendido = prendido('prod-mas-vendido');
+    const conNombre = borrador.variantes.filter(v => String(v.nombre).trim());
+    if (esNuevo && conNombre.length && !conNombre.some(v => v.nuevo)) return error('Elegí al menos un color para “Lo nuevo”, o apagalo.');
+    if (esVendido && conNombre.length && !conNombre.some(v => v.masVendido)) return error('Elegí al menos un color para “Lo más vendido”, o apagalo.');
+
+    const variantes = conNombre.map(v => {
+      const fotos = v.fotos.slice();
+      return {
+        nombre: String(v.nombre).trim(),
+        precio: Math.max(0, parseInt(v.precio, 10) || 0),
+        foto: fotos[0] || '',
+        fotos,
+        stockInicial: Math.max(0, parseInt(v.stock, 10) || 0),
+        // La tienda muestra en cada sección solo los colores marcados
+        nuevo: esNuevo && !!v.nuevo,
+        masVendido: esVendido && !!v.masVendido
+      };
+    });
     if (!variantes.length) return error('Agregá al menos un color con nombre.');
 
     const prod = { nombre, categoria, subgrupo, descripcion, variantes, actualizado: new Date().toISOString() };
     if (orden !== null) prod.orden = orden;
     if (descuento) prod.descuento = descuento;
-    if ($('prod-nuevo').getAttribute('aria-checked') === 'true') prod.nuevo = true;
-    if ($('prod-mas-vendido').getAttribute('aria-checked') === 'true') prod.masVendido = true;
+    if (esNuevo) prod.nuevo = true;
+    if (esVendido) prod.masVendido = true;
     if (borrador.fotoAvatar) prod.fotoAvatar = borrador.fotoAvatar;
 
     const btn = $('btn-guardar');
@@ -591,11 +627,23 @@
   $('btn-guardar').addEventListener('click', guardar);
   $('btn-eliminar').addEventListener('click', eliminar);
 
-  ['prod-nuevo', 'prod-mas-vendido'].forEach(id => $(id).addEventListener('click', e => {
+  DESTACADOS.forEach(([campo, id]) => $(id).addEventListener('click', e => {
     e.preventDefault();
     const b = $(id);
-    b.setAttribute('aria-checked', String(b.getAttribute('aria-checked') !== 'true'));
+    const ahora = b.getAttribute('aria-checked') !== 'true';
+    b.setAttribute('aria-checked', String(ahora));
+    if (ahora && borrador && !borrador.variantes.some(v => v[campo])) borrador.variantes.forEach(v => { v[campo] = true; });
     sucio = true;
+    pintarDestacados();
+  }));
+  ['colores-nuevo', 'colores-vendido'].forEach(id => $(id).addEventListener('click', e => {
+    const chip = e.target.closest('[data-destacar]');
+    if (!chip) return;
+    const v = borrador.variantes.find(x => x.clave === Number(chip.dataset.clave));
+    if (!v) return;
+    v[chip.dataset.destacar] = !v[chip.dataset.destacar];
+    sucio = true;
+    pintarDestacados();
   }));
 
   // Foto de ambiente
@@ -626,7 +674,7 @@
 
   // Colores
   $('btn-agregar-color').addEventListener('click', () => {
-    borrador.variantes.push({ clave: siguienteClave++, nombre: '', precio: borrador.variantes[borrador.variantes.length - 1]?.precio ?? '', stock: '', fotos: [] });
+    borrador.variantes.push({ clave: siguienteClave++, nombre: '', precio: borrador.variantes[borrador.variantes.length - 1]?.precio ?? '', stock: '', fotos: [], nuevo: false, masVendido: false });
     sucio = true;
     pintarVariantes();
     const cajas = $('variantes').querySelectorAll('.variante');
@@ -639,6 +687,7 @@
     if (!campo) return;
     const { v } = varianteDe(e.target);
     if (v) v[campo] = e.target.value;
+    if (campo === 'nombre') pintarDestacados();
   });
   $('variantes').addEventListener('click', e => {
     const { caja, v } = varianteDe(e.target);
