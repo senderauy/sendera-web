@@ -107,6 +107,11 @@
     .foto-celda .quitar { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(24, 20, 14, 0.72); color: #fff; cursor: pointer; }
     .foto-celda .quitar .lucide { width: 13px; height: 13px; }
     .foto-celda .principal { position: absolute; left: 4px; bottom: 4px; padding: 1px 6px; border-radius: 999px; background: rgba(24, 20, 14, 0.72); color: #fff; font-size: 0.62rem; font-weight: 600; pointer-events: none; }
+    /* La primera foto es la que sale en la tienda y en los anuncios: va más grande */
+    .foto-celda:first-child { width: 96px; height: 96px; }
+    .foto-celda .encuadrar { position: absolute; right: 4px; bottom: 4px; width: 24px; height: 24px; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(24, 20, 14, 0.72); color: #fff; cursor: pointer; }
+    .foto-celda .encuadrar .lucide { width: 13px; height: 13px; }
+    .foto-celda .encuadrar:hover, .foto-celda .quitar:hover { background: rgba(24, 20, 14, 0.92); }
     [data-pista]:empty { display: none; }
     .pista-fotos { margin-top: -4px; font-size: 0.76rem; color: var(--sa-tinta-3); }
     .pista-fotos.activa { color: var(--sa-ambar-oscuro); font-weight: 600; }
@@ -122,6 +127,68 @@
     .editor > footer .eliminar { display: inline-flex; align-items: center; gap: 6px; padding: 8px 6px; border: 0; border-radius: 8px; background: none; color: var(--sa-rojo); font-size: 0.85rem; font-weight: 600; cursor: pointer; }
     .editor > footer .eliminar:hover { background: var(--sa-rojo-fondo); }
     .editor > footer .derecha { display: flex; gap: 10px; margin-left: auto; }
+
+    /* Encuadrar una foto: en el celular una columna; en la compu la foto grande a la izquierda */
+    dialog.encuadre { width: min(540px, calc(100% - 32px)); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); padding: 22px 24px 0; overflow-y: auto; overscroll-behavior: contain; }
+    dialog.encuadre[open] { display: flex; flex-direction: column; gap: 14px; }
+    .encuadre > header { display: flex; align-items: flex-start; gap: 12px; }
+    .encuadre > header p { margin-top: 6px; font-size: 0.82rem; }
+    .encuadre > header .sa-icono-btn { margin: -4px -8px 0 auto; color: var(--sa-tinta-2); }
+    .encuadre > header .sa-icono-btn:hover { color: var(--sa-tinta); }
+    .escenario {
+      position: relative; flex-shrink: 0; width: min(100%, max(260px, calc(100vh - 330px))); width: min(100%, max(260px, calc(100dvh - 330px)));
+      aspect-ratio: 1; margin-inline: auto; border-radius: 12px; overflow: hidden; background: var(--sa-papel-2);
+      touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    }
+    .escenario:active { cursor: grabbing; }
+    .escenario canvas, .escenario .calco { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+    .escenario .calco { object-fit: cover; opacity: 0.45; pointer-events: none; }
+    /* Guía mientras se mueve: el centro y la caja hasta donde llega el producto con el ajuste automático */
+    .escenario .guias { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: difference; opacity: 0; transition: opacity 0.25s; }
+    .escenario.moviendo .guias { opacity: 1; }
+    .escenario .guias::before { content: ''; position: absolute; inset: 10%; border: 1px dashed rgba(255, 255, 255, 0.75); }
+    .escenario .guias::after { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)) center / 1px 100% no-repeat, linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)) center / 100% 1px no-repeat; }
+    .zoom { display: flex; align-items: center; gap: 6px; }
+    .zoom input { flex: 1; min-width: 0; accent-color: var(--sa-noche); }
+    .zoom .sa-icono-btn { color: var(--sa-tinta-2); }
+    .zoom .sa-icono-btn:hover { color: var(--sa-tinta); }
+    .zoom output { min-width: 44px; text-align: right; font-size: 0.82rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+    dialog.encuadre .nota-encuadre { min-height: 2.4em; margin-top: -10px; font-size: 0.76rem; line-height: 1.2; color: var(--sa-tinta-3); }
+    dialog.encuadre .nota-encuadre.error { color: var(--sa-rojo); }
+    .botones-encuadre { display: flex; flex-wrap: wrap; gap: 8px; margin-top: -8px; }
+    .comparar h4 { font-size: 0.8rem; font-weight: 600; color: var(--sa-tinta-3); }
+    .comparar small { display: block; margin-top: 2px; font-size: 0.76rem; color: var(--sa-tinta-3); }
+    .otras { display: flex; gap: 8px; overflow-x: auto; padding: 8px 2px 4px; scrollbar-width: thin; }
+    .otra { flex-shrink: 0; width: 56px; height: 56px; padding: 0; border: 2px solid transparent; border-radius: 11px; overflow: hidden; background: var(--sa-papel-2); cursor: pointer; }
+    .otra img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 9px; }
+    .otra:hover { border-color: var(--sa-linea); }
+    .otra[aria-pressed="true"] { border-color: var(--sa-ambar); }
+    /* Cancelar y Listo siempre a la vista */
+    dialog.encuadre .sa-acciones { position: sticky; bottom: 0; z-index: 1; margin: 0 -24px; padding: 14px 24px 18px; background: var(--sa-papel); border-top: 1px solid var(--sa-linea-2); }
+    @media (max-width: 600px) {
+      dialog.encuadre { width: 100%; max-width: 100%; height: 100%; max-height: 100%; margin: 0; border-radius: 0; padding: calc(16px + env(safe-area-inset-top, 0px)) 16px 0; }
+      dialog.encuadre .sa-acciones { margin: auto -16px 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); }
+      .escenario { width: 100%; }
+    }
+    @media (min-width: 900px) {
+      dialog.encuadre { --lado: min(520px, calc(100vh - 96px)); --lado: min(520px, calc(100dvh - 96px)); width: fit-content; max-width: calc(100% - 32px); padding: 24px; }
+      dialog.encuadre[open] {
+        display: grid; grid-template-columns: var(--lado) 320px; grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
+        grid-template-areas: "escenario cabeza" "escenario zoom" "escenario nota" "escenario botones" "escenario comparar" "escenario acciones";
+        column-gap: 28px; row-gap: 14px;
+      }
+      .encuadre > header { grid-area: cabeza; }
+      .escenario { grid-area: escenario; width: var(--lado); align-self: start; }
+      .zoom { grid-area: zoom; }
+      dialog.encuadre .nota-encuadre { grid-area: nota; }
+      .botones-encuadre { grid-area: botones; }
+      .comparar { grid-area: comparar; min-height: 0; display: flex; flex-direction: column; }
+      .otras { flex-wrap: wrap; align-content: flex-start; overflow-x: hidden; overflow-y: auto; min-height: 0; }
+      dialog.encuadre .sa-acciones { grid-area: acciones; position: static; margin: 0; padding: 0; border: 0; background: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .escenario .guias { transition: none; }
+    }
 
     @media (max-width: 900px) {
       .herramientas { width: 100%; }
@@ -248,6 +315,41 @@
   </footer>
 </aside>
 
+<dialog class="sa-dialogo encuadre" id="dialogo-encuadre" aria-labelledby="encuadre-titulo">
+  <header>
+    <div>
+      <h3 id="encuadre-titulo">Encuadrar foto</h3>
+      <p>Arrastrala para moverla. Para acercarla o alejarla, scrolleá encima o pellizcala con dos dedos.</p>
+    </div>
+    <button type="button" class="sa-icono-btn" data-cerrar-encuadre aria-label="Cerrar"><i data-lucide="x"></i></button>
+  </header>
+  <div class="escenario" id="encuadre-escenario" tabindex="0" aria-label="Foto. Se mueve con las flechas y se acerca o aleja con + y −">
+    <canvas id="encuadre-lienzo"></canvas>
+    <img class="calco" id="encuadre-calco" alt="" hidden />
+    <span class="guias" aria-hidden="true"></span>
+  </div>
+  <div class="zoom">
+    <button type="button" class="sa-icono-btn" data-zoom="-1" aria-label="Alejar"><i data-lucide="zoom-out"></i></button>
+    <input type="range" id="encuadre-zoom" min="50" max="300" step="1" value="100" aria-label="Tamaño de la foto" />
+    <button type="button" class="sa-icono-btn" data-zoom="1" aria-label="Acercar"><i data-lucide="zoom-in"></i></button>
+    <output id="encuadre-valor" for="encuadre-zoom">100%</output>
+  </div>
+  <p class="nota-encuadre" id="encuadre-nota" role="status"></p>
+  <div class="botones-encuadre">
+    <button type="button" class="sa-boton-sec boton-chico" id="encuadre-auto"><i data-lucide="wand-sparkles"></i>Ajuste automático</button>
+    <button type="button" class="sa-boton-sec boton-chico" id="encuadre-original"><i data-lucide="rotate-ccw"></i>Como estaba</button>
+  </div>
+  <div class="comparar" id="encuadre-comparar">
+    <h4>Comparar con otra foto</h4>
+    <small>Tocá una y se ve transparente encima, para dejarlas del mismo tamaño.</small>
+    <div class="otras" id="encuadre-otras"></div>
+  </div>
+  <div class="sa-acciones">
+    <button type="button" class="sa-boton-sec" data-cerrar-encuadre>Cancelar</button>
+    <button type="button" class="sa-boton" id="encuadre-listo"><i data-lucide="check"></i>Listo</button>
+  </div>
+</dialog>
+
 <script>
   const $ = id => document.getElementById(id);
   const pesos = n => '$' + num(n).toLocaleString('es-UY');
@@ -343,6 +445,7 @@
         <span class="foto-tile" role="button" tabindex="0" data-elegir-foto="${i}" aria-pressed="${i === elegida}" aria-label="Foto ${i + 1}${i === 0 ? ', la principal' : ''}">${imagen(f)}</span>
         ${i === 0 && v.fotos.length > 1 ? '<span class="principal">Principal</span>' : ''}
         <button type="button" class="quitar" data-quitar-foto="${i}" aria-label="Quitar la foto ${i + 1}"><i data-lucide="x"></i></button>
+        <button type="button" class="encuadrar" data-encuadrar-foto="${i}" aria-label="Encuadrar la foto ${i + 1}" title="Acercar, alejar o mover"><i data-lucide="crop"></i></button>
       </span>`).join('') + `
       <label class="agregar-foto"><i data-lucide="image-plus"></i>Agregar
         <input class="archivo" type="file" accept="image/*" multiple data-subir-foto />
@@ -733,6 +836,8 @@
       fotoElegida = null;
       return pintarFotos(caja, v);
     }
+    const encuadrar = e.target.closest('[data-encuadrar-foto]');
+    if (encuadrar) return abrirEncuadre(v, Number(encuadrar.dataset.encuadrarFoto));
     const tile = e.target.closest('[data-elegir-foto]');
     if (tile) return elegirFoto(caja, v, Number(tile.dataset.elegirFoto));
     if (e.target.closest('[data-mostrar-enlace]')) {
@@ -816,6 +921,408 @@
     arrastre = null;
     $('variantes').querySelectorAll('.arrastrando, .encima').forEach(x => x.classList.remove('arrastrando', 'encima'));
   });
+
+  // ── Encuadrar una foto ─────────────────────────
+  // La foto se guarda ya encuadrada (cuadrada, 800 px): así se ve igual en la tienda, en la página
+  // del producto y en el catálogo de los anuncios de Meta.
+  const LADO_FOTO = 800;
+  const ZOOM_MIN = 0.5, ZOOM_MAX = 3;
+  const OBJETIVO = 0.8;      // con el ajuste automático el producto ocupa el 80 % del cuadro (la caja de la guía)
+  const UMBRAL_BORDE = 20;   // cuánto tiene que cambiar el color para contar como contorno del producto
+  // x, y: cuánto se corrió el centro de la foto, en fracción del lado del cuadro
+  const enc = { clave: null, indice: 0, foto: '', fuente: '', img: null, bordes: null, promedio: '#ccc', caja: undefined, zoom: 1, x: 0, y: 0, mensaje: '', otras: [], punteros: new Map() };
+  // Fotos encuadradas en esta visita: si se vuelven a abrir se parte de la original, sin perder calidad
+  const encuadresHechos = new Map();
+  const entre = (n, a, b) => Math.min(b, Math.max(a, n));
+
+  function cargarImagen(f) {
+    return new Promise((ok, mal) => {
+      const src = fotoLiviana(fotoVariante({ fotos: [f] }));
+      if (!src) return mal(new Error('Sin foto'));
+      const img = new Image();
+      if (/^https:/i.test(src)) img.crossOrigin = 'anonymous';
+      img.onload = () => ok(img);
+      img.onerror = () => mal(new Error('No se pudo cargar la foto'));
+      img.src = src;
+    });
+  }
+
+  // Copia chica de la foto, achicando a la mitad de a poco para que quede pareja
+  function achicarA(fuente, maximo) {
+    let w = fuente.naturalWidth || fuente.width, h = fuente.naturalHeight || fuente.height;
+    const pasar = (ancho, alto, de) => {
+      const c = document.createElement('canvas');
+      c.width = ancho; c.height = alto;
+      const ctx = c.getContext('2d');
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(de, 0, 0, ancho, alto);
+      return c;
+    };
+    let actual = fuente;
+    while (w > maximo * 2 || h > maximo * 2) {
+      w = Math.ceil(w / 2); h = Math.ceil(h / 2);
+      actual = pasar(w, h, actual);
+    }
+    const s = Math.min(1, maximo / Math.max(w, h));
+    return pasar(Math.max(1, Math.round(w * s)), Math.max(1, Math.round(h * s)), actual);
+  }
+
+  function colorPromedio(lienzo) {
+    const d = achicarA(lienzo, 1).getContext('2d').getImageData(0, 0, 1, 1).data;
+    return `rgb(${d[0]}, ${d[1]}, ${d[2]})`;
+  }
+
+  // Dónde está el producto: busca los contornos nítidos (el fondo de estudio es liso, aunque tenga sombra suave).
+  // Devuelve la caja en píxeles de la foto, o null si el fondo no es liso o el producto toca el borde.
+  function cajaDelProducto(img) {
+    const chica = achicarA(img, 320);
+    const w = chica.width, h = chica.height;
+    if (w < 32 || h < 32) return null;
+    const d = chica.getContext('2d').getImageData(0, 0, w, h).data;
+    const cols = new Uint16Array(w), filas = new Uint16Array(h);
+    const m = Math.max(4, Math.round(Math.min(w, h) * 0.05));
+    let anillo = 0, anilloConContorno = 0;
+    // Se saltean las dos líneas de cada borde: a veces la foto trae una raya del recorte
+    for (let y = 2; y < h - 2; y++) {
+      for (let x = 2; x < w - 2; x++) {
+        const i = (y * w + x) * 4;
+        let g = 0;
+        for (let c = 0; c < 3; c++) {
+          const v = Math.abs(d[i + 4 + c] - d[i - 4 + c]) + Math.abs(d[i + w * 4 + c] - d[i - w * 4 + c]);
+          if (v > g) g = v;
+        }
+        const enAnillo = x < m || y < m || x >= w - m || y >= h - m;
+        if (enAnillo) anillo++;
+        if (g < UMBRAL_BORDE) continue;
+        cols[x]++; filas[y]++;
+        if (enAnillo) anilloConContorno++;
+      }
+    }
+    if (anilloConContorno > anillo * 0.1) return null;
+    // Se queda con el tramo de más contorno: si hay un hueco (por ejemplo, entre el gorro y su sombra) la sombra no cuenta
+    const tramo = (a, hueco) => {
+      let mejor = null, actual = null;
+      for (let k = 0; k < a.length; k++) {
+        if (a[k] < 3) continue;
+        if (!actual || k - actual.hasta > hueco) actual = { desde: k, hasta: k, suma: 0 };
+        actual.hasta = k;
+        actual.suma += a[k];
+        if (!mejor || actual.suma > mejor.suma) mejor = actual;
+      }
+      return mejor;
+    };
+    const tx = tramo(cols, Math.round(w * 0.03)), ty = tramo(filas, Math.round(h * 0.03));
+    if (!tx || !ty || tx.hasta - tx.desde < 8 || ty.hasta - ty.desde < 8) return null;
+    const x0 = tx.desde, x1 = tx.hasta, y0 = ty.desde, y1 = ty.hasta;
+    if (x0 <= 3 || y0 <= 3 || x1 >= w - 4 || y1 >= h - 4) return null;
+    const sx = img.naturalWidth / w, sy = img.naturalHeight / h;
+    return { cx: (x0 + x1 + 1) / 2 * sx, cy: (y0 + y1 + 1) / 2 * sy, w: (x1 - x0 + 1) * sx, h: (y1 - y0 + 1) * sy };
+  }
+
+  // Dónde queda la foto dentro de un cuadro de "lado" px. Con zoom 1 queda como hoy en la tienda (llena el cuadro).
+  function ubicacion(lado) {
+    const iw = enc.img.naturalWidth, ih = enc.img.naturalHeight;
+    const k = Math.max(lado / iw, lado / ih) * enc.zoom;
+    const w = iw * k, h = ih * k;
+    const x0 = (lado - w) / 2 + enc.x * lado, y0 = (lado - h) / 2 + enc.y * lado;
+    const x1 = x0 + w, y1 = y0 + h;
+    // Si la foto no llega a algún borde, ese lado se completa
+    return { x0, y0, x1, y1, w, h, izq: x0 > 0, arr: y0 > 0, der: x1 < lado, aba: y1 < lado };
+  }
+  const faltaFondo = u => u.izq || u.arr || u.der || u.aba;
+
+  // Dibuja la foto encuadrada en un cuadrado
+  const capa = document.createElement('canvas');   // la foto con los bordes fundidos, antes de ponerla sobre el fondo
+  function dibujarEncuadre(ctx, lado) {
+    const { img, bordes } = enc;
+    const u = ubicacion(lado);
+    const { x0, y0, x1, y1, w, h, izq, arr, der, aba } = u;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    if (!faltaFondo(u)) {
+      ctx.drawImage(img, x0, y0, w, h);
+      return;
+    }
+    // Lo que falta se completa estirando los bordes de una copia chica de la foto, así el fondo sigue parejo.
+    // El fondo estirado entra un poco debajo de la foto, donde ella se funde, para que no se note el corte.
+    const bw = bordes.width, bh = bordes.height;
+    const f = Math.max(2, Math.min(w, h) * 0.06);
+    ctx.fillStyle = enc.promedio;
+    ctx.fillRect(0, 0, lado, lado);
+    if (izq && arr) ctx.drawImage(bordes, 0, 0, 1, 1, 0, 0, x0 + 1, y0 + 1);
+    if (der && arr) ctx.drawImage(bordes, bw - 1, 0, 1, 1, x1 - 1, 0, lado - x1 + 1, y0 + 1);
+    if (izq && aba) ctx.drawImage(bordes, 0, bh - 1, 1, 1, 0, y1 - 1, x0 + 1, lado - y1 + 1);
+    if (der && aba) ctx.drawImage(bordes, bw - 1, bh - 1, 1, 1, x1 - 1, y1 - 1, lado - x1 + 1, lado - y1 + 1);
+    if (izq) ctx.drawImage(bordes, 0, 0, 1, bh, 0, y0, x0 + f, h);
+    if (der) ctx.drawImage(bordes, bw - 1, 0, 1, bh, x1 - f, y0, lado - x1 + f, h);
+    if (arr) ctx.drawImage(bordes, 0, 0, bw, 1, x0, 0, w, y0 + f);
+    if (aba) ctx.drawImage(bordes, 0, bh - 1, bw, 1, x0, y1 - f, w, lado - y1 + f);
+
+    if (capa.width !== lado || capa.height !== lado) { capa.width = lado; capa.height = lado; }
+    const c = capa.getContext('2d');
+    c.clearRect(0, 0, lado, lado);
+    c.imageSmoothingEnabled = true;
+    c.imageSmoothingQuality = 'high';
+    c.drawImage(img, x0, y0, w, h);
+    c.globalCompositeOperation = 'destination-out';
+    const fundir = (ax, ay, bx, by, rx, ry, rw, rh) => {
+      const g = c.createLinearGradient(ax, ay, bx, by);
+      g.addColorStop(0, 'rgba(0, 0, 0, 1)');
+      g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      c.fillStyle = g;
+      c.fillRect(rx, ry, rw, rh);
+    };
+    if (izq) fundir(x0, 0, x0 + f, 0, x0, y0, f, h);
+    if (der) fundir(x1, 0, x1 - f, 0, x1 - f, y0, f, h);
+    if (arr) fundir(0, y0, 0, y0 + f, x0, y0, w, f);
+    if (aba) fundir(0, y1, 0, y1 - f, x0, y1 - f, w, f);
+    c.globalCompositeOperation = 'source-over';
+    ctx.drawImage(capa, 0, 0);
+  }
+
+  let dibujoPendiente = false;
+  function redibujar() {
+    if (dibujoPendiente) return;
+    dibujoPendiente = true;
+    requestAnimationFrame(() => { dibujoPendiente = false; dibujarEscenario(); });
+  }
+  function dibujarEscenario() {
+    if (!enc.img || !$('dialogo-encuadre').open) return;
+    const pct = Math.round(enc.zoom * 100);
+    $('encuadre-zoom').value = pct;
+    $('encuadre-valor').textContent = pct + '%';
+    const nota = $('encuadre-nota');
+    const texto = enc.mensaje || (faltaFondo(ubicacion(LADO_FOTO)) ? 'Lo que falta en los bordes se completa con el color del fondo de la foto.' : '');
+    if (nota.textContent !== texto) nota.textContent = texto;
+    nota.classList.toggle('error', !!enc.mensaje);
+    const lienzo = $('encuadre-lienzo');
+    const lado = Math.round($('encuadre-escenario').clientWidth * Math.min(window.devicePixelRatio || 1, 2));
+    if (!lado) return;
+    if (lienzo.width !== lado) lienzo.width = lienzo.height = lado;
+    dibujarEncuadre(lienzo.getContext('2d'), lado);
+  }
+
+  // Las líneas de guía aparecen mientras se mueve o se acerca la foto, y se van al rato de soltarla
+  let guiasHasta = 0;
+  function mostrarGuias(ms = 1000) {
+    $('encuadre-escenario').classList.add('moviendo');
+    clearTimeout(guiasHasta);
+    guiasHasta = setTimeout(() => { if (!enc.punteros.size) $('encuadre-escenario').classList.remove('moviendo'); }, ms);
+  }
+  // Después de cada cambio: el centro de la foto no puede salir del cuadro
+  function cambio() {
+    enc.x = entre(enc.x, -0.5, 0.5);
+    enc.y = entre(enc.y, -0.5, 0.5);
+    enc.mensaje = '';
+    mostrarGuias();
+    redibujar();
+  }
+  // Acerca o aleja dejando quieto el punto (px, py) del cuadro (por defecto, el centro)
+  function zoomA(nuevo, px = 0.5, py = 0.5) {
+    nuevo = entre(nuevo, ZOOM_MIN, ZOOM_MAX);
+    const f = nuevo / enc.zoom;
+    enc.x = px + (0.5 + enc.x - px) * f - 0.5;
+    enc.y = py + (0.5 + enc.y - py) * f - 0.5;
+    enc.zoom = nuevo;
+    cambio();
+  }
+
+  function ajusteAutomatico() {
+    if (enc.caja === undefined) {
+      try { enc.caja = cajaDelProducto(enc.img); } catch (e) { enc.caja = null; }
+    }
+    const caja = enc.caja;
+    if (!caja) {
+      enc.mensaje = 'Esta foto no tiene un fondo liso y no se puede ajustar sola. Acomodala a mano.';
+      return redibujar();
+    }
+    const iw = enc.img.naturalWidth, ih = enc.img.naturalHeight;
+    const base = Math.max(1 / iw, 1 / ih);   // con zoom 1: fracción del cuadro que ocupa cada píxel de la foto
+    enc.zoom = entre(OBJETIVO / Math.max(caja.w, caja.h) / base, ZOOM_MIN, ZOOM_MAX);
+    const k = base * enc.zoom;
+    enc.x = -(caja.cx - iw / 2) * k;
+    enc.y = -(caja.cy - ih / 2) * k;
+    cambio();
+    mostrarGuias(1600);   // un rato más, para ver que el producto quedó dentro de la caja
+  }
+
+  // Fotos para comparar: los otros colores de este producto y después los demás (primero los de la misma categoría)
+  function pintarComparar() {
+    const vistas = new Set([enc.foto, enc.fuente]);
+    const otras = [];
+    const sumar = (f, nombre) => {
+      const ver = fotoVariante({ fotos: [f] });
+      if (ver && !vistas.has(f)) { vistas.add(f); otras.push({ ver, nombre }); }
+    };
+    const nombre = $('prod-nombre').value.trim();
+    borrador.variantes.forEach(x => sumar(x.fotos[0], [nombre, String(x.nombre).trim()].filter(Boolean).join(' ')));
+    const cat = $('prod-categoria').value.trim();
+    const resto = estado.productos.filter(p => p.id !== borrador.id);
+    [...resto.filter(p => p.categoria === cat), ...resto.filter(p => p.categoria !== cat)]
+      .forEach(p => variantesDe(p).forEach(x => sumar(fotosDe(x)[0], [p.nombre, x.nombre].filter(Boolean).join(' '))));
+    enc.otras = otras.slice(0, 24);
+    $('encuadre-comparar').hidden = !enc.otras.length;
+    $('encuadre-otras').innerHTML = enc.otras.map((o, k) =>
+      `<button type="button" class="otra" data-calco="${k}" aria-pressed="false" aria-label="Comparar con ${esc(o.nombre)}" title="${esc(o.nombre)}">${imagen(o.ver)}</button>`).join('');
+    $('encuadre-otras').scrollLeft = 0;
+    $('encuadre-calco').hidden = true;
+    $('encuadre-calco').removeAttribute('src');
+  }
+
+  async function abrirEncuadre(v, i) {
+    if ($('dialogo-encuadre').open) return;
+    if (fotoElegida) {
+      const c = fotoElegida.clave;
+      fotoElegida = null;
+      pintarFotosDe(c);
+    }
+    const foto = v.fotos[i];
+    const previo = encuadresHechos.get(foto);
+    const fuente = previo ? previo.fuente : foto;
+    let img;
+    try {
+      img = await cargarImagen(fuente);
+      // Un enlace de otra página que no deja usar sus fotos no se puede recortar: se avisa antes de abrir
+      const prueba = document.createElement('canvas');
+      prueba.width = prueba.height = 1;
+      prueba.getContext('2d').drawImage(img, 0, 0, 1, 1);
+      prueba.toDataURL();
+    } catch (e) {
+      return panel.aviso('Esta foto no se puede encuadrar desde acá. Subila como archivo y probá de nuevo.', true);
+    }
+    // Mientras cargaba se pudo cerrar el producto o abrir otra foto
+    if (!borrador || !borrador.variantes.includes(v) || v.fotos[i] !== foto || $('dialogo-encuadre').open) return;
+    const bordes = achicarA(img, 32);   // bien chica: al estirarla, el fondo queda liso aunque tenga textura
+    Object.assign(enc, {
+      clave: v.clave, indice: i, foto, fuente, img, bordes, promedio: colorPromedio(bordes), caja: undefined,
+      zoom: previo ? previo.zoom : 1, x: previo ? previo.x : 0, y: previo ? previo.y : 0, mensaje: ''
+    });
+    enc.punteros.clear();
+    pintarComparar();
+    $('dialogo-encuadre').showModal();
+    $('dialogo-encuadre').scrollTop = 0;
+    dibujarEscenario();
+    mostrarGuias(1600);   // al abrir se ven un momento, para saber que están
+  }
+
+  function usarEncuadre() {
+    const dialogo = $('dialogo-encuadre');
+    const v = borrador && borrador.variantes.find(x => x.clave === enc.clave);
+    if (!v || v.fotos[enc.indice] !== enc.foto) return dialogo.close();
+    const igual = Math.abs(enc.zoom - 1) < 0.005 && Math.abs(enc.x) < 0.0005 && Math.abs(enc.y) < 0.0005;
+    let nueva = enc.fuente;
+    if (!igual) {
+      const lienzo = document.createElement('canvas');
+      lienzo.width = lienzo.height = LADO_FOTO;
+      dibujarEncuadre(lienzo.getContext('2d'), LADO_FOTO);
+      try {
+        nueva = lienzo.toDataURL('image/jpeg', 0.82);
+      } catch (e) {
+        dialogo.close();
+        return panel.aviso('No se pudo encuadrar esta foto. Subila como archivo y probá de nuevo.', true);
+      }
+      encuadresHechos.set(nueva, { fuente: enc.fuente, zoom: enc.zoom, x: enc.x, y: enc.y });
+    }
+    dialogo.close();
+    if (nueva === enc.foto) return;
+    v.fotos[enc.indice] = nueva;
+    sucio = true;
+    pintarFotosDe(v.clave);
+    panel.aviso('Foto encuadrada. Tocá Guardar para que cambie en la tienda.');
+  }
+
+  (() => {
+    const dialogo = $('dialogo-encuadre');
+    const escenario = $('encuadre-escenario');
+    const puntoEn = e => {
+      const r = escenario.getBoundingClientRect();
+      return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
+    };
+    // Un dedo (o el mouse) mueve la foto; dos dedos la acercan o alejan
+    escenario.addEventListener('pointerdown', e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      try { escenario.setPointerCapture(e.pointerId); } catch (err) { /* sin captura igual funciona dentro del cuadro */ }
+      enc.punteros.set(e.pointerId, puntoEn(e));
+    });
+    escenario.addEventListener('pointermove', e => {
+      const antes = enc.punteros.get(e.pointerId);
+      if (!antes || !enc.img) return;
+      const ahora = puntoEn(e);
+      if (enc.punteros.size === 1) {
+        enc.x += ahora.x - antes.x;
+        enc.y += ahora.y - antes.y;
+      } else {
+        const otro = [...enc.punteros].find(([id]) => id !== e.pointerId)[1];
+        const distancia = (p, q) => Math.hypot(p.x - q.x, p.y - q.y);
+        const nuevo = entre(enc.zoom * distancia(ahora, otro) / Math.max(distancia(antes, otro), 0.01), ZOOM_MIN, ZOOM_MAX);
+        const f = nuevo / enc.zoom;
+        const medioAntes = { x: (antes.x + otro.x) / 2, y: (antes.y + otro.y) / 2 };
+        const medioAhora = { x: (ahora.x + otro.x) / 2, y: (ahora.y + otro.y) / 2 };
+        enc.x = medioAhora.x + (0.5 + enc.x - medioAntes.x) * f - 0.5;
+        enc.y = medioAhora.y + (0.5 + enc.y - medioAntes.y) * f - 0.5;
+        enc.zoom = nuevo;
+      }
+      enc.punteros.set(e.pointerId, ahora);
+      cambio();
+    });
+    const soltar = e => {
+      if (!enc.punteros.delete(e.pointerId)) return;
+      mostrarGuias();
+    };
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => escenario.addEventListener(t, soltar));
+    // Scrollear encima de la foto la acerca o aleja (en la notebook también con el pellizco del touchpad)
+    escenario.addEventListener('wheel', e => {
+      if (!enc.img) return;
+      e.preventDefault();
+      const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+      const p = puntoEn(e);
+      zoomA(enc.zoom * Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.0012)), p.x, p.y);
+    }, { passive: false });
+    escenario.addEventListener('keydown', e => {
+      const paso = e.shiftKey ? 0.05 : 0.01;
+      const mover = { ArrowLeft: [-paso, 0], ArrowRight: [paso, 0], ArrowUp: [0, -paso], ArrowDown: [0, paso] }[e.key];
+      if (mover) {
+        e.preventDefault();
+        enc.x += mover[0];
+        enc.y += mover[1];
+        return cambio();
+      }
+      if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomA(enc.zoom + 0.05); }
+      if (e.key === '-' || e.key === '_') { e.preventDefault(); zoomA(enc.zoom - 0.05); }
+    });
+
+    $('encuadre-zoom').addEventListener('input', e => zoomA(Number(e.target.value) / 100));
+    $('encuadre-auto').addEventListener('click', ajusteAutomatico);
+    $('encuadre-original').addEventListener('click', () => {
+      Object.assign(enc, { zoom: 1, x: 0, y: 0 });
+      cambio();
+    });
+    $('encuadre-listo').addEventListener('click', usarEncuadre);
+    dialogo.addEventListener('click', e => {
+      if (e.target.closest('[data-cerrar-encuadre]')) return dialogo.close();
+      const z = e.target.closest('[data-zoom]');
+      if (z) return zoomA(enc.zoom + Number(z.dataset.zoom) * 0.05);
+      const otra = e.target.closest('[data-calco]');
+      if (!otra) return;
+      // Tocar otra foto la muestra transparente encima; tocarla de nuevo la saca
+      const calco = $('encuadre-calco');
+      const yaEstaba = otra.getAttribute('aria-pressed') === 'true';
+      $('encuadre-otras').querySelectorAll('[data-calco]').forEach(b => b.setAttribute('aria-pressed', 'false'));
+      if (yaEstaba) { calco.hidden = true; return; }
+      otra.setAttribute('aria-pressed', 'true');
+      calco.src = fotoLiviana(enc.otras[Number(otra.dataset.calco)].ver);
+      calco.hidden = false;
+    });
+    dialogo.addEventListener('close', () => {
+      enc.punteros.clear();
+      enc.img = null;
+      enc.bordes = null;
+      $('encuadre-calco').hidden = true;
+      clearTimeout(guiasHasta);
+      escenario.classList.remove('moviendo');
+    });
+    addEventListener('resize', () => { if (dialogo.open) redibujar(); });
+  })();
 
   // ── Datos en vivo ──────────────────────────────
   db.ref('productos').on('value', snap => {
