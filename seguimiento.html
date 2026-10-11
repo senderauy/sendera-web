@@ -93,6 +93,36 @@
     .cuentas .total span:first-child { color: var(--tinta); }
     .cuentas .total span:last-child { font-variant-numeric: tabular-nums; }
 
+    /* Reseña, cuando el pedido ya se entregó */
+    .resena h2.titulo { font: 600 1.6rem/1.15 'Cormorant Garamond', serif; text-transform: none; letter-spacing: 0; color: var(--tinta); margin-bottom: 4px; }
+    .resena .sub { font-size: 0.85rem; color: var(--tinta-2); }
+    .resena form { margin-top: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .estrellas { display: flex; gap: 4px; }
+    .estrellas button { padding: 2px 4px; border: 0; background: none; font-size: 2.1rem; line-height: 1; color: #ddd3c4; cursor: pointer; transition: color 0.15s, transform 0.15s; }
+    .estrellas button.elegida { color: #c8861a; }
+    .estrellas button:hover { transform: scale(1.08); }
+    .estrellas button:focus-visible { outline: 2px solid var(--verde); outline-offset: 2px; border-radius: 6px; }
+    .campo-r { display: flex; flex-direction: column; gap: 6px; font-size: 0.8rem; font-weight: 500; color: var(--tinta-2); }
+    .campo-r i { font-style: normal; font-weight: 400; color: var(--tinta-3); }
+    .campo-r input, .campo-r textarea {
+      width: 100%; padding: 11px 13px; border: 1.5px solid var(--linea); border-radius: 10px; background: #fff;
+      font: 400 0.92rem 'Montserrat', sans-serif; color: var(--tinta); outline: none; resize: vertical;
+    }
+    .campo-r input:focus, .campo-r textarea:focus { border-color: var(--tinta-3); }
+    .dos-r { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .error-resena { font-size: 0.82rem; color: #a5432f; min-height: 1.2em; }
+    .error-resena:empty { display: none; }
+    .boton-enviar {
+      padding: 15px 20px; border: 0; border-radius: 12px; background: var(--noche); color: #fff;
+      font: 600 0.92rem 'Montserrat', sans-serif; cursor: pointer; transition: background 0.2s;
+    }
+    .boton-enviar:hover { background: #0c140b; }
+    .boton-enviar:disabled { opacity: 0.6; cursor: default; }
+    .boton-enviar:focus-visible { outline: 2px solid var(--verde); outline-offset: 3px; }
+    .gracias { display: flex; gap: 12px; align-items: flex-start; }
+    .gracias b { display: block; font-size: 0.98rem; }
+    .gracias p { margin-top: 2px; font-size: 0.85rem; color: var(--tinta-2); }
+
     .ayuda { display: flex; flex-direction: column; align-items: center; gap: 12px; padding-top: 4px; }
     .boton-wa {
       display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
@@ -112,6 +142,7 @@
     a:focus-visible, .boton-wa:focus-visible { outline: 2px solid var(--verde); outline-offset: 3px; }
 
     @media (max-width: 480px) {
+      .dos-r { grid-template-columns: 1fr; }
       main { margin-top: 26px; }
       .hola h1 { font-size: 1.9rem; }
       .tarjeta { padding: 22px 18px; }
@@ -141,6 +172,9 @@
   const pedidoId = params.get('p') || '';
   const codigo = params.get('c') || '';
   let ultimo = '';   // lo último que se dibujó, para no redibujar si no cambió nada
+  let datos = null;  // el pedido que se está mostrando
+  let estrellasElegidas = 0;
+  let yaSeMovio = false;   // el link del mail de "entregado" trae #resena: se baja una sola vez hasta el formulario
 
   function esc(v) {
     return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -189,10 +223,42 @@
     return d.envio || '—';
   }
 
+  // Reseña: cuando el pedido ya llegó, se le pide que cuente qué le pareció (una vez por pedido)
+  function htmlResena(d) {
+    if (d.estado !== 'entregado') return '';
+    if (d.resena) {
+      return `
+      <section class="tarjeta resena" id="resena">
+        <div class="gracias"><span aria-hidden="true">🙌</span><div><b>¡Gracias por tu reseña!</b><p>La publicamos en la tienda apenas la revisemos.</p></div></div>
+      </section>`;
+    }
+    return `
+      <section class="tarjeta resena" id="resena" aria-labelledby="titulo-resena">
+        <h2 class="titulo" id="titulo-resena">¿Qué te pareció tu compra?</h2>
+        <p class="sub">Tu reseña aparece en la tienda y ayuda a otros a elegir.</p>
+        <form id="form-resena" novalidate>
+          <div class="estrellas" role="radiogroup" aria-label="Puntuación de 1 a 5">
+            ${[1, 2, 3, 4, 5].map(n => `<button type="button" role="radio" aria-checked="${n === estrellasElegidas}" class="${n <= estrellasElegidas ? 'elegida' : ''}" data-estrella="${n}" aria-label="${n} ${n === 1 ? 'estrella' : 'estrellas'}">★</button>`).join('')}
+          </div>
+          <label class="campo-r"><span>Tu reseña</span><textarea name="texto" maxlength="300" rows="4" placeholder="Contanos qué te pareció"></textarea></label>
+          <div class="dos-r">
+            <label class="campo-r"><span>Tu nombre</span><input name="nombre" maxlength="40" value="${esc(d.nombre)}" autocomplete="given-name" /></label>
+            <label class="campo-r"><span>Tu ciudad <i>(opcional)</i></span><input name="ciudad" maxlength="40" autocomplete="address-level2" /></label>
+          </div>
+          <p class="error-resena" role="alert"></p>
+          <button type="submit" class="boton-enviar">Enviar reseña</button>
+        </form>
+      </section>`;
+  }
+
   function pintar(d) {
     const huella = JSON.stringify(d);
     if (huella === ultimo) return;
+    // Si está escribiendo la reseña, no se le borra lo que escribió
+    const escribiendo = document.querySelector('#form-resena textarea');
+    if (escribiendo && escribiendo.value.trim()) return;
     ultimo = huella;
+    datos = d;
     const retiro = d.entrega === 'retiro';
     const nombres = ['Recibido', 'Confirmado', retiro ? 'Listo para retirar' : 'En camino', retiro ? 'Retirado' : 'Entregado'];
     const paso = Math.min(3, Math.max(0, Number(d.paso) || 0));
@@ -219,6 +285,8 @@
         </div>
       </section>
 
+      ${htmlResena(d)}
+
       <section class="tarjeta" aria-label="Lo que compraste">
         <h2>Tu compra</h2>
         <ul class="items">${(d.productos || []).map(p => `
@@ -234,7 +302,57 @@
         <a class="boton-wa" href="${esc(enlaceWA(consulta))}" target="_blank" rel="noopener noreferrer">${ICONO_WA}Consultas por WhatsApp</a>
         <a class="seguir" href="/">Seguir comprando</a>
       </div>`;
+
+    if (location.hash === '#resena' && !yaSeMovio && document.getElementById('resena')) {
+      yaSeMovio = true;
+      document.getElementById('resena').scrollIntoView({ block: 'start' });
+    }
   }
+
+  function marcarEstrellas() {
+    document.querySelectorAll('[data-estrella]').forEach(b => {
+      const n = Number(b.dataset.estrella);
+      b.classList.toggle('elegida', n <= estrellasElegidas);
+      b.setAttribute('aria-checked', String(n === estrellasElegidas));
+    });
+  }
+
+  document.addEventListener('click', e => {
+    const estrella = e.target.closest('[data-estrella]');
+    if (!estrella) return;
+    estrellasElegidas = Number(estrella.dataset.estrella);
+    marcarEstrellas();
+  });
+
+  document.addEventListener('submit', async e => {
+    const form = e.target;
+    if (form.id !== 'form-resena') return;
+    e.preventDefault();
+    const error = form.querySelector('.error-resena');
+    const boton = form.querySelector('.boton-enviar');
+    const texto = form.texto.value.trim();
+    if (!estrellasElegidas) { error.textContent = 'Elegí de 1 a 5 estrellas.'; return; }
+    if (!texto) { error.textContent = 'Escribí qué te pareció.'; form.texto.focus(); return; }
+    error.textContent = '';
+    boton.disabled = true;
+    boton.textContent = 'Enviando…';
+    try {
+      const r = await fetch('/api/seguimiento', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p: pedidoId, c: codigo, estrellas: estrellasElegidas, texto, nombre: form.nombre.value.trim(), ciudad: form.ciudad.value.trim() })
+      });
+      const respuesta = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(respuesta.error || 'No se pudo enviar la reseña. Probá de nuevo.');
+      form.texto.value = '';
+      ultimo = '';
+      pintar({ ...datos, resena: true });
+    } catch (err) {
+      error.textContent = err.message && !/fetch/i.test(err.message) ? err.message : 'No se pudo enviar. Revisá tu conexión y probá de nuevo.';
+      boton.disabled = false;
+      boton.textContent = 'Enviar reseña';
+    }
+  });
 
   function mostrarError(tipo) {
     if (ultimo) return;   // si ya se veía el pedido, un corte de conexión no lo borra

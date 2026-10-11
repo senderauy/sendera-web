@@ -103,6 +103,7 @@
     .resena p { margin: 8px 0 10px; line-height: 1.55; }
     .resena small { color: var(--sa-tinta-3); }
     .resena .sa-acciones { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .verificada { margin-left: 8px; vertical-align: 2px; font-size: 0.7rem; padding: 2px 8px 2px 7px; }
     .resumen-resenas { display: flex; gap: 26px; margin: 4px 0 14px; }
     .resumen-resenas b { font: 600 1.8rem/1 var(--sa-serif); display: block; }
     .resumen-resenas small { color: var(--sa-tinta-3); font-size: 0.78rem; }
@@ -430,10 +431,12 @@
   });
 
   // ── Reseñas ────────────────────────────────────
+  // Compra verificada: la mandó el cliente desde el link de su pedido (el servidor anota en el pedido cuál es su reseña)
+  const deCompra = r => r.compraVerificada === true && estado.pedidos.some(p => p.id === r.pedido && p.resena === r.id);
   function dibujarResenas() {
     $('resenas-pendientes').innerHTML = estado.resenasPendientes.map(r => `
       <div class="resena">
-        <span class="estrellas">${'★'.repeat(estrellas(r.estrellas))}</span>
+        <span class="estrellas">${'★'.repeat(estrellas(r.estrellas))}</span>${deCompra(r) ? '<span class="sa-pastilla verde verificada">Compra verificada</span>' : ''}
         <p>“${esc(r.texto)}”</p>
         <small>${esc(r.nombre || 'Sin nombre')}${r.ciudad ? ', ' + esc(r.ciudad) : ''}. Espera tu aprobación.</small>
         <div class="sa-acciones">
@@ -449,7 +452,7 @@
     $('resenas-publicadas').innerHTML = publicadas.length
       ? publicadas.map(r => `
         <li>
-          <div><b>${esc(r.nombre || 'Sin nombre')}</b>${r.ciudad ? ', ' + esc(r.ciudad) : ''} <span class="estrellas">${'★'.repeat(estrellas(r.estrellas))}</span><p>“${esc(r.texto || '')}”</p></div>
+          <div><b>${esc(r.nombre || 'Sin nombre')}</b>${r.ciudad ? ', ' + esc(r.ciudad) : ''} <span class="estrellas">${'★'.repeat(estrellas(r.estrellas))}</span>${r.compraVerificada ? '<span class="sa-pastilla verde verificada">Compra verificada</span>' : ''}<p>“${esc(r.texto || '')}”</p></div>
           <button type="button" class="sa-icono-btn" data-borrar-resena="${esc(r.id)}" aria-label="Borrar reseña"><i data-lucide="trash-2"></i></button>
         </li>`).join('')
       : '<li class="sa-vacio">Todavía no hay reseñas publicadas.</li>';
@@ -465,7 +468,10 @@
       const r = estado.resenasPendientes.find(x => x.id === id);
       if (!r) return;
       aprobar.disabled = true;
-      await db.ref('resenas').push({ nombre: r.nombre, ciudad: r.ciudad || '', texto: r.texto, estrellas: estrellas(r.estrellas), fecha: r.fecha || new Date().toISOString(), orden: Date.now(), aprobada: true });
+      const publicada = { nombre: r.nombre, ciudad: r.ciudad || '', texto: r.texto, estrellas: estrellas(r.estrellas), fecha: r.fecha || new Date().toISOString(), orden: Date.now(), aprobada: true };
+      // La dejó desde el link de su pedido: en la tienda se muestra como compra verificada
+      if (deCompra(r)) publicada.compraVerificada = true;
+      await db.ref('resenas').push(publicada);
       await db.ref('resenas_pendientes/' + id).remove();
       panel.aviso('Reseña publicada');
     }
@@ -507,7 +513,7 @@
 
   // ── Datos en vivo ──────────────────────────────
   const lista = snap => { const items = []; snap.forEach(c => { items.push({ id: c.key, ...c.val() }); }); return items; };
-  db.ref('pedidos').on('value', snap => { estado.pedidos = lista(snap); dibujarCaja(); dibujarRanking(); dibujarTareas(); });
+  db.ref('pedidos').on('value', snap => { estado.pedidos = lista(snap); dibujarCaja(); dibujarRanking(); dibujarTareas(); dibujarResenas(); });
   db.ref('productos').on('value', snap => { estado.productos = lista(snap); dibujarRanking(); dibujarStock(); dibujarTareas(); });
   db.ref('stock').on('value', snap => { estado.stock = snap.val() || {}; dibujarStock(); dibujarTareas(); });
   db.ref('resenas_pendientes').on('value', snap => { estado.resenasPendientes = lista(snap); dibujarResenas(); dibujarTareas(); });

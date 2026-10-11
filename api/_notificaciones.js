@@ -84,7 +84,7 @@ export async function enviarWhatsAppConfirmacion({ celular, cliente, productos, 
 // Todo lo que viene del pedido se escapa antes de ir al HTML.
 const REMITENTE = 'Sendera <pedidos@senderauy.com>';
 
-function armarMail({ etiqueta, cliente, mensaje, nota, productos, envio, total, enlace }) {
+function armarMail({ etiqueta, cliente, mensaje, nota, productos, envio, total, enlace, boton = 'Ver mi pedido', notaBoton = 'Ahí ves en qué paso está tu pedido.' }) {
   const nombre = texto(String(cliente ?? '').trim().split(/\s+/)[0], 40);
   const saludo = nombre ? `¡Hola ${nombre}!` : '¡Hola!';
   const lineas = String(productos || '').split('\n').filter(Boolean).map(l => l.replace(/^• /, ''));
@@ -111,10 +111,10 @@ function armarMail({ etiqueta, cliente, mensaje, nota, productos, envio, total, 
             ${enlace ? `
             <table cellpadding="0" cellspacing="0" style="margin:0 0 8px">
               <tr><td style="background:#182417;border-radius:10px">
-                <a href="${escaparHtml(enlace)}" style="display:inline-block;padding:14px 28px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:10px">Ver mi pedido</a>
+                <a href="${escaparHtml(enlace)}" style="display:inline-block;padding:14px 28px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:10px">${escaparHtml(boton)}</a>
               </td></tr>
             </table>
-            <p style="margin:0 0 28px;font-size:12px;color:#9a8f82">Ahí ves en qué paso está tu pedido.</p>` : ''}
+            <p style="margin:0 0 28px;font-size:12px;color:#9a8f82">${escaparHtml(notaBoton)}</p>` : ''}
             ${productosHtml ? `
             <div style="background:#faf8f4;border-radius:10px;padding:20px 24px;margin-bottom:24px;border:1px solid #e8dfd2">
               <p style="margin:0 0 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#9a8f82;font-weight:600">Productos</p>
@@ -150,7 +150,7 @@ function armarMail({ etiqueta, cliente, mensaje, nota, productos, envio, total, 
   // Versión en texto, para los programas de correo que no muestran HTML
   const textoPlano = [
     saludo, '', mensaje, '',
-    enlace ? `Ver mi pedido: ${enlace}\n` : '',
+    enlace ? `${boton}: ${enlace}\n` : '',
     ...lineas.map(l => `- ${l}`),
     total ? `\nEnvío: ${texto(envio || '—', 200)}\nTotal: $${texto(total, 30)}` : '',
     nota ? `\n${nota}` : '',
@@ -193,6 +193,9 @@ export async function enviarEmailConfirmacion({ email, cliente, productos, total
   return enviarMail({ email, asunto: porConfirmar ? 'Recibimos tu pedido — Sendera' : '✅ Tu pedido está en preparación — Sendera', ...mail });
 }
 
+// Con el pedido entregado, el botón lleva directo al formulario de reseña de la página de seguimiento
+const PEDIR_RESENA = { boton: 'Dejar mi reseña', notaBoton: 'Te lleva un minuto y ayuda a otros a elegir.', ancla: '#resena' };
+
 // Qué dice el mail de cada paso, según cómo se entrega y cómo se paga
 function textosDeEstado(paso, entrega, metodoPago) {
   const retiro = entrega === 'retiro';
@@ -230,8 +233,8 @@ function textosDeEstado(paso, entrega, metodoPago) {
   }
   if (paso === 'entregado') {
     return retiro
-      ? { asunto: '🏔️ ¡Gracias por tu compra! — Sendera', etiqueta: 'Pedido retirado', mensaje: 'Retiraste tu pedido. ¡Gracias por elegir Sendera! Que lo disfrutes en tus próximas salidas.' }
-      : { asunto: '🏔️ Tu pedido llegó — Sendera', etiqueta: 'Pedido entregado', mensaje: 'Tu pedido ya está con vos. ¡Gracias por elegir Sendera! Que lo disfrutes en tus próximas salidas.' };
+      ? { asunto: '🏔️ ¡Gracias por tu compra! — Sendera', etiqueta: 'Pedido retirado', mensaje: 'Retiraste tu pedido. ¡Gracias por elegir Sendera! Cuando lo estrenes, contanos qué te pareció.', ...PEDIR_RESENA }
+      : { asunto: '🏔️ Tu pedido llegó — Sendera', etiqueta: 'Pedido entregado', mensaje: 'Tu pedido ya está con vos. ¡Gracias por elegir Sendera! Cuando lo estrenes, contanos qué te pareció.', ...PEDIR_RESENA };
   }
   return null;
 }
@@ -240,7 +243,10 @@ function textosDeEstado(paso, entrega, metodoPago) {
 export async function enviarEmailEstado({ email, cliente, paso, envio, metodoPago, productos, total, enlace }) {
   const t = textosDeEstado(paso, entregaDe(envio), metodoPago);
   if (!t) return false;
-  const mail = armarMail({ etiqueta: t.etiqueta, cliente, mensaje: t.mensaje, nota: t.nota, productos, envio, total, enlace });
+  const mail = armarMail({
+    etiqueta: t.etiqueta, cliente, mensaje: t.mensaje, nota: t.nota, productos, envio, total,
+    enlace: enlace && t.ancla ? enlace + t.ancla : enlace, boton: t.boton, notaBoton: t.notaBoton
+  });
   return enviarMail({ email, asunto: t.asunto, ...mail });
 }
 

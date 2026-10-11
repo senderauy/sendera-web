@@ -66,14 +66,18 @@ export async function asegurarCodigo(id, pedido, token) {
   throw new Error('No se pudo guardar el código de seguimiento');
 }
 
-// Anota que al cliente ya se le avisó de este paso. Devuelve false si ya estaba anotado: así el mail no se repite.
-export async function marcarAviso(id, paso, token) {
-  const ruta = `pedidos/${id}/avisos/${paso}`;
+// Guarda un valor solo si ese lugar está vacío. Si dos llegan juntos gana el primero (ETag de Firebase).
+export async function ponerSiVacio(ruta, valor, token) {
   const actual = await fb(ruta, token, { headers: { 'X-Firebase-ETag': 'true' } });
   const etag = actual.headers.get('etag');
   if ((await actual.json()) != null || !etag) return false;
-  const res = await fb(ruta, token, { method: 'PUT', body: JSON.stringify(new Date().toISOString()), headers: { 'if-match': etag } });
-  return res.ok; // 412 = otro lo anotó primero
+  const res = await fb(ruta, token, { method: 'PUT', body: JSON.stringify(valor), headers: { 'if-match': etag } });
+  return res.ok; // 412 = otro lo guardó primero
+}
+
+// Anota que al cliente ya se le avisó de este paso. Devuelve false si ya estaba anotado: así el mail no se repite.
+export function marcarAviso(id, paso, token) {
+  return ponerSiVacio(`pedidos/${id}/avisos/${paso}`, new Date().toISOString(), token);
 }
 
 // Si el mail no salió, se borra la marca para que se pueda volver a intentar
