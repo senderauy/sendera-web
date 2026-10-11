@@ -1,13 +1,15 @@
 // Después de registrar un pedido (efectivo, transferencia o tarjeta), el checkout avisa acá con el id.
 // El servidor lee el pedido de la base (no confía en lo que mande el navegador) y, una sola vez por pedido:
 //   · notifica a los admins (push)
-//   · manda al cliente el WhatsApp automático y el email de confirmación
+//   · le crea el código del link de seguimiento
+//   · manda al cliente el WhatsApp automático y el email de confirmación (con el link para seguir el pedido)
 // Mercado Pago no pasa por acá: esas confirmaciones las manda el webhook al aprobarse el pago.
 import { DB_URL, getFirebaseToken } from './_pedido.js';
 import {
   enviarWhatsAppConfirmacion, enviarEmailConfirmacion, notificarAdmins,
   normalizarCelular, lineasProductos
 } from './_notificaciones.js';
+import { asegurarCodigo, enlaceSeguimiento, anotarAvisos } from './_seguimiento.js';
 
 const VENTANA_MINUTOS = 15;             // solo pedidos recién creados
 const MAX_WHATSAPP_POR_HORA = 3;        // por número de celular, para que no se use para mandar spam
@@ -65,6 +67,11 @@ export default async function handler(req, res) {
     const envio = String(pedido.envio || '—');
     await notificarAdmins({ cliente: pedido.cliente, total, envio }, token).catch(e => console.error('confirmar-pedido push:', e.message));
 
+    // Todo pedido queda con su link de seguimiento (el panel también lo puede mandar por WhatsApp)
+    let enlace = '';
+    try { enlace = enlaceSeguimiento(id, await asegurarCodigo(id, pedido, token)); }
+    catch (e) { console.error('confirmar-pedido seguimiento:', e.message); }
+
     if (ESTADOS_CON_CONFIRMACION.includes(pedido.estado)) {
       const productos = lineasProductos(pedido.productos);
       const celular = normalizarCelular(pedido.celular);
@@ -73,8 +80,10 @@ export default async function handler(req, res) {
           .catch(e => console.error('confirmar-pedido WhatsApp:', e.message));
       }
       if (pedido.email) {
-        await enviarEmailConfirmacion({ email: pedido.email, cliente: pedido.cliente, productos, total, envio })
-          .catch(e => console.error('confirmar-pedido email:', e.message));
+        const enviado = await enviarEmailConfirmacion({ email: pedido.email, cliente: pedido.cliente, productos, total, envio, estado: pedido.estado, enlace })
+          .catch(e => { console.error('confirmar-pedido email:', e.message); return false; });
+        // Si el pago ya estaba aprobado, este mail ya le contó que está confirmado: no se le repite después
+        if (enviado) await anotarAvisos(id, pedido.estado === 'aprobado' ? ['recibido', 'confirmado'] : ['recibido'], token);
       }
     }
     return res.status(200).json({ ok: true });

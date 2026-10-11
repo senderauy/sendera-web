@@ -135,6 +135,9 @@
     .paso.siguiente i { border-color: var(--sa-noche); }
     .otro-estado { display: flex; align-items: center; gap: 10px; margin-top: 18px; font-size: 0.8rem; color: var(--sa-tinta-2); }
     .otro-estado select { flex: 1; min-width: 0; padding: 8px 10px; font-size: 0.84rem; cursor: pointer; }
+    .aviso-mail { display: flex; align-items: flex-start; gap: 7px; margin-top: 14px; font-size: 0.78rem; color: var(--sa-tinta-3); }
+    .aviso-mail .lucide { width: 15px; height: 15px; margin-top: 1px; }
+    .seguimiento-link { margin-top: 10px; }
 
     .items li { list-style: none; display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--sa-linea-2); }
     .items li:first-child { border-top: 0; padding-top: 0; }
@@ -329,6 +332,10 @@
   };
   const pagoDe = p => PAGOS[p.metodo_pago] || ['wallet', 'Sin dato'];
   const enFiltro = (p, f) => f === 'todos' || p.estado === f || (f === 'confirmado' && p.estado === 'aprobado');
+  // Estados que se le avisan al cliente por mail, y el link para que siga su pedido (sin el código no se ve nada)
+  const ESTADOS_CON_AVISO = ['confirmado', 'camino', 'entregado'];
+  const codigoSeguimiento = p => /^[A-Za-z0-9_-]{16,40}$/.test(String(p.codigo || '')) ? p.codigo : '';
+  const enlaceSeguimiento = p => `https://www.senderauy.com/seguimiento?p=${encodeURIComponent(p.id)}&c=${encodeURIComponent(codigoSeguimiento(p))}`;
 
   // ── Datos de cada pedido ───────────────────────
   function itemsDe(x) {
@@ -581,6 +588,10 @@
             ${nombres.map((n, i) => `<span class="paso${i <= paso ? ' hecho' : ''}${i === paso + 1 ? ' siguiente' : ''}"${i === paso ? ' aria-current="step"' : ''}><i></i>${n}</span>`).join('')}
           </div>
           <label class="otro-estado">Cambiar a mano <select class="sa-campo" data-estado>${opcionesEstado(p)}</select></label>
+          ${p.email
+            ? `<p class="aviso-mail"><i data-lucide="mail"></i>Cuando lo marcás confirmado, ${entrega.retiro ? 'listo para retirar o retirado' : 'en camino o entregado'}, le avisamos por mail.</p>`
+            : '<p class="aviso-mail"><i data-lucide="mail-x"></i>No dejó mail: los cambios de estado no le llegan por mail.</p>'}
+          ${codigoSeguimiento(p) ? '<button type="button" class="sa-enlace seguimiento-link" data-copiar-seguimiento><i data-lucide="link"></i>Copiar el link para seguir el pedido</button>' : ''}
         </section>
         <section>
           <h3>Productos</h3>
@@ -655,9 +666,28 @@
     try {
       await db.ref('pedidos/' + p.id + '/estado').set(nuevo);
       panel.aviso(`Pedido de ${primerNombre(p.cliente)} marcado como ${textoEstado({ ...p, estado: nuevo }).toLowerCase()}`);
+      if (ESTADOS_CON_AVISO.includes(nuevo)) avisarCliente(p);
     } catch (e) {
       panel.aviso('No se pudo cambiar el estado. Revisá la conexión y probá de nuevo.', true);
       refrescarDetalle(p);
+    }
+  }
+
+  // Si el cliente dejó su mail, el servidor le manda el estado nuevo (una sola vez por paso)
+  async function avisarCliente(p) {
+    if (!p.email) return;
+    try {
+      const token = await firebase.auth().currentUser.getIdToken();
+      const r = await fetch('/api/avisar-estado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ pedidoId: p.id })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (d.enviado) panel.aviso(`Le avisamos por mail a ${primerNombre(p.cliente)}`);
+      else if (!r.ok) panel.aviso(`No le pudimos mandar el mail a ${primerNombre(p.cliente)}. El estado sí quedó cambiado.`, true);
+    } catch (e) {
+      panel.aviso(`No le pudimos mandar el mail a ${primerNombre(p.cliente)}. El estado sí quedó cambiado.`, true);
     }
   }
 
@@ -685,10 +715,10 @@
     const prods = itemsDe(p).map(pr =>
       `• ${pr.nombre} ${pr.variante} x${pr.qty} — $${(num(pr.precio) * num(pr.qty)).toLocaleString()}`
     ).join('\n');
-    abrirWA(String(p.celular), String(p.cliente || ''), prods, num(p.total).toLocaleString(), String(p.envio || ''));
+    abrirWA(String(p.celular), String(p.cliente || ''), prods, num(p.total).toLocaleString(), String(p.envio || ''), codigoSeguimiento(p) ? enlaceSeguimiento(p) : '');
   }
 
-  function abrirWA(celular, cliente, productos, total, envio) {
+  function abrirWA(celular, cliente, productos, total, envio, enlace = '') {
     const esInterior = envio && envio.toLowerCase().includes('interior');
     const esMontevideo = envio && envio.toLowerCase().includes('montevideo');
     const esPickup = envio && envio.toLowerCase().includes('pick up');
@@ -700,7 +730,8 @@
       (esInterior ? `Te avisaremos cuando sea despachado. ` : '') +
       (esMontevideo ? `Nos pondremos en contacto para coordinar la entrega. ` : '') +
       (esPickup ? `Nos pondremos en contacto para coordinar el retiro. ` : '') +
-      `¡Muchas gracias por tu compra! ${mountain}`
+      `¡Muchas gracias por tu compra! ${mountain}` +
+      (enlace ? `\n\nSeguí tu pedido acá: ${enlace}` : '')
     );
     window.open(`https://wa.me/${celularWA(celular)}?text=${msg}`, '_blank', 'noopener');
   }
@@ -933,6 +964,11 @@
     if (e.target.closest('[data-pdf]')) return abrirPDF(p.id);
     if (e.target.closest('[data-ver-comprobante]')) return verImagen(imgSegura(p.comprobante));
     if (e.target.closest('[data-eliminar]')) return eliminarPedido(p);
+    if (e.target.closest('[data-copiar-seguimiento]')) {
+      return navigator.clipboard.writeText(enlaceSeguimiento(p))
+        .then(() => panel.aviso('Link copiado. Pegalo en WhatsApp o donde quieras.'))
+        .catch(() => panel.aviso('No se pudo copiar el link.', true));
+    }
     const avanzar = e.target.closest('[data-avanzar]');
     if (avanzar) return cambiarEstado(p, avanzar.dataset.avanzar);
   });

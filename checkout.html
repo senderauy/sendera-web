@@ -915,7 +915,11 @@
     } else {
       document.getElementById('res-icon').textContent = '🏔️';
       document.getElementById('res-titulo').textContent = '¡Gracias por tu compra!';
-      document.getElementById('res-msg').innerHTML = 'Te avisaremos el estado de tu pedido.<br>¡Nos vemos en la aventura!';
+      // El mail de confirmación lleva el link para seguir el pedido (con el pago pendiente todavía no sale)
+      const conMail = !!(document.getElementById('ch-email')?.value || '').trim() && tipo !== 'pendiente';
+      document.getElementById('res-msg').innerHTML = (conMail
+        ? 'Te mandamos un mail con el link para seguir tu pedido.'
+        : 'Te avisaremos el estado de tu pedido.') + '<br>¡Nos vemos en la aventura!';
       const cupWrap = document.querySelector('.cupon-wrap');
       if (cupWrap) cupWrap.style.display = 'none';
       document.getElementById('cupon-msg').style.display = 'none';

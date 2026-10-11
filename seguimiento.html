@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Página privada: el link lleva el código del pedido, así que no se indexa ni se manda como referencia a otros sitios -->
+  <meta name="robots" content="noindex" />
+  <meta name="referrer" content="no-referrer" />
+  <title>Tu pedido — Sendera</title>
+  <link rel="icon" type="image/png" href="/img/logo.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    :root {
+      --fondo: #f2ede6;
+      --papel: #fff;
+      --linea: #e0d8cc;
+      --linea-2: #ede5d8;
+      --tinta: #2a2218;
+      --tinta-2: #7a6e62;
+      --tinta-3: #9a8f82;
+      --verde: #507a3a;
+      --verde-suave: rgba(80, 122, 58, 0.16);
+      --noche: #182417;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--fondo);
+      color: var(--tinta);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .navbar {
+      background: var(--papel);
+      border-bottom: 1px solid var(--linea);
+      padding: 0 20px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(60, 40, 20, 0.07);
+    }
+    .logo { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; color: var(--tinta); letter-spacing: 0.15em; text-decoration: none; }
+    .nav-tienda { font-size: 0.75rem; color: var(--tinta-3); text-decoration: none; transition: color 0.2s; }
+    .nav-tienda:hover { color: var(--tinta); }
+
+    main { max-width: 560px; margin: 36px auto 64px; padding: 0 16px; display: flex; flex-direction: column; gap: 18px; }
+
+    .hola h1 { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 2.2rem; line-height: 1.1; text-wrap: balance; }
+    .hola p { margin-top: 6px; font-size: 0.85rem; color: var(--tinta-2); }
+
+    .tarjeta {
+      background: var(--papel);
+      border: 1.5px solid var(--linea);
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(60, 40, 20, 0.08);
+      padding: 26px 24px;
+    }
+
+    /* Recorrido del pedido */
+    .recorrido { position: relative; }
+    .recorrido::before { content: ''; position: absolute; top: 9px; left: 12.5%; right: 12.5%; height: 2px; background: var(--linea); }
+    .pasos { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); }
+    .avance { position: absolute; top: 9px; left: 12.5%; height: 2px; background: var(--verde); transition: width 0.4s; }
+    .paso { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; font-size: 0.72rem; font-weight: 500; color: var(--tinta-3); padding: 0 4px; }
+    .paso i { width: 20px; height: 20px; border-radius: 50%; background: var(--papel); border: 2px solid var(--linea); display: grid; place-items: center; }
+    .paso.hecho { color: var(--tinta); }
+    .paso.hecho i { background: var(--verde); border-color: var(--verde); }
+    .paso.hecho i::after { content: ''; width: 5px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; transform: translateY(-1px) rotate(45deg); }
+    .paso.actual { font-weight: 600; }
+    .paso.actual i { box-shadow: 0 0 0 5px var(--verde-suave); }
+
+    .estado { margin-top: 24px; padding: 16px 18px; border-radius: 12px; background: #f7f3ec; border: 1px solid var(--linea-2); }
+    .estado b { display: block; font-size: 0.98rem; font-weight: 600; }
+    .estado p { margin-top: 4px; font-size: 0.85rem; color: var(--tinta-2); }
+
+    /* Lo que compró */
+    .tarjeta h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--tinta-3); font-weight: 600; margin-bottom: 12px; }
+    .items { list-style: none; }
+    .items li { display: flex; justify-content: space-between; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--linea-2); font-size: 0.88rem; }
+    .items li:first-child { padding-top: 0; }
+    .items small { display: block; font-size: 0.78rem; color: var(--tinta-3); }
+    .items span:last-child { white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .cuentas { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; }
+    .cuentas div { display: flex; justify-content: space-between; gap: 14px; }
+    .cuentas span:first-child { color: var(--tinta-2); }
+    .cuentas span:last-child { text-align: right; }
+    .cuentas .total { margin-top: 6px; font-size: 1rem; font-weight: 600; }
+    .cuentas .total span:first-child { color: var(--tinta); }
+    .cuentas .total span:last-child { font-variant-numeric: tabular-nums; }
+
+    .ayuda { display: flex; flex-direction: column; align-items: center; gap: 12px; padding-top: 4px; }
+    .boton-wa {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+      padding: 15px 20px; border-radius: 12px; border: 1.5px solid var(--linea); background: var(--papel);
+      color: var(--tinta); font: 600 0.9rem 'Montserrat', sans-serif; text-decoration: none; transition: border-color 0.2s;
+    }
+    .boton-wa:hover { border-color: var(--tinta-3); }
+    .boton-wa svg { width: 20px; height: 20px; color: #25d366; flex-shrink: 0; }
+    .seguir { font-size: 0.8rem; color: var(--tinta-2); }
+    .seguir:hover { color: var(--tinta); }
+
+    .aviso { text-align: center; padding: 40px 24px; }
+    .aviso h1 { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 1.7rem; }
+    .aviso p { margin: 8px auto 0; max-width: 34ch; font-size: 0.88rem; color: var(--tinta-2); }
+    .aviso .boton-wa { margin-top: 20px; }
+
+    a:focus-visible, .boton-wa:focus-visible { outline: 2px solid var(--verde); outline-offset: 3px; }
+
+    @media (max-width: 480px) {
+      main { margin-top: 26px; }
+      .hola h1 { font-size: 1.9rem; }
+      .tarjeta { padding: 22px 18px; }
+      .paso { font-size: 0.66rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .avance { transition: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="logo">SENDERA</a>
+  <a href="/" class="nav-tienda">Ir a la tienda</a>
+</nav>
+
+<main id="contenido" aria-live="polite">
+  <div class="tarjeta aviso"><p>Buscando tu pedido…</p></div>
+</main>
+
+<script>
+  const WHATSAPP = '59895290959';
+  const ICONO_WA = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.4-.5c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3zM12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg>';
+
+  const params = new URLSearchParams(location.search);
+  const pedidoId = params.get('p') || '';
+  const codigo = params.get('c') || '';
+  let ultimo = '';   // lo último que se dibujó, para no redibujar si no cambió nada
+
+  function esc(v) {
+    return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  const pesos = n => '$' + Math.round(Number(n) || 0).toLocaleString('es-UY');
+  function fechaLarga(iso) {
+    const d = new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleDateString('es-UY', { day: 'numeric', month: 'long', timeZone: 'America/Montevideo' });
+  }
+  function enlaceWA(texto) {
+    return `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(texto)}`;
+  }
+
+  // Qué se le dice al cliente en cada estado
+  function textoEstado(d) {
+    const retiro = d.entrega === 'retiro';
+    switch (d.estado) {
+      case 'pendiente-transferencia':
+        return ['Estamos revisando tu transferencia', 'Apenas la confirmemos empezamos a preparar tu pedido.'];
+      case 'pendiente-efectivo':
+        return ['Recibimos tu pedido', 'Lo pagás en efectivo cuando lo retirás en Cordón. Te avisamos cuando esté listo.'];
+      case 'pendiente':
+        return ['Tu pago se está procesando', 'Mercado Pago todavía lo está procesando. Te avisamos cuando se confirme.'];
+      case 'revisar-monto':
+        return ['Estamos revisando tu pago', 'Si necesitamos algo, te escribimos.'];
+      case 'aprobado':
+      case 'confirmado':
+        return ['Estamos preparando tu pedido', retiro ? 'Te avisamos cuando esté listo para retirar.' : 'Lo despachamos al día siguiente de confirmada la compra.'];
+      case 'camino':
+        if (retiro) return ['Tu pedido está listo para retirar', 'Escribinos por WhatsApp para coordinar cuándo pasás por Cordón.' + (d.metodoPago === 'efectivo' ? ' Lo pagás en efectivo al retirarlo.' : '')];
+        if (d.entrega === 'interior') return ['Despachamos tu pedido', 'Lo enviamos por agencia. Cualquier duda con el envío, escribinos.'];
+        return ['Tu pedido está en camino', d.entrega === 'montevideo' ? 'Ya va camino a tu casa.' : 'Ya salió hacia vos.'];
+      case 'entregado':
+        return retiro
+          ? ['Retiraste tu pedido', '¡Gracias por elegir Sendera! Que lo disfrutes en tus próximas salidas.']
+          : ['Tu pedido llegó', '¡Gracias por elegir Sendera! Que lo disfrutes en tus próximas salidas.'];
+      default:
+        return ['Recibimos tu pedido', 'Te avisamos en cada paso.'];
+    }
+  }
+
+  function textoEnvio(d) {
+    if (d.entrega === 'retiro') return 'Retiro en Cordón, sin costo';
+    if (d.entrega === 'interior') return 'Por agencia, a cargo del comprador';
+    if (d.entrega === 'montevideo') return 'Envío a domicilio en Montevideo';
+    return d.envio || '—';
+  }
+
+  function pintar(d) {
+    const huella = JSON.stringify(d);
+    if (huella === ultimo) return;
+    ultimo = huella;
+    const retiro = d.entrega === 'retiro';
+    const nombres = ['Recibido', 'Confirmado', retiro ? 'Listo para retirar' : 'En camino', retiro ? 'Retirado' : 'Entregado'];
+    const paso = Math.min(3, Math.max(0, Number(d.paso) || 0));
+    const [titulo, detalle] = textoEstado(d);
+    const fecha = fechaLarga(d.fecha);
+    const consulta = `¡Hola! Tengo una consulta sobre mi pedido${fecha ? ' del ' + fecha : ''}${d.nombre ? ', a nombre de ' + d.nombre : ''}.`;
+
+    document.getElementById('contenido').innerHTML = `
+      <header class="hola">
+        <h1>${d.nombre ? `Hola, ${esc(d.nombre)}` : 'Tu pedido'}</h1>
+        ${fecha ? `<p>Pedido del ${esc(fecha)}</p>` : ''}
+      </header>
+
+      <section class="tarjeta" aria-labelledby="titulo-estado">
+        <div class="recorrido">
+          <span class="avance" style="width:${paso * 25}%" aria-hidden="true"></span>
+          <ol class="pasos" aria-label="Recorrido del pedido">
+            ${nombres.map((n, i) => `<li class="paso${i <= paso ? ' hecho' : ''}${i === paso ? ' actual' : ''}"${i === paso ? ' aria-current="step"' : ''}><i aria-hidden="true"></i>${esc(n)}</li>`).join('')}
+          </ol>
+        </div>
+        <div class="estado">
+          <b id="titulo-estado">${esc(titulo)}</b>
+          <p>${esc(detalle)}</p>
+        </div>
+      </section>
+
+      <section class="tarjeta" aria-label="Lo que compraste">
+        <h2>Tu compra</h2>
+        <ul class="items">${(d.productos || []).map(p => `
+          <li><span>${esc(p.nombre)}<small>${esc(p.variante)}${p.qty > 1 ? ` · ${p.qty} unidades` : ''}</small></span><span>${pesos(p.precio * p.qty)}</span></li>`).join('')}
+        </ul>
+        <div class="cuentas">
+          <div><span>Entrega</span><span>${esc(textoEnvio(d))}</span></div>
+          <div class="total"><span>Total</span><span>${pesos(d.total)}</span></div>
+        </div>
+      </section>
+
+      <div class="ayuda">
+        <a class="boton-wa" href="${esc(enlaceWA(consulta))}" target="_blank" rel="noopener noreferrer">${ICONO_WA}¿Dudas? Escribinos por WhatsApp</a>
+        <a class="seguir" href="/">Seguir comprando</a>
+      </div>`;
+  }
+
+  function mostrarError(tipo) {
+    if (ultimo) return;   // si ya se veía el pedido, un corte de conexión no lo borra
+    const titulo = tipo === 'red' ? 'No pudimos cargar tu pedido' : 'No encontramos tu pedido';
+    const texto = tipo === 'red'
+      ? 'Revisá tu conexión y volvé a abrir el link.'
+      : 'Revisá que el link del mail esté completo. Si el problema sigue, escribinos.';
+    document.getElementById('contenido').innerHTML = `
+      <div class="tarjeta aviso">
+        <h1>${titulo}</h1>
+        <p>${texto}</p>
+        <a class="boton-wa" href="${esc(enlaceWA('¡Hola! Quiero consultar por mi pedido.'))}" target="_blank" rel="noopener noreferrer">${ICONO_WA}Escribinos por WhatsApp</a>
+      </div>`;
+  }
+
+  async function cargar() {
+    if (!pedidoId || !codigo) return mostrarError('no-encontrado');
+    try {
+      const r = await fetch(`/api/seguimiento?p=${encodeURIComponent(pedidoId)}&c=${encodeURIComponent(codigo)}`, { cache: 'no-store' });
+      if (r.status === 404) return mostrarError('no-encontrado');
+      if (!r.ok) throw new Error('respuesta ' + r.status);
+      pintar(await r.json());
+    } catch (e) {
+      mostrarError('red');
+    }
+  }
+
+  // Si el cliente deja la página abierta o vuelve a ella, se actualiza sola cuando cambia el estado
+  cargar();
+  setInterval(() => { if (document.visibilityState === 'visible') cargar(); }, 5 * 60 * 1000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') cargar(); });
+</script>
+</body>
+</html>

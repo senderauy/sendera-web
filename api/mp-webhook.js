@@ -1,5 +1,6 @@
 import { GoogleAuth } from 'google-auth-library';
 import { notificarAdmins, enviarWhatsAppConfirmacion, enviarEmailConfirmacion, lineasProductos } from './_notificaciones.js';
+import { nuevoCodigo, enlaceSeguimiento, emailValido, anotarAvisos } from './_seguimiento.js';
 
 const DB_URL = 'https://sendera-34791-default-rtdb.firebaseio.com';
 
@@ -110,10 +111,15 @@ export default async function handler(req, res) {
       pagado,
       estado: montoOk ? 'confirmado' : 'revisar-monto',
       mp_id: String(data.id),
-      metodo_pago: 'mercadopago'
+      metodo_pago: 'mercadopago',
+      // Código del link de seguimiento que va en el mail (sin él no se puede ver el pedido)
+      codigo: nuevoCodigo()
     };
+    // El mail queda en el pedido para avisarle los cambios de estado
+    if (emailValido(orderTemp.email)) pedido.email = String(orderTemp.email).trim();
 
-    await fbPost('pedidos', pedido, fbToken);
+    const guardado = await fbPost('pedidos', pedido, fbToken);
+    const pedidoId = guardado && guardado.name;
 
     // Marcar pago como procesado para evitar duplicados
     await fetch(`${DB_URL}/pedidos_mp_ids/${data.id}.json`, {
@@ -142,8 +148,11 @@ export default async function handler(req, res) {
           .catch(e => console.error('Error enviando WhatsApp:', e.message));
       }
       if (orderTemp.email) {
-        await enviarEmailConfirmacion({ email: orderTemp.email, cliente: orderTemp.cliente, productos: productosMsg, total: totalTxt, envio: envioTxt })
-          .catch(e => console.error('Error enviando email:', e.message));
+        const enlace = pedidoId ? enlaceSeguimiento(pedidoId, pedido.codigo) : '';
+        const enviado = await enviarEmailConfirmacion({ email: orderTemp.email, cliente: orderTemp.cliente, productos: productosMsg, total: totalTxt, envio: envioTxt, estado: 'confirmado', enlace })
+          .catch(e => { console.error('Error enviando email:', e.message); return false; });
+        // Ese mail ya le contó que está confirmado: cuando el panel lo marque así no se le repite
+        if (enviado && pedidoId) await anotarAvisos(pedidoId, ['recibido', 'confirmado'], fbToken);
       }
     }
 
