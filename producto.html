@@ -20,6 +20,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#e8ddc8" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="carrito.css?v=1" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -559,89 +560,8 @@
       justify-content: center;
     }
 
-    #cart-modal {
-      position: fixed;
-      bottom: 92px; right: 28px;
-      width: 360px; max-height: 85vh;
-      display: flex; flex-direction: column;
-      background: #faf7f3;
-      border: 1px solid #e0d8cc;
-      z-index: 199;
-      transform: translateY(20px);
-      opacity: 0; pointer-events: none;
-      transition: all 0.3s;
-      box-shadow: 0 8px 40px rgba(60,40,20,0.18);
-      border-radius: 14px;
-      overflow: hidden;
-    }
-    #cart-modal.open { transform: translateY(0); opacity: 1; pointer-events: all; }
-
-    .cart-header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 18px 20px;
-      border-bottom: 1px solid #ede5d8;
-    }
-    .cart-header h3 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.3rem; color: #2a2218; letter-spacing: 0.06em;
-    }
-    .cart-close { background: none; border: none; color: #9a8f82; font-size: 1rem; cursor: pointer; }
-
-    #cart-items { overflow-y: auto; max-height: 200px; padding: 12px 20px; flex-shrink: 0; }
-    #cart-items::-webkit-scrollbar { width: 3px; }
-    #cart-items::-webkit-scrollbar-track { background: transparent; }
-    #cart-items::-webkit-scrollbar-thumb { background: #d0c8bc; border-radius: 2px; }
-    .cart-empty { color: #9a8f82; font-size: 0.88rem; text-align: center; padding: 20px 0; }
-    .cart-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0ebe3; }
-    .cart-item-info { flex: 1; display: flex; flex-direction: column; }
-    .cart-item-name { color: #2a2218; font-size: 0.85rem; font-weight: 500; }
-    .cart-item-variant { color: #9a8f82; font-size: 0.75rem; }
-    .cart-item-controls { display: flex; align-items: center; gap: 8px; }
-    .cart-item-controls button { background: rgba(0,0,0,0.06); border: none; color: #2a2218; width: 24px; height: 24px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
-    .cart-item-controls span { color: #2a2218; font-size: 0.85rem; min-width: 16px; text-align: center; }
-    .cart-item-price { color: #2a2218; font-size: 0.88rem; font-weight: 600; min-width: 50px; text-align: right; }
-    .cart-item-remove { background: none; border: none; color: #9a8f82; cursor: pointer; font-size: 0.75rem; padding: 4px; }
-
-    .cart-footer { padding: 16px 20px; border-top: 1px solid #ede5d8; overflow-y: auto; flex: 1; }
-    .cart-footer::-webkit-scrollbar { width: 3px; }
-    .cart-footer::-webkit-scrollbar-track { background: transparent; }
-    .cart-footer::-webkit-scrollbar-thumb { background: #d0c8bc; border-radius: 2px; }
-
-    .cart-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem; color: #2a2218; }
-    .total-final { border-top: 1px solid #e0d8cc; padding-top: 10px; margin-top: 6px; margin-bottom: 14px; font-weight: 700; font-size: 1rem; color: var(--color-compra); }
-
-    .envio-section { margin-bottom: 14px; }
-    .envio-titulo { font-size: 0.72rem; color: var(--color-compra); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 10px; font-weight: 600; }
-    .envio-opcion { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #e0d8cc; margin-bottom: 6px; cursor: pointer; transition: border-color 0.2s; border-radius: 8px; background: #fff; }
-    .envio-opcion:hover { border-color: var(--color-compra); }
-    .envio-opcion input[type="radio"] { accent-color: var(--color-compra); flex-shrink: 0; }
-    .envio-info { display: flex; flex-direction: column; flex: 1; }
-    .envio-nombre { font-size: 0.82rem; color: #2a2218; }
-    .envio-detalle { font-size: 0.7rem; color: #9a8f82; margin-top: 1px; }
-    .envio-precio { font-size: 0.82rem; color: var(--color-compra); font-weight: 600; white-space: nowrap; }
-    .envio-campos { padding: 10px 12px 4px; background: #f5f0ea; border: 1px solid #e0d8cc; border-top: none; margin-bottom: 6px; border-radius: 0 0 8px 8px; }
-    .envio-input { width: 100%; padding: 9px 12px; background: #fff; border: 1px solid #e0d8cc; color: #2a2218; font-family: 'Montserrat', sans-serif; font-size: 0.82rem; outline: none; margin-bottom: 8px; transition: border-color 0.2s; border-radius: 6px; }
-    .envio-input:focus { border-color: var(--color-compra); }
-    .envio-radio-group { display: flex; gap: 16px; margin-bottom: 8px; }
-    .envio-sub { font-size: 0.78rem; color: #7a6e62; display: flex; align-items: center; gap: 6px; cursor: pointer; }
-    .envio-sub input { accent-color: var(--color-compra); }
-
-    .cart-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
-    .cart-form input { background: #fff; border: 1px solid #e0d8cc; color: #2a2218; padding: 10px 14px; font-size: 0.85rem; font-family: 'Montserrat', sans-serif; outline: none; transition: border-color 0.2s; border-radius: 8px; }
-    .cart-form input:focus { border-color: var(--color-compra); }
-    .cart-form input::placeholder { color: #b0a598; }
-
-    .btn-send-order { width: 100%; padding: 13px; background: var(--color-compra); color: #fff; border: none; font-family: 'Montserrat', sans-serif; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; border-radius: 10px; }
-    .btn-send-order:hover { background: var(--color-compra-hover); }
-    .btn-mp { width: 100%; padding: 13px; background: #009ee3; color: #fff; border: none; font-family: 'Montserrat', sans-serif; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; margin-top: 10px; transition: background 0.2s; border-radius: 10px; }
-    .btn-mp:hover { background: #007dc1; }
-    .btn-mp:disabled { opacity: 0.6; cursor: not-allowed; }
-    .envio-row { color: #9a8f82; font-size: 0.8rem; }
-    .cart-note { color: #9a8f82; font-size: 0.74rem; text-align: center; margin-top: 10px; letter-spacing: 0.03em; }
-
     /* ── MOBILE ─────────────────────────────────────────────────── */
     @media (max-width: 720px) {
-      #cart-modal { width: calc(100vw - 24px); right: 12px; }
       #cart-btn { right: 14px; bottom: 18px; }
 
       .product-page { grid-template-columns: 1fr; }
@@ -696,60 +616,11 @@
     <div class="relacionados-track" id="relacionados-track"></div>
   </section>
 
-  <!-- MODAL CARRITO -->
-  <div id="cart-modal" onclick="event.stopPropagation()">
-    <div class="cart-header">
-      <h3>Tu pedido</h3>
-      <button type="button" onclick="closeCart()" class="cart-close">✕</button>
-    </div>
-    <div id="cart-items"></div>
-    <div class="cart-footer">
-      <div class="envio-section">
-        <p class="envio-titulo">Método de envío</p>
-        <label class="envio-opcion">
-          <input type="radio" name="envio" value="montevideo" onchange="updateEnvio()" />
-          <span class="envio-info"><span class="envio-nombre">📍 Montevideo</span><span class="envio-detalle">Entrega a domicilio</span></span>
-          <span class="envio-precio">$200</span>
-        </label>
-        <div class="envio-campos" id="campos-montevideo" style="display:none;">
-          <input type="text" class="envio-input" id="envio-direccion" placeholder="Dirección de entrega" />
-        </div>
-        <label class="envio-opcion">
-          <input type="radio" name="envio" value="interior" onchange="updateEnvio()" />
-          <span class="envio-info"><span class="envio-nombre">🚛 Interior del país</span><span class="envio-detalle">Por agencia, a cargo del comprador</span></span>
-          <span class="envio-precio">—</span>
-        </label>
-        <div class="envio-campos" id="campos-interior" style="display:none;">
-          <input type="text" class="envio-input" id="envio-ciudad" placeholder="Ciudad / Localidad" />
-          <div class="envio-radio-group">
-            <label class="envio-sub"><input type="radio" name="interior-tipo" value="agencia" /> Retiro en agencia</label>
-            <label class="envio-sub"><input type="radio" name="interior-tipo" value="domicilio" onchange="toggleDomicilioInterior()" /> Entrega a domicilio</label>
-          </div>
-          <input type="text" class="envio-input" id="envio-domicilio-interior" placeholder="Dirección de entrega" style="display:none;" />
-        </div>
-        <label class="envio-opcion">
-          <input type="radio" name="envio" value="pickup" onchange="updateEnvio()" />
-          <span class="envio-info"><span class="envio-nombre">🏡 A coordinar retiro</span><span class="envio-detalle">Zona Cordón · coordinación previa</span></span>
-          <span class="envio-precio">Gratis</span>
-        </label>
-      </div>
-      <div class="cart-total-row"><span>Subtotal</span><span id="cart-subtotal">$0</span></div>
-      <div class="cart-total-row envio-row" id="envio-row" style="display:none;"><span>Envío</span><span id="cart-envio-label">$0</span></div>
-      <div class="cart-total-row total-final"><span>Total</span><span id="cart-total">$0</span></div>
-      <div class="cart-form">
-        <input type="text" id="customer-name" placeholder="Tu nombre" />
-        <input type="tel" id="customer-phone" placeholder="Tu celular (ej: 099 123 456)" />
-      </div>
-      <button type="button" class="btn-mp" onclick="pagarMP()">💳 Ir a pagar</button>
-      <p class="cart-note">Te contactaremos para coordinar el envío.</p>
-    </div>
-  </div>
-
   <script src="pixel.js?v=1"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="firebase-config.js?v=2"></script>
-  <script src="cart.js?v=6"></script>
+  <script src="cart.js?v=7"></script>
   <script>
     // ── MAPAS DE COLOR ─────────────────────────────────────────────
     const COLOR_BG = {

@@ -3,456 +3,628 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sendera — Checkout</title>
+  <title>Finalizar compra | Sendera</title>
   <script src="pixel.js?v=1"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="img/logo.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    /* Color de compra: el mismo que el resto de la página */
-    :root { --color-compra: #182417; --color-compra-hover: #0c140b; --color-compra-suave: rgba(24, 36, 23, 0.1); }
+    /* Los mismos colores y letra que el carrito y la página de producto */
+    :root {
+      --color-compra: #182417;
+      --color-compra-hover: #0c140b;
+      --color-compra-suave: rgba(24, 36, 23, 0.1);
+      --tinta: #1e1a12;
+      --texto: #3a3026;
+      --suave: #8a7f73;
+      --borde: #e6ddd0;
+      --fondo: #f2ede6;
+      --campo: #faf7f2;
+      --foto: #efe9e0;
+      --falta: #b4412f;
+      --ok: #507a3a;
+    }
 
     body {
       font-family: 'Montserrat', sans-serif;
-      background: #f2ede6;
-      color: #2a2218;
+      background: var(--fondo);
+      color: var(--tinta);
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
+    svg {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    button, input { font-family: inherit; }
+    :focus-visible { outline: 2px solid var(--color-compra); outline-offset: 2px; }
 
-    /* NAVBAR */
-    .navbar {
-      background: #fff;
-      border-bottom: 1px solid #e0d8cc;
-      padding: 0 24px;
-      height: 60px;
+    /* CABECERA */
+    .topbar {
+      height: 64px;
+      padding: 0 max(20px, calc((100% - 1080px) / 2));
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 2px 8px rgba(60,40,20,0.07);
+      background: #fff;
+      border-bottom: 1px solid var(--borde);
     }
-    .logo { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; color: #2a2218; letter-spacing: 0.15em; text-decoration: none; }
-    .nav-back { font-size: 0.75rem; color: #9a8f82; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.2s; }
-    .nav-back:hover { color: #2a2218; }
+    .topbar-logo img { height: 34px; width: auto; display: block; }
+    .topbar-volver {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--texto);
+      text-decoration: none;
+    }
+    .topbar-volver:hover { color: var(--tinta); }
+    .topbar-volver svg { width: 16px; height: 16px; }
 
-    /* LAYOUT */
-    .checkout-wrap {
-      max-width: 980px;
-      margin: 40px auto;
-      padding: 0 20px 60px;
+    /* ARMADO: en la compu, datos y pago a la izquierda y el pedido a la derecha */
+    .checkout {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
       display: grid;
-      grid-template-columns: 1fr 420px;
-      gap: 28px;
+      grid-template-columns: minmax(0, 1fr) 400px;
+      grid-template-areas:
+        "cabeza resumen"
+        "form   resumen";
+      grid-template-rows: auto 1fr;
+      column-gap: 32px;
       align-items: start;
     }
+    .checkout-cabeza { grid-area: cabeza; margin-bottom: 20px; }
+    .checkout-cabeza h1 {
+      font-size: clamp(1.6rem, 3vw, 2.1rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    .checkout-form, .resultado { grid-area: form; }
+    .resumen { grid-area: resumen; position: sticky; top: 24px; }
 
-    /* RESUMEN */
-    .resumen-card {
+    /* BLOQUES (tus datos / cómo pagás) */
+    .bloque {
       background: #fff;
+      border: 1px solid var(--borde);
       border-radius: 16px;
-      border: 1.5px solid #e0d8cc;
-      overflow: hidden;
-      box-shadow: 0 2px 12px rgba(60,40,20,0.08);
-    }
-
-    .resumen-header {
-      padding: 20px 24px;
-      border-bottom: 1.5px solid #ede5d8;
-      font-size: 0.72rem;
-      color: #9a8f82;
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      font-weight: 600;
-    }
-
-    .resumen-items { padding: 16px 24px; }
-
-    .resumen-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid #f0ebe3;
-      font-size: 0.85rem;
-    }
-    .resumen-item:last-child { border-bottom: none; }
-    .resumen-item-nombre { color: #2a2218; font-weight: 500; }
-    .resumen-item-var { font-size: 0.75rem; color: #9a8f82; margin-top: 2px; }
-    .resumen-item-precio { color: #2a2218; font-weight: 600; white-space: nowrap; }
-
-    .resumen-totales { padding: 16px 24px; border-top: 1.5px solid #ede5d8; }
-    .total-row { display: flex; justify-content: space-between; font-size: 0.82rem; color: #7a6e62; margin-bottom: 8px; }
-    .total-row.final { font-size: 1.1rem; font-weight: 700; color: #2a2218; margin-top: 12px; padding-top: 12px; border-top: 1.5px solid #e0d8cc; }
-    .total-row.descuento { color: #507a3a; font-weight: 600; }
-
-    .cupon-section {
-      margin: 16px 0 12px;
-      background: #faf8f4;
-      border: 1.5px solid #e8dfd2;
-      border-radius: 10px;
-      padding: 14px 16px 8px;
-    }
-    .cupon-label {
-      font-size: 0.75rem; font-weight: 600; color: #7a6e62;
-      letter-spacing: 0.04em; margin-bottom: 10px;
-    }
-    .cupon-wrap { display: flex; gap: 8px; }
-    .cupon-input {
-      flex: 1; border: 1.5px solid #e0d8cc; border-radius: 8px;
-      padding: 9px 14px; font-size: 0.82rem; font-family: inherit;
-      background: #faf7f3; color: #2a2218; text-transform: uppercase;
-      letter-spacing: 0.05em; outline: none;
-    }
-    .cupon-input::placeholder { color: #b0a598; }
-    .cupon-input:focus { border-color: var(--color-compra); }
-    .cupon-btn {
-      background: var(--color-compra); color: #fff; border: none; border-radius: 8px;
-      padding: 9px 18px; font-size: 0.8rem; font-family: inherit;
-      font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.2s;
-    }
-    .cupon-btn:hover { background: var(--color-compra-hover); }
-    .cupon-msg { padding: 6px 2px 2px; font-size: 0.78rem; min-height: 18px; }
-
-    .envio-info {
-      padding: 14px 24px;
-      background: #f5f0ea;
-      font-size: 0.78rem;
-      color: #7a6e62;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border-top: 1px solid #ede5d8;
-    }
-
-    /* PAGO */
-    .pago-card {
-      background: #fff;
-      border-radius: 16px;
-      border: 1.5px solid #e0d8cc;
-      overflow: hidden;
-      box-shadow: 0 2px 12px rgba(60,40,20,0.08);
-    }
-
-    .pago-header {
-      padding: 20px 24px;
-      border-bottom: 1.5px solid #ede5d8;
-    }
-    .pago-header h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: #2a2218; }
-    .pago-header p { font-size: 0.72rem; color: #9a8f82; margin-top: 3px; }
-
-    /* MÉTODOS */
-    .metodos { display: flex; gap: 10px; padding: 20px 24px 0; }
-    .metodo-btn {
-      flex: 1; padding: 12px 8px; border: 1.5px solid #e0d8cc; background: #faf7f3;
-      border-radius: 12px; cursor: pointer; transition: all 0.2s;
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
-      font-family: 'Montserrat', sans-serif; font-size: 0.68rem; color: #9a8f82;
-      font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
-    }
-    .metodo-btn .icon { font-size: 1.5rem; }
-    .metodo-btn.active { border-color: var(--color-compra); background: var(--color-compra-suave); color: var(--color-compra); }
-    .metodo-btn:hover { border-color: var(--color-compra); }
-
-    /* TRANSFERENCIA */
-    .transferencia-wrap { padding: 20px 24px; }
-    .banco-card {
-      background: #f5f0ea;
-      border: 1.5px solid #e0d8cc;
-      border-radius: 14px;
-      padding: 20px;
+      padding: 24px;
       margin-bottom: 16px;
     }
-    .banco-card-title {
-      font-size: 0.68rem; color: #9a8f82; text-transform: uppercase;
-      letter-spacing: 0.12em; font-weight: 600; margin-bottom: 14px;
+    .bloque-titulo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 18px;
     }
-    .banco-dato {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 8px 0; border-bottom: 1px solid #e0d8cc; font-size: 0.84rem;
+    .bloque-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--color-compra);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 700;
     }
-    .banco-dato:last-child { border-bottom: none; }
-    .banco-dato-label { color: #9a8f82; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; }
-    .banco-dato-valor { color: #2a2218; font-weight: 600; }
+
+    /* CAMPOS */
+    .campos { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .campo { display: grid; gap: 6px; }
+    .campo--ancho { grid-column: 1 / -1; }
+    .campo label { font-size: 0.82rem; font-weight: 600; color: var(--texto); }
+    .campo input {
+      width: 100%;
+      height: 48px;
+      padding: 0 14px;
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      background: var(--campo);
+      color: var(--tinta);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .campo input::placeholder { color: #a99e90; }
+    .campo input:focus { border-color: var(--color-compra); box-shadow: 0 0 0 3px var(--color-compra-suave); }
+    .campo input.falta { border-color: var(--falta); }
+    .campo-ayuda { font-size: 0.76rem; color: var(--suave); }
+    .aviso-falta { font-size: 0.82rem; font-weight: 600; color: var(--falta); margin-top: 12px; }
+    .aviso-falta:empty { display: none; }
+
+    /* MÉTODOS DE PAGO */
+    .metodos { display: grid; gap: 10px; }
+    .metodo {
+      border: 1px solid var(--borde);
+      border-radius: 14px;
+      background: #fff;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .metodo:hover { border-color: #cfc3b2; }
+    .metodo.activo { border-color: var(--color-compra); box-shadow: inset 0 0 0 1px var(--color-compra); }
+    .metodo-cabeza {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      cursor: pointer;
+    }
+    .metodo-cabeza input { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--color-compra); }
+    .metodo-cabeza > svg { width: 22px; height: 22px; flex-shrink: 0; color: #6b5f54; }
+    .metodo-info { display: grid; gap: 2px; min-width: 0; }
+    .metodo-nombre { font-size: 0.95rem; font-weight: 700; }
+    .metodo-detalle { font-size: 0.78rem; color: var(--suave); }
+    .metodo-panel { padding: 0 16px 18px; }
+
+    .paso-texto { font-size: 0.85rem; line-height: 1.55; color: var(--texto); margin-bottom: 14px; }
+
+    /* Datos de la cuenta */
+    .banco {
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      background: var(--campo);
+      padding: 4px 16px;
+      margin-bottom: 14px;
+    }
+    .banco-fila {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 46px;
+      border-bottom: 1px solid var(--borde);
+      font-size: 0.88rem;
+    }
+    .banco-fila:last-child { border-bottom: 0; }
+    .banco-label { width: 72px; flex-shrink: 0; color: var(--suave); font-size: 0.8rem; }
+    .banco-valor { flex: 1; font-weight: 700; font-variant-numeric: tabular-nums; }
     .btn-copiar {
-      background: none; border: none; cursor: pointer; font-size: 0.75rem;
-      color: var(--color-compra); font-weight: 600; padding: 2px 8px; border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--color-compra);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-copiar:hover { border-color: var(--color-compra); }
+    .btn-copiar svg { width: 14px; height: 14px; }
+
+    /* Comprobante */
+    .comprobante {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+      border: 1.5px dashed #cfc3b2;
+      border-radius: 12px;
+      background: var(--campo);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      margin-bottom: 14px;
+    }
+    .comprobante:hover { border-color: var(--color-compra); }
+    .comprobante input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+    .comprobante > svg { width: 26px; height: 26px; flex-shrink: 0; color: #6b5f54; }
+    .comprobante-textos { display: grid; gap: 2px; min-width: 0; }
+    .comprobante-titulo { font-size: 0.9rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .comprobante-detalle { font-size: 0.78rem; color: var(--suave); }
+    .comprobante.listo { border-style: solid; border-color: var(--color-compra); background: var(--color-compra-suave); }
+    .comprobante.listo > svg { color: var(--color-compra); }
+    .comprobante.falta { border-color: var(--falta); }
+    .comprobante-preview {
+      display: none;
+      margin: -4px 0 14px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--borde);
+    }
+    .comprobante-preview img { width: 100%; max-height: 220px; object-fit: cover; display: block; }
+
+    /* BOTÓN DE COMPRA */
+    .btn-compra {
+      width: 100%;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--color-compra);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
       transition: background 0.2s;
     }
-    .btn-copiar:hover { background: #f0e8e0; }
-    .transferencia-aviso {
-      background: #fff8e6; border: 1.5px solid #f0d890; border-radius: 10px;
-      padding: 12px 16px; font-size: 0.76rem; color: #7a6008; margin-bottom: 16px;
-      display: flex; gap: 8px; align-items: flex-start; line-height: 1.5;
+    .btn-compra:hover { background: var(--color-compra-hover); }
+    .btn-compra:disabled { opacity: 0.6; cursor: wait; }
+    .btn-compra svg { width: 18px; height: 18px; stroke-width: 2; }
+    .nota-segura {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 10px;
+      font-size: 0.76rem;
+      color: var(--suave);
     }
-    .btn-transferi {
-      width: 100%; padding: 15px; background: #009ee3; color: #fff; border: none;
-      border-radius: 12px; font-family: 'Montserrat', sans-serif; font-size: 0.88rem;
-      font-weight: 700; cursor: pointer; transition: all 0.2s; letter-spacing: 0.04em;
-    }
-    .btn-transferi:hover { background: #007dc1; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,158,227,0.25); }
-    .btn-transferi:disabled { background: #b0d8f0; cursor: not-allowed; transform: none; }
+    .nota-segura svg { width: 14px; height: 14px; }
 
-    /* COMPROBANTE UPLOAD */
-    .comprobante-section { margin-bottom: 16px; }
-    .comprobante-label {
-      font-size: 0.7rem; color: #6b5f54; letter-spacing: 0.1em;
-      text-transform: uppercase; margin-bottom: 8px; font-weight: 600; display: block;
+    /* RESUMEN DEL PEDIDO */
+    .resumen {
+      background: #fff;
+      border: 1px solid var(--borde);
+      border-radius: 16px;
     }
-    .comprobante-opciones { display: flex; gap: 10px; margin-bottom: 0; }
-    .comprobante-opcion {
-      flex: 1; border: 2px dashed #d0c8bc; border-radius: 12px; padding: 16px 8px;
-      text-align: center; cursor: pointer; transition: all 0.2s; background: #faf8f4;
+    .resumen-toggle { display: none; }
+    .resumen-cuerpo { padding: 22px 22px 20px; }
+    .resumen-titulo { font-size: 1.05rem; font-weight: 800; margin-bottom: 6px; }
+    .resumen-item {
+      display: grid;
+      grid-template-columns: 60px 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--borde);
+    }
+    .resumen-foto {
       position: relative;
+      width: 60px;
+      height: 60px;
+      border-radius: 10px;
+      background: var(--foto);
+      display: grid;
+      place-items: center;
+      color: #b3a898;
     }
-    .comprobante-opcion:hover { border-color: var(--color-compra); background: var(--color-compra-suave); }
-    .comprobante-opcion.has-file { border-color: var(--color-compra); border-style: solid; background: var(--color-compra-suave); }
-    .comprobante-opcion input[type="file"] {
-      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    .resumen-foto img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; display: block; }
+    .resumen-foto svg { width: 22px; height: 22px; }
+    .resumen-cant {
+      position: absolute;
+      top: -7px;
+      right: -7px;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 6px;
+      border-radius: 11px;
+      background: var(--color-compra);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+      font-variant-numeric: tabular-nums;
     }
-    .comprobante-opcion-icon { font-size: 1.8rem; margin-bottom: 4px; }
-    .comprobante-opcion-text { font-size: 0.72rem; color: #9a8f82; font-weight: 600; }
-    .comprobante-upload-area { display: none; }
-    .comprobante-preview {
-      display: none; margin-top: 10px; border-radius: 10px; overflow: hidden;
-      border: 1.5px solid #d0c8bc; max-height: 180px;
-    }
-    .comprobante-preview img { width: 100%; height: 180px; object-fit: cover; display: block; }
+    .resumen-item-datos { display: grid; gap: 2px; min-width: 0; }
+    .resumen-item-nombre { font-size: 0.88rem; font-weight: 700; }
+    .resumen-item-var { font-size: 0.78rem; color: var(--suave); }
+    .resumen-item-precio { font-size: 0.9rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-    /* FORMULARIO DATOS */
-    .datos-form { padding: 20px 24px; border-bottom: 1.5px solid #ede5d8; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; font-size: 0.7rem; color: var(--color-compra); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
-    .form-group input {
-      width: 100%; padding: 11px 14px; background: #faf8f4;
-      border: 1.5px solid #ddd5c8; border-radius: 10px; color: #2a2218;
-      font-family: 'Montserrat', sans-serif; font-size: 0.88rem;
-      outline: none; transition: border-color 0.2s;
+    .resumen-envio {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--borde);
+      font-size: 0.82rem;
+      line-height: 1.45;
+      color: var(--texto);
     }
-    .form-group input::placeholder { color: #b0a598; }
-    .form-group input:focus { border-color: var(--color-compra); box-shadow: 0 0 0 3px var(--color-compra-suave); }
+    .resumen-envio svg { width: 18px; height: 18px; flex-shrink: 0; color: #6b5f54; margin-top: 1px; }
 
-    /* BRICKS CONTAINER */
-    .bricks-wrap { padding: 0 24px 20px; }
-    #cardPaymentBrick_container { min-height: 200px; }
-
-    /* MP BUTTON */
-    .mp-wrap { padding: 20px 24px; }
-    .btn-mp-checkout {
-      width: 100%; padding: 16px; background: #009ee3; color: #fff; border: none;
-      border-radius: 12px; font-family: 'Montserrat', sans-serif; font-size: 0.9rem;
-      font-weight: 700; cursor: pointer; transition: all 0.2s; letter-spacing: 0.04em;
-      display: flex; align-items: center; justify-content: center; gap: 10px;
+    .cupon { padding: 14px 0; border-bottom: 1px solid var(--borde); }
+    .cupon-label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--texto); margin-bottom: 8px; }
+    .cupon-wrap { display: flex; gap: 8px; }
+    .cupon-input {
+      flex: 1;
+      min-width: 0;
+      height: 44px;
+      padding: 0 14px;
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      background: var(--campo);
+      color: var(--tinta);
+      font-size: 0.88rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      outline: none;
     }
-    .btn-mp-checkout:hover { background: #007dc1; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,158,227,0.25); }
-    .btn-mp-checkout:disabled { background: #b0d8f0; cursor: not-allowed; transform: none; }
+    .cupon-input::placeholder { color: #a99e90; text-transform: none; letter-spacing: 0; }
+    .cupon-input:focus { border-color: var(--color-compra); box-shadow: 0 0 0 3px var(--color-compra-suave); }
+    .cupon-btn {
+      height: 44px;
+      padding: 0 18px;
+      border: 1.5px solid var(--color-compra);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--color-compra);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .cupon-btn:hover { background: var(--color-compra); color: #fff; }
+    .cupon-msg { font-size: 0.8rem; font-weight: 600; margin-top: 8px; }
+    .cupon-msg:empty { display: none; }
 
-    /* SEGURIDAD */
-    .seguridad {
-      padding: 14px 24px;
-      display: flex; align-items: center; gap: 8px;
-      font-size: 0.68rem; color: #b0a598;
-      border-top: 1px solid #ede5d8;
+    .resumen-totales { padding-top: 14px; }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+      font-size: 0.88rem;
+      color: var(--texto);
+      font-variant-numeric: tabular-nums;
+    }
+    .total-row.descuento { color: var(--ok); font-weight: 600; }
+    .total-row.final {
+      margin: 12px 0 0;
+      padding-top: 12px;
+      border-top: 1px solid var(--borde);
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--tinta);
     }
 
     /* RESULTADO */
     .resultado {
-      display: none; padding: 32px 24px;
+      display: none;
+      background: #fff;
+      border: 1px solid var(--borde);
+      border-radius: 16px;
+      padding: 44px 28px;
       text-align: center;
     }
     .resultado.visible { display: block; }
-    .resultado-icon { font-size: 3rem; margin-bottom: 12px; }
-    .resultado-titulo { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; margin-bottom: 8px; color: #2a2218; }
-    .resultado-msg { font-size: 0.82rem; color: #7a6e62; margin-bottom: 20px; line-height: 1.6; }
+    .resultado-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 18px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--color-compra);
+      color: #fff;
+    }
+    .resultado-icon svg { width: 30px; height: 30px; stroke-width: 2.2; }
+    .resultado-icon.error { background: var(--falta); }
+    .resultado-titulo { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.015em; margin-bottom: 10px; }
+    .resultado-msg { font-size: 0.92rem; line-height: 1.6; color: var(--texto); margin-bottom: 24px; }
     .btn-volver {
-      display: inline-block; padding: 12px 28px; background: var(--color-compra); color: #fff;
-      border-radius: 10px; text-decoration: none; font-size: 0.8rem; font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 28px;
+      border-radius: 12px;
+      background: var(--color-compra);
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-decoration: none;
       transition: background 0.2s;
     }
     .btn-volver:hover { background: var(--color-compra-hover); }
 
-    @media (max-width: 768px) {
-      .checkout-wrap { grid-template-columns: 1fr; margin: 16px auto; }
-      .resumen-card { order: 2; }
-      .pago-card { order: 1; }
+    @keyframes falta {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
     }
+    .sacudir { animation: falta 0.45s ease; }
 
+    /* CELULAR Y TABLET: una sola columna, el pedido arriba y plegado */
+    @media (max-width: 900px) {
+      .checkout {
+        max-width: 640px;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+          "cabeza"
+          "resumen"
+          "form";
+        grid-template-rows: none;
+        padding: 22px 16px 48px;
+      }
+      .checkout-cabeza { margin-bottom: 14px; }
+      .resumen { position: static; margin-bottom: 16px; }
+      .resumen-toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 16px 18px;
+        cursor: pointer;
+        list-style: none;
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+      .resumen-toggle::-webkit-details-marker { display: none; }
+      .resumen-toggle > svg { width: 18px; height: 18px; color: #6b5f54; }
+      .resumen-toggle-texto { flex: 1; }
+      .resumen-toggle-total { font-size: 1rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+      .resumen-toggle .flecha { transition: transform 0.2s; }
+      .resumen[open] .resumen-toggle .flecha { transform: rotate(180deg); }
+      .resumen[open] .resumen-toggle { border-bottom: 1px solid var(--borde); }
+      .resumen-cuerpo { padding: 4px 18px 18px; }
+      .resumen-titulo { display: none; }
+      .bloque { padding: 20px 16px; }
+      .metodo-panel { padding: 0 14px 16px; }
+      .metodo-cabeza { padding: 14px; }
+    }
     @media (max-width: 480px) {
-      .form-row { grid-template-columns: 1fr; }
-      .metodos { flex-wrap: wrap; }
-      .metodo-btn { min-width: 120px; }
-      .datos-form { padding: 16px; }
-      .bricks-wrap { padding: 0 16px 16px; }
-      .transferencia-wrap { padding: 16px; }
-      .banco-card { padding: 16px; }
-      .resumen-items, .resumen-totales { padding: 12px 16px; }
-      .navbar { padding: 0 16px; }
+      .campos { grid-template-columns: 1fr; }
+      .topbar { height: 58px; }
+      .topbar-logo img { height: 30px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sacudir { animation: none; }
+      .resumen-toggle .flecha { transition: none; }
     }
   </style>
 </head>
 <body>
 
-<div class="navbar">
-  <a href="index.html" class="logo">SENDERA</a>
-  <a href="index.html" class="nav-back">← Volver a la tienda</a>
-</div>
+<header class="topbar">
+  <a href="index.html" class="topbar-logo"><img src="img/logo-modal.png" alt="Sendera" /></a>
+  <a href="index.html" class="topbar-volver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Seguir comprando</a>
+</header>
 
-<div class="checkout-wrap">
+<main class="checkout">
 
-  <!-- RESUMEN -->
-  <div class="resumen-card">
-    <div class="resumen-header">🛍️ Resumen del pedido</div>
-    <div class="resumen-items" id="resumen-items">
-      <p style="color:#9a8f82;font-size:0.82rem;padding:10px 0">Cargando...</p>
-    </div>
-    <div class="envio-info" id="envio-info" style="display:none">
-      <span>📦</span>
-      <span id="envio-detalle">—</span>
-    </div>
-    <div class="resumen-totales">
-      <div class="total-row"><span>Subtotal</span><span id="subtotal-val">$0</span></div>
-      <div class="total-row" id="envio-row" style="display:none"><span>Envío</span><span id="envio-val">$0</span></div>
-      <div class="total-row descuento" id="descuento-row" style="display:none"><span id="descuento-label">Descuento</span><span id="descuento-val"></span></div>
-      <div class="total-row final"><span>Total a pagar</span><span id="total-val">$0</span></div>
-    </div>
+  <div class="checkout-cabeza">
+    <h1>Finalizar compra</h1>
   </div>
 
-  <!-- PAGO -->
-  <div class="pago-card">
-
-    <!-- Resultado pago -->
-    <div class="resultado" id="resultado">
-      <div class="resultado-icon" id="res-icon">🏔️</div>
-      <div class="resultado-titulo" id="res-titulo">¡Gracias por tu compra!</div>
-      <div class="resultado-msg" id="res-msg">Te avisaremos el estado de tu pedido.<br>¡Nos vemos en la aventura!</div>
-      <a href="index.html" class="btn-volver">Volver a la tienda</a>
+  <!-- RESUMEN (en el celular arriba y plegado, con el total a la vista) -->
+  <details class="resumen" id="resumen">
+    <summary class="resumen-toggle">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      <span class="resumen-toggle-texto" id="resumen-toggle-texto">Ver tu pedido</span>
+      <span class="resumen-toggle-total" id="total-movil">$0</span>
+      <svg class="flecha" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </summary>
+    <div class="resumen-cuerpo">
+      <h2 class="resumen-titulo">Tu pedido</h2>
+      <div class="resumen-items" id="resumen-items">
+        <p style="color:var(--suave);font-size:0.85rem;padding:12px 0">Cargando...</p>
+      </div>
+      <div class="resumen-envio" id="envio-info" style="display:none">
+        <span id="envio-icono"></span>
+        <span id="envio-detalle">—</span>
+      </div>
+      <div class="cupon">
+        <label class="cupon-label" for="cupon-input">¿Tenés un código de descuento?</label>
+        <div class="cupon-wrap">
+          <input class="cupon-input" id="cupon-input" type="text" placeholder="Escribí tu código" autocomplete="off" />
+          <button type="button" class="cupon-btn" onclick="aplicarCupon()">Aplicar</button>
+        </div>
+        <p class="cupon-msg" id="cupon-msg" role="status"></p>
+      </div>
+      <div class="resumen-totales">
+        <div class="total-row"><span>Subtotal</span><span id="subtotal-val">$0</span></div>
+        <div class="total-row" id="envio-row" style="display:none"><span>Envío</span><span id="envio-val">$0</span></div>
+        <div class="total-row descuento" id="descuento-row" style="display:none"><span id="descuento-label">Descuento</span><span id="descuento-val"></span></div>
+        <div class="total-row final"><span>Total</span><span id="total-val">$0</span></div>
+      </div>
     </div>
+  </details>
 
-    <div id="pago-contenido">
-      <div class="pago-header">
-        <h2>Método de pago</h2>
-        <p>Pagá de forma segura con MercadoPago</p>
+  <!-- DATOS Y PAGO -->
+  <div class="checkout-form" id="pago-contenido">
+
+    <section class="bloque" aria-labelledby="titulo-datos">
+      <h2 class="bloque-titulo" id="titulo-datos"><span class="bloque-num">1</span>Tus datos</h2>
+      <div class="campos">
+        <div class="campo">
+          <label for="ch-nombre">Nombre</label>
+          <input type="text" id="ch-nombre" placeholder="Tu nombre" autocomplete="name" />
+        </div>
+        <div class="campo">
+          <label for="ch-celular">Celular</label>
+          <input type="tel" id="ch-celular" placeholder="099 123 456" autocomplete="tel" inputmode="tel" />
+        </div>
+        <div class="campo campo--ancho">
+          <label for="ch-email">Email</label>
+          <input type="email" id="ch-email" placeholder="tu@email.com" autocomplete="email" inputmode="email" />
+          <span class="campo-ayuda">Te mandamos el link para seguir tu pedido.</span>
+        </div>
       </div>
+      <p class="aviso-falta" id="aviso-datos" role="alert"></p>
+    </section>
 
-      <!-- Métodos -->
+    <section class="bloque" aria-labelledby="titulo-pago">
+      <h2 class="bloque-titulo" id="titulo-pago"><span class="bloque-num">2</span>Cómo querés pagar</h2>
       <div class="metodos">
-        <button class="metodo-btn active" onclick="setMetodo('transferencia', this)" id="btn-transferencia">
-          <span class="icon">🏦</span>Transferencia
-        </button>
-        <button class="metodo-btn" onclick="setMetodo('mp', this)" id="btn-mp">
-          <span class="icon">💳</span>MercadoPago
-        </button>
-        <button class="metodo-btn" onclick="setMetodo('efectivo', this)" id="btn-efectivo" style="display:none">
-          <span class="icon">💵</span>Efectivo
-        </button>
-      </div>
 
-      <!-- Datos del comprador -->
-      <div class="datos-form">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Nombre</label>
-            <input type="text" id="ch-nombre" placeholder="Tu nombre" />
-          </div>
-          <div class="form-group">
-            <label>Celular</label>
-            <input type="tel" id="ch-celular" placeholder="099 123 456" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="ch-email" placeholder="tu@email.com" />
-        </div>
-      </div>
-
-      <!-- Transferencia bancaria -->
-      <div id="seccion-transferencia">
-        <div class="transferencia-wrap">
-          <div class="banco-card">
-            <div class="banco-card-title">📋 Datos para transferir</div>
-            <div class="banco-dato">
-              <span class="banco-dato-label">Banco</span>
-              <span class="banco-dato-valor">Prex</span>
-            </div>
-            <div class="banco-dato">
-              <span class="banco-dato-label">Cuenta</span>
-              <span class="banco-dato-valor" id="num-cuenta">19467638</span>
-              <button class="btn-copiar" onclick="copiar('19467638', this)">Copiar</button>
-            </div>
-            <div class="banco-dato">
-              <span class="banco-dato-label">Titular</span>
-              <span class="banco-dato-valor">Edgardo Torres</span>
-            </div>
-          </div>
-          <div class="transferencia-aviso">
-            <span>⚠️</span>
-            <span>Realizá la transferencia y luego adjuntá el comprobante para confirmar tu pedido.</span>
-          </div>
-
-          <!-- Comprobante upload -->
-          <div class="comprobante-section">
-            <span class="comprobante-label">📎 Comprobante de transferencia</span>
-            <div class="comprobante-opciones">
-              <div class="comprobante-opcion" id="comprobante-foto-area">
-                <input type="file" id="comprobante-input-foto" accept="image/*" onchange="onComprobanteChange(event, 'foto')" />
-                <div class="comprobante-opcion-icon">📷</div>
-                <div class="comprobante-opcion-text">Foto</div>
+        <!-- Transferencia -->
+        <div class="metodo activo" id="metodo-transferencia">
+          <label class="metodo-cabeza">
+            <input type="radio" name="metodo" value="transferencia" checked onchange="setMetodo('transferencia')" />
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h18M5 10V20M10 10v10M14 10v10M19 10v10M3 20h18M12 3l9 5H3z"/></svg>
+            <span class="metodo-info"><span class="metodo-nombre">Transferencia</span><span class="metodo-detalle">A nuestra cuenta Prex, con el comprobante</span></span>
+          </label>
+          <div class="metodo-panel" id="seccion-transferencia">
+            <div class="banco">
+              <div class="banco-fila"><span class="banco-label">Banco</span><span class="banco-valor">Prex</span></div>
+              <div class="banco-fila">
+                <span class="banco-label">Cuenta</span>
+                <span class="banco-valor" id="num-cuenta">19467638</span>
+                <button type="button" class="btn-copiar" onclick="copiar('19467638', this)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>Copiar</span></button>
               </div>
-              <div class="comprobante-opcion" id="comprobante-pdf-area">
-                <input type="file" id="comprobante-input-pdf" accept="application/pdf" onchange="onComprobanteChange(event, 'pdf')" />
-                <div class="comprobante-opcion-icon">📄</div>
-                <div class="comprobante-opcion-text">PDF</div>
-              </div>
+              <div class="banco-fila"><span class="banco-label">Titular</span><span class="banco-valor">Edgardo Torres</span></div>
+              <div class="banco-fila"><span class="banco-label">Monto</span><span class="banco-valor" id="monto-transferir">$0</span></div>
             </div>
+            <p class="paso-texto">Transferí el monto y subí el comprobante para confirmar tu pedido.</p>
+            <label class="comprobante" id="comprobante-zona">
+              <input type="file" id="comprobante-input" accept="image/*,application/pdf" onchange="onComprobanteChange(event)" />
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              <span class="comprobante-textos">
+                <span class="comprobante-titulo" id="comprobante-titulo">Subí el comprobante</span>
+                <span class="comprobante-detalle" id="comprobante-detalle">Foto o PDF</span>
+              </span>
+            </label>
             <div class="comprobante-preview" id="comprobante-preview">
               <img id="comprobante-img" src="" alt="Comprobante" />
             </div>
+            <button type="button" class="btn-compra" id="btn-transferi" onclick="confirmarTransferencia()">Ya transferí</button>
           </div>
+        </div>
 
-          <div class="cupon-section">
-            <div class="cupon-label">🏷️ ¿Tenés un código de descuento?</div>
-            <div class="cupon-wrap">
-              <input class="cupon-input" id="cupon-input" type="text" placeholder="Ingresá tu código" />
-              <button class="cupon-btn" onclick="aplicarCupon()">Aplicar</button>
-            </div>
-            <div class="cupon-msg" id="cupon-msg"></div>
+        <!-- Mercado Pago -->
+        <div class="metodo" id="metodo-mp">
+          <label class="metodo-cabeza">
+            <input type="radio" name="metodo" value="mp" onchange="setMetodo('mp')" />
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg>
+            <span class="metodo-info"><span class="metodo-nombre">Mercado Pago</span><span class="metodo-detalle">Tarjeta de crédito, débito o saldo</span></span>
+          </label>
+          <div class="metodo-panel" id="seccion-mp" style="display:none">
+            <p class="paso-texto">Te llevamos a Mercado Pago para pagar y al terminar volvés a la tienda.</p>
+            <button type="button" class="btn-compra" id="btn-pagar-mp" onclick="pagarConMP()">Continuar con Mercado Pago</button>
+            <p class="nota-segura"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Pago seguro procesado por Mercado Pago</p>
           </div>
-
-          <button class="btn-transferi" id="btn-transferi" onclick="confirmarTransferencia()">
-            ✅ Ya transferí
-          </button>
         </div>
-      </div>
 
-      <!-- Efectivo (solo pickup) -->
-      <div id="seccion-efectivo" style="display:none">
-        <div class="transferencia-wrap">
-          <div class="banco-card" style="border-color:#d4edda;background:#f8fff8">
-            <p style="font-size:.95rem;font-weight:600;color:#2a4a20;margin-bottom:6px;">💵 Pagás al retirar</p>
-            <p style="font-size:.82rem;color:#555;line-height:1.6">Confirmá tu pedido y te contactamos por WhatsApp para coordinar el retiro.</p>
+        <!-- Efectivo (solo con retiro en Cordón) -->
+        <div class="metodo" id="metodo-efectivo" style="display:none">
+          <label class="metodo-cabeza">
+            <input type="radio" name="metodo" value="efectivo" onchange="setMetodo('efectivo')" />
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
+            <span class="metodo-info"><span class="metodo-nombre">Efectivo al retirar</span><span class="metodo-detalle">Pagás cuando lo buscás en Cordón</span></span>
+          </label>
+          <div class="metodo-panel" id="seccion-efectivo" style="display:none">
+            <p class="paso-texto">Confirmá tu pedido y te contactamos por WhatsApp para coordinar el retiro.</p>
+            <button type="button" class="btn-compra" onclick="confirmarEfectivo()">Confirmar pedido</button>
           </div>
-          <button class="btn-transferi" style="background:var(--color-compra)" onclick="confirmarEfectivo()">
-            ✅ Confirmar pedido
-          </button>
         </div>
-      </div>
 
-      <!-- MercadoPago redirect -->
-      <div id="seccion-mp" style="display:none">
-        <div class="mp-wrap">
-          <button class="btn-mp-checkout" id="btn-pagar-mp" onclick="pagarConMP()">
-            <span>💳</span> Continuar con MercadoPago
-          </button>
-          <p style="font-size:0.72rem;color:#9a8f82;text-align:center;margin-top:12px;">Crédito, débito y saldo MP · Te redirige a MercadoPago</p>
-        </div>
       </div>
-
-      <div class="seguridad">
-        🔒 Pago seguro procesado por MercadoPago · SSL
-      </div>
-    </div>
-
+    </section>
   </div>
-</div>
+
+  <!-- Resultado del pago -->
+  <div class="resultado" id="resultado" role="status">
+    <div class="resultado-icon" id="res-icon"></div>
+    <h2 class="resultado-titulo" id="res-titulo">¡Gracias por tu compra!</h2>
+    <p class="resultado-msg" id="res-msg">Te avisaremos el estado de tu pedido.<br>¡Nos vemos en la aventura!</p>
+    <a href="index.html" class="btn-volver">Volver a la tienda</a>
+  </div>
+
+</main>
 
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -474,39 +646,97 @@
     window.location.href = 'index.html';
   }
 
+  // ── Ayudas para mostrar ───────────────────────────────────
+  const ICONOS = {
+    bolsa: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
+    montevideo: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
+    interior: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+    pickup: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
+    listo: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    error: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v6M12 17h.01"/></svg>',
+    subido: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg>',
+    subir: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>'
+  };
+
+  // Lo que viene del carrito guardado se muestra como texto, nunca como HTML
+  function textoSeguro(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function pesos(n) {
+    return '$' + (Number(n) || 0).toLocaleString('es-UY');
+  }
+  function fotoValida(f) {
+    return typeof f === 'string' && /^(\/api\/foto\?h=[a-f0-9]{32}|img\/[\w.\/-]+|https:\/\/[^\s"'<>]+)$/.test(f) ? f : '';
+  }
+
   // ── Render resumen ────────────────────────────────────────
   function renderResumen() {
     const { items, envio, cliente, celular } = pedidoData;
     const subtotal = items.reduce((s, i) => s + i.precio * i.qty, 0);
-    const total = subtotal + (envio?.costo || 0);
+    const unidades = items.reduce((s, i) => s + (Number(i.qty) || 0), 0);
 
-    document.getElementById('resumen-items').innerHTML = items.map(i => `
+    document.getElementById('resumen-items').innerHTML = items.map(i => {
+      const foto = fotoValida(i.foto);
+      return `
       <div class="resumen-item">
-        <div>
-          <div class="resumen-item-nombre">${i.name} <span style="color:#9a8f82;font-weight:400">x${i.qty}</span></div>
-          <div class="resumen-item-var">${i.variant}</div>
+        <div class="resumen-foto">${foto ? `<img src="${textoSeguro(foto)}" alt="" />` : ICONOS.bolsa}<span class="resumen-cant">${Number(i.qty) || 0}</span></div>
+        <div class="resumen-item-datos">
+          <span class="resumen-item-nombre">${textoSeguro(i.name)}</span>
+          <span class="resumen-item-var">${textoSeguro(i.variant)}</span>
         </div>
-        <div class="resumen-item-precio">$${(i.precio * i.qty).toLocaleString()}</div>
-      </div>
-    `).join('');
+        <span class="resumen-item-precio">${pesos(i.precio * i.qty)}</span>
+      </div>`;
+    }).join('');
 
-    document.getElementById('subtotal-val').textContent = '$' + subtotal.toLocaleString();
-    document.getElementById('total-val').textContent = '$' + total.toLocaleString();
+    document.getElementById('resumen-toggle-texto').textContent = `Tu pedido (${unidades})`;
+    document.getElementById('subtotal-val').textContent = pesos(subtotal);
 
     if (envio && envio.costo > 0) {
       document.getElementById('envio-row').style.display = 'flex';
-      document.getElementById('envio-val').textContent = '$' + envio.costo.toLocaleString();
+      document.getElementById('envio-val').textContent = pesos(envio.costo);
     }
 
     if (envio && envio.label) {
       document.getElementById('envio-info').style.display = 'flex';
+      document.getElementById('envio-icono').innerHTML = ICONOS[envio.tipo] || ICONOS.montevideo;
       document.getElementById('envio-detalle').textContent = envio.label;
     }
+
+    actualizarTotal();
 
     // Pre-llenar nombre y celular
     if (cliente) document.getElementById('ch-nombre').value = cliente;
     if (celular) document.getElementById('ch-celular').value = celular;
   }
+
+  // Fotos que no vinieron con el carrito (carritos armados antes): se buscan en los productos
+  function completarFotosResumen() {
+    if (!pedidoData || pedidoData.items.every(i => fotoValida(i.foto))) return;
+    db.ref('productos').once('value').then(snap => {
+      const productos = Object.values(snap.val() || {});
+      let cambio = false;
+      pedidoData.items.forEach(item => {
+        if (fotoValida(item.foto)) return;
+        const p = productos.find(p => p && p.nombre === item.name);
+        const v = p && Object.values(p.variantes || {}).find(v => v && v.nombre === item.variant);
+        const foto = v && fotoValida((Array.isArray(v.fotos) && v.fotos[0]) || v.foto);
+        if (foto) { item.foto = foto; cambio = true; }
+      });
+      if (cambio) renderResumen();
+    }).catch(() => {});
+  }
+
+  // En la compu el pedido queda siempre abierto; en el celular arranca plegado
+  const pantallaAncha = window.matchMedia('(min-width: 901px)');
+  function acomodarResumen() {
+    const resumen = document.getElementById('resumen');
+    if (pantallaAncha.matches) resumen.open = true;
+  }
+  acomodarResumen();
+  pantallaAncha.addEventListener('change', acomodarResumen);
+  document.querySelector('.resumen-toggle').addEventListener('click', e => {
+    if (pantallaAncha.matches) e.preventDefault();
+  });
 
   // ── Descuento ─────────────────────────────────────────────
   let descuentoAplicado = 0;
@@ -519,8 +749,10 @@
   }
 
   function actualizarTotal() {
-    const total = calcularTotal();
-    document.getElementById('total-val').textContent = '$' + total.toLocaleString();
+    const total = pesos(calcularTotal());
+    document.getElementById('total-val').textContent = total;
+    document.getElementById('total-movil').textContent = total;
+    document.getElementById('monto-transferir').textContent = total;
   }
 
   async function aplicarCupon() {
@@ -528,15 +760,15 @@
     const msg = document.getElementById('cupon-msg');
     if (!codigo) return;
 
-    msg.style.color = '#9a8f82';
+    msg.style.color = 'var(--suave)';
     msg.textContent = 'Verificando...';
 
     const snap = await db.ref('codigos_descuento/' + codigo).once('value');
     const data = snap.val();
 
     if (!data || !data.activo) {
-      msg.style.color = '#b91c1c';
-      msg.textContent = '❌ Código inválido o no disponible.';
+      msg.style.color = 'var(--falta)';
+      msg.textContent = 'Ese código no existe o ya no está disponible.';
       descuentoAplicado = 0;
       codigoAplicado = '';
       document.getElementById('descuento-row').style.display = 'none';
@@ -556,14 +788,18 @@
     }
 
     codigoAplicado = codigo;
-    document.getElementById('descuento-val').textContent = '-$' + descuentoAplicado.toLocaleString();
+    document.getElementById('descuento-val').textContent = '-' + pesos(descuentoAplicado);
     document.getElementById('descuento-row').style.display = 'flex';
-    msg.style.color = '#507a3a';
-    msg.textContent = '✅ Código aplicado.';
+    msg.style.color = 'var(--ok)';
+    msg.textContent = `Código ${codigo} aplicado.`;
     actualizarTotal();
   }
+  document.getElementById('cupon-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); aplicarCupon(); }
+  });
 
   renderResumen();
+  completarFotosResumen();
 
   // Píxel de Meta: datos de la compra con los mismos códigos de color del catálogo
   function datosMeta(total) {
@@ -581,7 +817,7 @@
 
   // Mostrar opción efectivo solo para pickup
   if (pedidoData?.envio?.tipo === 'pickup') {
-    document.getElementById('btn-efectivo').style.display = '';
+    document.getElementById('metodo-efectivo').style.display = '';
   }
 
   // ── Pre-llenar datos si el usuario está logueado ──────────
@@ -638,6 +874,30 @@
   }
   document.getElementById('ch-email')?.addEventListener('change', avisarMailCarrito);
 
+  // ── Lo que falta completar ───────────────────────────────
+  function sacudir(el) {
+    el.classList.remove('sacudir');
+    void el.offsetWidth;
+    el.classList.add('sacudir');
+  }
+
+  // Nombre y celular son obligatorios: si falta alguno se marca y se lleva a la persona hasta el campo
+  function datosCompletos() {
+    const aviso = document.getElementById('aviso-datos');
+    const faltan = ['ch-nombre', 'ch-celular'].map(id => document.getElementById(id)).filter(el => !el.value.trim());
+    document.querySelectorAll('.campo input').forEach(el => el.classList.remove('falta'));
+    if (!faltan.length) { aviso.textContent = ''; return true; }
+    faltan.forEach(el => el.classList.add('falta'));
+    aviso.textContent = faltan.length === 2 ? 'Completá tu nombre y tu celular.' : faltan[0].id === 'ch-nombre' ? 'Completá tu nombre.' : 'Completá tu celular.';
+    faltan[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+    faltan[0].focus({ preventScroll: true });
+    sacudir(faltan[0]);
+    return false;
+  }
+  ['ch-nombre', 'ch-celular'].forEach(id => document.getElementById(id).addEventListener('input', e => {
+    if (e.target.value.trim()) e.target.classList.remove('falta');
+  }));
+
   // ── MercadoPago Bricks ────────────────────────────────────
   const mp = new MercadoPago(PUBLIC_KEY, { locale: 'es-UY' });
   let bricksController = null;
@@ -689,10 +949,7 @@
     const celular = document.getElementById('ch-celular').value.trim();
     const email = document.getElementById('ch-email').value.trim();
 
-    if (!nombre || !celular) {
-      alert('Por favor completá nombre y celular.');
-      return;
-    }
+    if (!datosCompletos()) return;
 
     localStorage.setItem('sendera_cliente_nombre', nombre);
     localStorage.setItem('sendera_cliente_celular', celular);
@@ -738,26 +995,29 @@
     }
   }
 
-  // ── Comprobante upload ────────────────────────────────────
+  // ── Comprobante (una foto o un PDF) ───────────────────────
   let comprobanteBase64 = null;
 
-  function onComprobanteChange(event, tipo) {
+  function marcarComprobante(titulo) {
+    const zona = document.getElementById('comprobante-zona');
+    zona.classList.add('listo');
+    zona.classList.remove('falta');
+    zona.querySelector('svg').outerHTML = ICONOS.subido;
+    document.getElementById('comprobante-titulo').textContent = titulo;
+    document.getElementById('comprobante-detalle').textContent = 'Tocá para cambiarlo';
+  }
+
+  function onComprobanteChange(event) {
     const file = event.target.files[0];
     if (!file) return;
+    const esPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
 
     const reader = new FileReader();
     reader.onload = function(e) {
-      if (tipo === 'pdf') {
+      if (esPdf) {
         comprobanteBase64 = e.target.result;
         document.getElementById('comprobante-preview').style.display = 'none';
-        const area = document.getElementById('comprobante-pdf-area');
-        area.classList.add('has-file');
-        area.querySelector('.comprobante-opcion-icon').textContent = '✅';
-        area.querySelector('.comprobante-opcion-text').textContent = 'PDF adjunto';
-        // reset foto
-        document.getElementById('comprobante-foto-area').classList.remove('has-file');
-        document.getElementById('comprobante-foto-area').querySelector('.comprobante-opcion-icon').textContent = '📷';
-        document.getElementById('comprobante-foto-area').querySelector('.comprobante-opcion-text').textContent = 'Foto';
+        marcarComprobante(file.name || 'PDF adjunto');
       } else {
         const img = new Image();
         img.onload = function() {
@@ -775,14 +1035,7 @@
           document.getElementById('comprobante-preview').style.display = 'block';
         };
         img.src = e.target.result;
-        const area = document.getElementById('comprobante-foto-area');
-        area.classList.add('has-file');
-        area.querySelector('.comprobante-opcion-icon').textContent = '✅';
-        area.querySelector('.comprobante-opcion-text').textContent = 'Foto adjunta';
-        // reset pdf
-        document.getElementById('comprobante-pdf-area').classList.remove('has-file');
-        document.getElementById('comprobante-pdf-area').querySelector('.comprobante-opcion-icon').textContent = '📄';
-        document.getElementById('comprobante-pdf-area').querySelector('.comprobante-opcion-text').textContent = 'PDF';
+        marcarComprobante('Foto adjunta');
       }
     };
     reader.readAsDataURL(file);
@@ -790,14 +1043,15 @@
 
   // ── Confirmar transferencia ───────────────────────────────
   async function confirmarTransferencia() {
-    const nombre = document.getElementById('ch-nombre').value.trim();
-    const celular = document.getElementById('ch-celular').value.trim();
-    const email = document.getElementById('ch-email').value.trim();
-    if (!nombre || !celular) { alert('Por favor completá tu nombre y celular.'); return; }
+    if (!datosCompletos()) return;
 
     if (!comprobanteBase64) {
-      alert('Por favor adjuntá el comprobante de la transferencia.');
-      document.getElementById('comprobante-area').style.borderColor = '#e74c3c';
+      const zona = document.getElementById('comprobante-zona');
+      zona.classList.add('falta');
+      document.getElementById('comprobante-titulo').textContent = 'Falta el comprobante';
+      document.getElementById('comprobante-detalle').textContent = 'Subí una foto o el PDF de la transferencia';
+      zona.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      sacudir(zona);
       return;
     }
 
@@ -811,25 +1065,22 @@
   // ── Copiar al portapapeles ────────────────────────────────
   function copiar(texto, btn) {
     navigator.clipboard.writeText(texto).then(() => {
-      const orig = btn.textContent;
-      btn.textContent = '✓ Copiado';
-      setTimeout(() => btn.textContent = orig, 2000);
+      const etiqueta = btn.querySelector('span') || btn;
+      etiqueta.textContent = 'Copiado';
+      setTimeout(() => etiqueta.textContent = 'Copiar', 2000);
     });
   }
 
   // ── Cambiar método ────────────────────────────────────────
-  function setMetodo(metodo, btn) {
-    document.querySelectorAll('.metodo-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('seccion-transferencia').style.display = metodo === 'transferencia' ? 'block' : 'none';
-    document.getElementById('seccion-mp').style.display = metodo === 'mp' ? 'block' : 'none';
-    document.getElementById('seccion-efectivo').style.display = metodo === 'efectivo' ? 'block' : 'none';
+  function setMetodo(metodo) {
+    ['transferencia', 'mp', 'efectivo'].forEach(m => {
+      document.getElementById('metodo-' + m).classList.toggle('activo', m === metodo);
+      document.getElementById('seccion-' + m).style.display = m === metodo ? 'block' : 'none';
+    });
   }
 
   async function confirmarEfectivo() {
-    const nombre = document.getElementById('ch-nombre').value.trim();
-    const celular = document.getElementById('ch-celular').value.trim();
-    if (!nombre || !celular) { alert('Por favor completá tu nombre y celular.'); return; }
+    if (!datosCompletos()) return;
     // Al cliente le llega el WhatsApp automático de confirmación (ya no se abre el WhatsApp de la tienda)
     guardarPedidoFirebase('pendiente-efectivo', null, 'efectivo');
     mostrarResultado('efectivo');
@@ -840,10 +1091,11 @@
     const nombre = document.getElementById('ch-nombre').value.trim();
     const celular = document.getElementById('ch-celular').value.trim();
     const email = document.getElementById('ch-email').value.trim();
-    if (!nombre || !celular) { alert('Por favor completá tu nombre y celular.'); return; }
+    if (!datosCompletos()) return;
 
     const btn = document.getElementById('btn-pagar-mp');
-    btn.disabled = true; btn.innerHTML = '⏳ Procesando...';
+    const textoBoton = 'Continuar con Mercado Pago';
+    btn.disabled = true; btn.textContent = 'Abriendo Mercado Pago...';
 
     try {
       const res = await fetch('/api/create-preference', {
@@ -860,14 +1112,14 @@
       const data = await res.json();
       if (!res.ok || !data.init_point) {
         alert(data.error || 'No se pudo iniciar el pago. Intentá de nuevo.');
-        btn.disabled = false; btn.innerHTML = '<span>💳</span> Continuar con MercadoPago';
+        btn.disabled = false; btn.textContent = textoBoton;
         return;
       }
       // No borrar sessionStorage — se necesita al volver del redirect
       window.location.href = data.init_point;
     } catch(e) {
       alert('Error al conectar. Intentá de nuevo.');
-      btn.disabled = false; btn.innerHTML = '<span>💳</span> Continuar con MercadoPago';
+      btn.disabled = false; btn.textContent = textoBoton;
     }
   }
 
@@ -890,6 +1142,8 @@
       metodo_pago: metodoPago
     };
     if (email) pedido.email = email.slice(0, 120);
+    // Con transferencia o efectivo el total ya trae el descuento: queda anotado qué código se usó
+    if (codigoAplicado) pedido.codigo = codigoAplicado;
     if (comprobanteBase64) pedido.comprobante = comprobanteBase64;
     const refPedido = db.ref('pedidos').push(pedido);
     try { if (window.fbq) fbq('track', 'Purchase', datosMeta(pedido.total)); } catch (e) {}
@@ -920,27 +1174,31 @@
   function mostrarResultado(tipo, detalle = '') {
     document.getElementById('pago-contenido').style.display = 'none';
     const res = document.getElementById('resultado');
+    const icono = document.getElementById('res-icon');
     res.classList.add('visible');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     if (tipo === 'error') {
-      document.getElementById('res-icon').textContent = '❌';
-      document.getElementById('res-titulo').textContent = 'Hubo un problema';
-      document.getElementById('res-msg').innerHTML = 'No se pudo procesar el pago.<br>Revisá los datos o intentá con otro método.';
+      icono.innerHTML = ICONOS.error;
+      icono.classList.add('error');
+      document.getElementById('res-titulo').textContent = 'No se pudo hacer el pago';
+      document.getElementById('res-msg').innerHTML = 'Revisá los datos o probá con otro método.';
       setTimeout(() => {
         document.getElementById('pago-contenido').style.display = 'block';
         res.classList.remove('visible');
       }, 3000);
     } else {
-      document.getElementById('res-icon').textContent = '🏔️';
+      icono.innerHTML = ICONOS.listo;
+      icono.classList.remove('error');
+      document.querySelector('.checkout-cabeza').style.display = 'none';
       document.getElementById('res-titulo').textContent = '¡Gracias por tu compra!';
       // El mail de confirmación lleva el link para seguir el pedido (con el pago pendiente todavía no sale)
       const conMail = !!(document.getElementById('ch-email')?.value || '').trim() && tipo !== 'pendiente';
       document.getElementById('res-msg').innerHTML = (conMail
         ? 'Te mandamos un mail con el link para seguir tu pedido.'
         : 'Te avisaremos el estado de tu pedido.') + '<br>¡Nos vemos en la aventura!';
-      const cupWrap = document.querySelector('.cupon-wrap');
-      if (cupWrap) cupWrap.style.display = 'none';
-      document.getElementById('cupon-msg').style.display = 'none';
+      // La compra ya está hecha: el código de descuento no se puede cambiar
+      document.querySelector('.cupon').style.display = 'none';
     }
   }
 

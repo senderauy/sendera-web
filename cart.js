@@ -56,9 +56,40 @@ function precioFinal(precio, descuento) {
   return Math.round((Number(precio) || 0) * (100 - d) / 100);
 }
 
+// Texto que viene de afuera (el carrito guardado o el link del mail) se muestra como texto, nunca como HTML
+function textoSeguro(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function pesos(n) {
+  return '$' + (Number(n) || 0).toLocaleString('es-UY');
+}
+
+// Solo fotos de la tienda: las guardadas aparte (/api/foto), las de la carpeta img o links https
+function fotoValida(f) {
+  return typeof f === 'string' && /^(\/api\/foto\?h=[a-f0-9]{32}|img\/[\w.\/-]+|https:\/\/[^\s"'<>]+)$/.test(f) ? f : '';
+}
+
+// Productos que conoce la página (todos en el inicio, el que se está viendo en producto), para la foto de cada ítem
+const productosCarrito = new Map();
+
+function completarFotosCarrito() {
+  let cambio = false;
+  cart.forEach(item => {
+    if (fotoValida(item.foto)) return;
+    const p = productosCarrito.get(item.name);
+    const v = p && Object.values(p.variantes || {}).find(v => v && v.nombre === item.variant);
+    const foto = v && fotoValida((Array.isArray(v.fotos) && v.fotos[0]) || v.foto);
+    if (foto) { item.foto = foto; cambio = true; }
+  });
+  return cambio;
+}
+
 // Si cambió un precio o un descuento desde que se agregó al carrito, lo pone al día
 function actualizarPreciosCarrito(productos) {
   let cambio = false;
+  productos.forEach(p => { if (p && p.nombre) productosCarrito.set(p.nombre, p); });
+  if (completarFotosCarrito()) cambio = true;
   cart.forEach(item => {
     const p = productos.find(p => p && p.nombre === item.name);
     const v = p && Object.values(p.variantes || {}).find(v => v && v.nombre === item.variant);
@@ -193,21 +224,22 @@ function getEnvio() {
   return { tipo: null, costo: 0, label: '' };
 }
 
-function updateEnvio() {
+// Totales del pie del carrito (con el envío elegido)
+function pintarTotalesCarrito() {
   const subtotal = getTotal();
   const envio = getEnvio();
-  const total = subtotal + envio.costo;
-
-  document.getElementById('cart-subtotal').textContent = '$' + subtotal.toLocaleString();
-  document.getElementById('cart-total').textContent = '$' + total.toLocaleString();
-
+  document.getElementById('cart-subtotal').textContent = pesos(subtotal);
+  document.getElementById('cart-total').textContent = pesos(subtotal + envio.costo);
   const envioRow = document.getElementById('envio-row');
-  if (envio.tipo === 'montevideo') {
-    envioRow.style.display = 'flex';
-    document.getElementById('cart-envio-label').textContent = '$200';
-  } else {
-    envioRow.style.display = 'none';
-  }
+  const textoEnvio = { montevideo: pesos(envio.costo), interior: 'A cargo del comprador', pickup: 'Gratis' }[envio.tipo];
+  envioRow.style.display = textoEnvio ? 'flex' : 'none';
+  if (textoEnvio) document.getElementById('cart-envio-label').textContent = textoEnvio;
+}
+
+function updateEnvio() {
+  const envio = getEnvio();
+  pintarTotalesCarrito();
+  document.querySelector('.carrito .envio-section')?.classList.remove('falta');
 
   // Mostrar/ocultar campos según opción
   document.getElementById('campos-montevideo').style.display = envio.tipo === 'montevideo' ? 'block' : 'none';
@@ -274,32 +306,48 @@ function updateCartUI() {
   document.getElementById('cart-count').textContent = count;
   document.getElementById('cart-count').style.display = count > 0 ? 'flex' : 'none';
 
+  const modal = document.getElementById('cart-modal');
+  if (modal) modal.classList.toggle('carrito--vacio', cart.length === 0);
+  const cuenta = document.getElementById('carrito-cuenta');
+  if (cuenta) cuenta.textContent = count ? `${count} ${count === 1 ? 'producto' : 'productos'}` : '';
+  if (completarFotosCarrito()) saveCart();
+
   const itemsEl = document.getElementById('cart-items');
   if (cart.length === 0) {
-    itemsEl.innerHTML = '<p class="cart-empty">Tu carrito está vacío.</p>';
+    itemsEl.innerHTML = `
+      <div class="carrito-vacio">
+        ${ICONOS_CARRITO.bolsa}
+        <p class="carrito-vacio-titulo">Tu carrito está vacío</p>
+        <p class="carrito-vacio-texto">Elegí tus productos y aparecen acá.</p>
+        <a class="carrito-vacio-btn" href="index.html#productos" onclick="closeCart()">Ver productos</a>
+      </div>`;
   } else {
-    itemsEl.innerHTML = cart.map((item, i) => `
+    itemsEl.innerHTML = cart.map((item, i) => {
+      const nombre = textoSeguro(item.name), color = textoSeguro(item.variant);
+      const foto = fotoValida(item.foto);
+      return `
       <div class="cart-item">
-        <div class="cart-item-info">
-          <span class="cart-item-name">${item.name}</span>
-          <span class="cart-item-variant">${item.variant}</span>
+        <div class="cart-item-foto">${foto ? `<img src="${textoSeguro(foto)}" alt="" loading="lazy" decoding="async" />` : ICONOS_CARRITO.bolsa}</div>
+        <div class="cart-item-datos">
+          <div class="cart-item-fila">
+            <span class="cart-item-name">${nombre}</span>
+            <button type="button" class="cart-item-remove" onclick="removeFromCart(${i})" aria-label="Quitar ${nombre} ${color}">${ICONOS_CARRITO.basura}</button>
+          </div>
+          <span class="cart-item-variant">${color}</span>
+          <div class="cart-item-fila">
+            <div class="cart-item-controls">
+              <button type="button" onclick="changeQty(${i}, -1)" aria-label="Uno menos">−</button>
+              <span aria-label="Cantidad">${Number(item.qty) || 0}</span>
+              <button type="button" onclick="changeQty(${i}, 1)" aria-label="Uno más">+</button>
+            </div>
+            <span class="cart-item-price">${pesos(item.price * item.qty)}</span>
+          </div>
         </div>
-        <div class="cart-item-controls">
-          <button type="button" onclick="changeQty(${i}, -1)">−</button>
-          <span>${item.qty}</span>
-          <button type="button" onclick="changeQty(${i}, 1)">+</button>
-        </div>
-        <div class="cart-item-price">$${(item.price * item.qty).toLocaleString()}</div>
-        <button type="button" class="cart-item-remove" onclick="removeFromCart(${i})">✕</button>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   }
 
-  const subtotal = getTotal();
-  const envio = getEnvio();
-  document.getElementById('cart-subtotal').textContent = '$' + subtotal.toLocaleString();
-  document.getElementById('cart-total').textContent = '$' + (subtotal + envio.costo).toLocaleString();
-
+  pintarTotalesCarrito();
   syncCardsWithCart();
 }
 
@@ -324,100 +372,146 @@ function showCartError(msg) {
   toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 2800);
 }
 
-function toggleCart() {
+// ── Panel del carrito ─────────────────────────────────────
+// En la compu se abre de costado y en el celular sube desde abajo (carrito.css).
+// El inicio y la página de producto usan el mismo: el HTML se arma acá.
+const ICONOS_CARRITO = {
+  cerrar: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  basura: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
+  bolsa: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
+  camion: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
+  mapa: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+  casa: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
+  candado: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'
+};
+
+(function montarCarrito() {
+  if (document.getElementById('cart-modal')) return;
+  document.body.insertAdjacentHTML('beforeend', `
+  <div id="cart-overlay" class="carrito-fondo" onclick="closeCart()"></div>
+  <aside id="cart-modal" class="carrito carrito--vacio" role="dialog" aria-modal="true" aria-labelledby="carrito-titulo" aria-hidden="true">
+    <div class="carrito-cabecera">
+      <span class="carrito-manija" aria-hidden="true"></span>
+      <div>
+        <h2 class="carrito-titulo" id="carrito-titulo">Tu carrito</h2>
+        <p class="carrito-cuenta" id="carrito-cuenta"></p>
+      </div>
+      <button type="button" class="carrito-cerrar" onclick="closeCart()" aria-label="Cerrar el carrito">${ICONOS_CARRITO.cerrar}</button>
+    </div>
+    <div class="carrito-cuerpo">
+      <div id="cart-items"></div>
+      <section class="envio-section" aria-labelledby="envio-titulo">
+        <h3 class="envio-titulo" id="envio-titulo">Envío</h3>
+        <div class="envio-card">
+          <label class="envio-opcion">
+            <input type="radio" name="envio" value="montevideo" onchange="updateEnvio()" />
+            ${ICONOS_CARRITO.camion}
+            <span class="envio-info"><span class="envio-nombre">Montevideo</span><span class="envio-detalle">Envío a domicilio</span></span>
+            <span class="envio-precio">$200</span>
+          </label>
+          <div class="envio-campos" id="campos-montevideo" style="display:none;">
+            <input type="text" class="envio-input" id="envio-direccion" placeholder="Calle, número y apartamento" aria-label="Dirección de entrega" autocomplete="street-address" />
+          </div>
+        </div>
+        <div class="envio-card">
+          <label class="envio-opcion">
+            <input type="radio" name="envio" value="interior" onchange="updateEnvio()" />
+            ${ICONOS_CARRITO.mapa}
+            <span class="envio-info"><span class="envio-nombre">Interior</span><span class="envio-detalle">Por agencia, a cargo del comprador</span></span>
+          </label>
+          <div class="envio-campos" id="campos-interior" style="display:none;">
+            <input type="text" class="envio-input" id="envio-ciudad" placeholder="Ciudad o localidad" aria-label="Ciudad o localidad" autocomplete="address-level2" />
+            <div class="envio-radio-group">
+              <label class="envio-sub"><input type="radio" name="interior-tipo" value="agencia" /> Retiro en agencia</label>
+              <label class="envio-sub"><input type="radio" name="interior-tipo" value="domicilio" /> Entrega a domicilio</label>
+            </div>
+            <input type="text" class="envio-input" id="envio-domicilio-interior" placeholder="Dirección de entrega" aria-label="Dirección de entrega" autocomplete="street-address" style="display:none;" />
+          </div>
+        </div>
+        <div class="envio-card">
+          <label class="envio-opcion">
+            <input type="radio" name="envio" value="pickup" onchange="updateEnvio()" />
+            ${ICONOS_CARRITO.casa}
+            <span class="envio-info"><span class="envio-nombre">Retiro en Cordón</span><span class="envio-detalle">Coordinando antes</span></span>
+            <span class="envio-precio">Gratis</span>
+          </label>
+        </div>
+      </section>
+    </div>
+    <div class="carrito-pie">
+      <div class="cart-total-row"><span>Subtotal</span><span id="cart-subtotal">$0</span></div>
+      <div class="cart-total-row envio-row" id="envio-row" style="display:none;"><span>Envío</span><span id="cart-envio-label"></span></div>
+      <div class="cart-total-row total-final"><span>Total</span><span id="cart-total">$0</span></div>
+      <button type="button" class="btn-mp" onclick="pagarMP()">${ICONOS_CARRITO.candado} Ir a pagar</button>
+      <p class="cart-note">En el siguiente paso elegís cómo pagar.</p>
+    </div>
+  </aside>`);
+
+  // En el celular se puede cerrar deslizando la hoja hacia abajo desde la cabecera
   const modal = document.getElementById('cart-modal');
-  modal.classList.toggle('open');
+  const cabecera = modal.querySelector('.carrito-cabecera');
+  let y0 = null, dy = 0;
+  cabecera.addEventListener('touchstart', e => {
+    if (!matchMedia('(max-width: 640px)').matches) return;
+    y0 = e.touches[0].clientY; dy = 0; modal.style.transition = 'none';
+  }, { passive: true });
+  cabecera.addEventListener('touchmove', e => {
+    if (y0 === null) return;
+    dy = Math.max(0, e.touches[0].clientY - y0);
+    modal.style.transform = `translateY(${dy}px)`;
+  }, { passive: true });
+  cabecera.addEventListener('touchend', () => {
+    if (y0 === null) return;
+    y0 = null;
+    modal.style.transition = '';
+    modal.style.transform = '';
+    if (dy > 90) closeCart();
+  });
+})();
+
+let focoAntesDelCarrito = null;
+
+function abrirCarrito() {
+  const modal = document.getElementById('cart-modal');
+  if (modal.classList.contains('open')) return;
+  focoAntesDelCarrito = document.activeElement;
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.getElementById('cart-overlay').classList.add('open');
+  document.documentElement.classList.add('carrito-abierto');
+  setTimeout(() => modal.querySelector('.carrito-cerrar').focus({ preventScroll: true }), 60);
+}
+
+function toggleCart() {
+  if (document.getElementById('cart-modal').classList.contains('open')) closeCart();
+  else abrirCarrito();
 }
 
 function closeCart() {
-  document.getElementById('cart-modal').classList.remove('open');
+  const modal = document.getElementById('cart-modal');
+  if (!modal.classList.contains('open')) return;
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  document.getElementById('cart-overlay').classList.remove('open');
+  document.documentElement.classList.remove('carrito-abierto');
+  if (focoAntesDelCarrito && focoAntesDelCarrito.focus) focoAntesDelCarrito.focus({ preventScroll: true });
+  focoAntesDelCarrito = null;
 }
 
-function sendOrder() {
-  const name = document.getElementById('customer-name').value.trim();
-  const phone = document.getElementById('customer-phone').value.trim();
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeCart();
+});
 
-  if (!name || !phone) {
-    showCartError('Por favor completá tu nombre y celular.');
-    return;
-  }
-
-  if (cart.length === 0) {
-    showCartError('Tu carrito está vacío.');
-    return;
-  }
-
-  const envio = getEnvio();
-  if (!envio.tipo) {
-    showCartError('Por favor seleccioná un método de envío.');
-    return;
-  }
-
-  // Validar y armar detalle de envío
-  let envioDetalle = '';
-  if (envio.tipo === 'montevideo') {
-    const dir = document.getElementById('envio-direccion').value.trim();
-    if (!dir) { showCartError('Por favor ingresá tu dirección de entrega.'); return; }
-    envioDetalle = `📍 Montevideo · $200\nDirección: ${dir}`;
-  } else if (envio.tipo === 'interior') {
-    const ciudad = document.getElementById('envio-ciudad').value.trim();
-    if (!ciudad) { showCartError('Por favor ingresá tu ciudad o localidad.'); return; }
-    const interiorTipo = document.querySelector('input[name="interior-tipo"]:checked');
-    if (!interiorTipo) { showCartError('Por favor indicá si retirás en agencia o necesitás entrega a domicilio.'); return; }
-    if (interiorTipo.value === 'agencia') {
-      envioDetalle = `🚛 Interior · ${ciudad} · Retiro en agencia`;
-    } else {
-      const domicilio = document.getElementById('envio-domicilio-interior').value.trim();
-      if (!domicilio) { showCartError('Por favor ingresá tu dirección de entrega.'); return; }
-      envioDetalle = `🚛 Interior · ${ciudad} · Entrega a domicilio: ${domicilio}`;
-    }
-  } else if (envio.tipo === 'pickup') {
-    envioDetalle = `🏡 A coordinar retiro · Cordón`;
-  }
-
-  const lines = cart.map(i => `• ${i.name} - ${i.variant} x${i.qty} → $${(i.price * i.qty).toLocaleString()}`).join('\n');
-  const subtotal = getTotal();
-  const total = (subtotal + envio.costo).toLocaleString();
-
-  const message = encodeURIComponent(
-    `🛍️ *Nuevo pedido Sendera*\n\n` +
-    `${lines}\n\n` +
-    `Subtotal: $${subtotal.toLocaleString()}\n` +
-    `📦 Envío: ${envioDetalle}\n` +
-    `*Total: $${total}*\n\n` +
-    `👤 Cliente: ${name}\n` +
-    `📱 Celular: ${phone}\n\n` +
-    `_Pedido recibido desde sendera.uy_`
-  );
-
-  // Guardar pedido en Firebase
-  if (typeof db !== 'undefined') {
-    const envioData = getEnvio();
-    const pedido = {
-      fecha: new Date().toISOString(),
-      cliente: name,
-      celular: phone,
-      productos: cart.map(i => ({ nombre: i.name, variante: i.variant, qty: i.qty, precio: i.price })),
-      envio: envioData ? envioData.label : '—',
-      total: getTotal() + (envioData ? envioData.costo : 0),
-      estado: 'pendiente'
-    };
-    db.ref('pedidos').push(pedido);
-  }
-
-  WHATSAPP_NUMBERS.forEach((num, i) => {
-    setTimeout(() => {
-      window.open(`https://wa.me/${num}?text=${message}`, '_blank');
-    }, i * 800);
-  });
-
-  // Reset
-  cart = [];
-  saveCart();
-  updateCartUI();
-  document.getElementById('customer-name').value = '';
-  document.getElementById('customer-phone').value = '';
-  closeCart();
+// Marca lo que falta completar para seguir (con el aviso de abajo)
+function senalarFaltante(el, msg) {
+  showCartError(msg);
+  if (!el) return;
+  el.classList.remove('falta');
+  void el.offsetWidth;
+  el.classList.add('falta');
+  el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  if (el.tagName === 'INPUT') el.focus({ preventScroll: true });
+  setTimeout(() => el.classList.remove('falta'), 2500);
 }
 
 // Bloquear productos sin stock al cargar
@@ -447,46 +541,37 @@ async function pagarMP() {
   if (cart.length === 0) { showCartError('Tu carrito está vacío.'); return; }
 
   const envio = getEnvio();
-  if (!envio.tipo) { showCartError('Por favor seleccioná un método de envío.'); return; }
+  const campo = id => document.getElementById(id);
+  if (!envio.tipo) { senalarFaltante(document.querySelector('.carrito .envio-section'), 'Elegí cómo querés recibir tu pedido.'); return; }
 
   // Validar datos de envío completos
   let envioLabel = envio.label;
   if (envio.tipo === 'montevideo') {
-    const dir = document.getElementById('envio-direccion').value.trim();
-    if (!dir) { showCartError('Por favor ingresá tu dirección de entrega.'); return; }
+    const dir = campo('envio-direccion').value.trim();
+    if (!dir) { senalarFaltante(campo('envio-direccion'), 'Escribí la dirección de entrega.'); return; }
     envioLabel = `Montevideo · $200 · ${dir}`;
   } else if (envio.tipo === 'interior') {
-    const ciudad = document.getElementById('envio-ciudad').value.trim();
-    if (!ciudad) { showCartError('Por favor ingresá tu ciudad o localidad.'); return; }
+    const ciudad = campo('envio-ciudad').value.trim();
+    if (!ciudad) { senalarFaltante(campo('envio-ciudad'), 'Escribí tu ciudad o localidad.'); return; }
     const interiorTipo = document.querySelector('input[name="interior-tipo"]:checked');
-    if (!interiorTipo) { showCartError('Por favor indicá si retirás en agencia o necesitás entrega a domicilio.'); return; }
+    if (!interiorTipo) { senalarFaltante(document.querySelector('.carrito .envio-radio-group'), 'Elegí si retirás en la agencia o te lo llevan a tu casa.'); return; }
     if (interiorTipo.value === 'agencia') {
       envioLabel = `Interior · ${ciudad} · Retiro en agencia`;
     } else {
-      const domicilio = document.getElementById('envio-domicilio-interior').value.trim();
-      if (!domicilio) { showCartError('Por favor ingresá tu dirección de entrega.'); return; }
+      const domicilio = campo('envio-domicilio-interior').value.trim();
+      if (!domicilio) { senalarFaltante(campo('envio-domicilio-interior'), 'Escribí la dirección de entrega.'); return; }
       envioLabel = `Interior · ${ciudad} · Domicilio: ${domicilio}`;
     }
   }
 
   // Guardar datos en sessionStorage y redirigir a checkout.html
   const checkoutData = {
-    items: cart.map(i => ({ name: i.name, variant: i.variant, qty: i.qty, precio: i.price, id: i.id || STOCK_MAP[i.name + '-' + i.variant] || '' })),
+    items: cart.map(i => ({ name: i.name, variant: i.variant, qty: i.qty, precio: i.price, id: i.id || STOCK_MAP[i.name + '-' + i.variant] || '', foto: fotoValida(i.foto) })),
     envio: { label: envioLabel, costo: envio.costo, tipo: envio.tipo }
   };
   localStorage.setItem('sendera_checkout', JSON.stringify(checkoutData));
   window.location.href = '/checkout.html';
 }
-
-// Close on outside click
-document.addEventListener('click', function(e) {
-  const modal = document.getElementById('cart-modal');
-  const btn = document.getElementById('cart-btn');
-  const navBtn = document.querySelector('.cart-nav-btn');
-  if (modal.classList.contains('open') && !modal.contains(e.target) && (!btn || !btn.contains(e.target)) && (!navBtn || !navBtn.contains(e.target))) {
-    closeCart();
-  }
-});
 
 function irAProducto(productId, variantIdx) {
   sessionStorage.setItem('sendera_scroll', window.scrollY);

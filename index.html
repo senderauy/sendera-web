@@ -45,7 +45,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Sendera" />
   <meta name="theme-color" content="#1a1510" />
-  <link rel="stylesheet" href="style.css?v=53" />
+  <link rel="stylesheet" href="style.css?v=54" />
+  <link rel="stylesheet" href="carrito.css?v=1" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
@@ -327,81 +328,6 @@
     <span id="cart-count">0</span>
   </button>
 
-  <!-- MODAL CARRITO -->
-  <div id="cart-modal" onclick="event.stopPropagation()">
-    <div class="cart-header">
-      <h3>Tu pedido</h3>
-      <button type="button" onclick="closeCart()" class="cart-close">✕</button>
-    </div>
-    <div id="cart-items"></div>
-    <div class="cart-footer">
-
-      <!-- ENVÍO -->
-      <div class="envio-section">
-        <p class="envio-titulo">Método de envío</p>
-        <label class="envio-opcion">
-          <input type="radio" name="envio" value="montevideo" onchange="updateEnvio()" />
-          <span class="envio-info">
-            <span class="envio-nombre">📍 Montevideo</span>
-            <span class="envio-detalle">Entrega a domicilio</span>
-          </span>
-          <span class="envio-precio">$200</span>
-        </label>
-        <!-- Campos Montevideo -->
-        <div class="envio-campos" id="campos-montevideo" style="display:none;">
-          <input type="text" class="envio-input" id="envio-direccion" placeholder="Dirección de entrega (calle, número, apartamento)" />
-        </div>
-
-        <label class="envio-opcion">
-          <input type="radio" name="envio" value="interior" onchange="updateEnvio()" />
-          <span class="envio-info">
-            <span class="envio-nombre">🚛 Interior del país</span>
-            <span class="envio-detalle">Por agencia, a cargo del comprador</span>
-          </span>
-          <span class="envio-precio">—</span>
-        </label>
-        <!-- Campos Interior -->
-        <div class="envio-campos" id="campos-interior" style="display:none;">
-          <input type="text" class="envio-input" id="envio-ciudad" placeholder="Ciudad / Localidad" />
-          <div class="envio-radio-group">
-            <label class="envio-sub">
-              <input type="radio" name="interior-tipo" value="agencia" /> Retiro en agencia
-            </label>
-            <label class="envio-sub">
-              <input type="radio" name="interior-tipo" value="domicilio" onchange="toggleDomicilioInterior()" /> Entrega a domicilio
-            </label>
-          </div>
-          <input type="text" class="envio-input" id="envio-domicilio-interior" placeholder="Dirección de entrega" style="display:none;" />
-        </div>
-
-        <label class="envio-opcion">
-          <input type="radio" name="envio" value="pickup" onchange="updateEnvio()" />
-          <span class="envio-info">
-            <span class="envio-nombre">🏡 A coordinar retiro</span>
-            <span class="envio-detalle">Zona Cordón · coordinación previa</span>
-          </span>
-          <span class="envio-precio">Gratis</span>
-        </label>
-      </div>
-
-      <div class="cart-total-row">
-        <span>Subtotal</span>
-        <span id="cart-subtotal">$0</span>
-      </div>
-      <div class="cart-total-row envio-row" id="envio-row" style="display:none;">
-        <span>Envío</span>
-        <span id="cart-envio-label">$0</span>
-      </div>
-      <div class="cart-total-row total-final">
-        <span>Total</span>
-        <span id="cart-total">$0</span>
-      </div>
-
-      <button type="button" class="btn-mp" onclick="pagarMP()">💳 Ir a pagar</button>
-      <p class="cart-note">Te contactaremos para coordinar el envío.</p>
-    </div>
-  </div>
-
   <!-- MODAL CONFIRMAR SALIDA -->
   <div id="confirm-salida-overlay" class="confirm-salida-overlay" onclick="cerrarConfirmSalida()">
     <div class="confirm-salida-modal" onclick="event.stopPropagation()">
@@ -465,7 +391,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script src="cart.js?v=6"></script>
+  <script src="cart.js?v=7"></script>
   <script>
     let ultimosProductos = [];
     let fotosColecciones = {};
