@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <script>
+    // Si una foto falla al cargar (por ejemplo, un corte de conexión en el celular), se vuelve a pedir una vez
+    document.addEventListener('error', e => {
+      const img = e.target;
+      if (!(img instanceof HTMLImageElement) || img.dataset.reintento) return;
+      const src = img.getAttribute('src') || '';
+      if (!src.startsWith('/api/foto?h=')) return;
+      img.dataset.reintento = '1';
+      setTimeout(() => { img.src = src + '&r=1'; }, 1500);
+    }, true);
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sendera | Producto</title>
