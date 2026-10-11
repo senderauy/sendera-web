@@ -131,7 +131,7 @@ function armarMail({ etiqueta, cliente, mensaje, nota, productos, envio, total, 
               </tr>
             </table>` : ''}
             ${nota ? `<p style="margin:0 0 28px;font-size:13px;color:#507a3a;background:#f0faf4;border-radius:8px;padding:12px 16px;border:1px solid #b8dba8">${escaparHtml(nota)}</p>` : ''}
-            <p style="margin:0;font-size:13px;color:#9a8f82;line-height:1.6">¿Dudas? Escribinos por WhatsApp al 095 290 959.<br/>¡Muchas gracias! 🏔️</p>
+            <p style="margin:0;font-size:13px;color:#9a8f82;line-height:1.6">Por consultas, escribinos por WhatsApp al 095 290 959.<br/>¡Muchas gracias! 🏔️</p>
           </td>
         </tr>
         <tr>
@@ -152,7 +152,7 @@ function armarMail({ etiqueta, cliente, mensaje, nota, productos, envio, total, 
     ...lineas.map(l => `- ${l}`),
     total ? `\nEnvío: ${texto(envio || '—', 200)}\nTotal: $${texto(total, 30)}` : '',
     nota ? `\n${nota}` : '',
-    '', '¿Dudas? Escribinos por WhatsApp al 095 290 959.', 'Sendera · www.senderauy.com'
+    '', 'Por consultas, escribinos por WhatsApp al 095 290 959.', 'Sendera · www.senderauy.com'
   ].join('\n');
 
   return { html, textoPlano };
@@ -217,7 +217,7 @@ function textosDeEstado(paso, entrega, metodoPago) {
       return {
         asunto: '📦 Despachamos tu pedido — Sendera',
         etiqueta: 'Pedido despachado',
-        mensaje: 'Despachamos tu pedido por agencia. Cualquier duda con el envío, escribinos.'
+        mensaje: 'Despachamos tu pedido por agencia. Por cualquier consulta sobre el envío, escribinos.'
       };
     }
     return {

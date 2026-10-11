@@ -171,7 +171,7 @@
         return ['Estamos preparando tu pedido', retiro ? 'Te avisamos cuando esté listo para retirar.' : 'Lo despachamos al día siguiente de confirmada la compra.'];
       case 'camino':
         if (retiro) return ['Tu pedido está listo para retirar', 'Escribinos por WhatsApp para coordinar cuándo pasás por Cordón.' + (d.metodoPago === 'efectivo' ? ' Lo pagás en efectivo al retirarlo.' : '')];
-        if (d.entrega === 'interior') return ['Despachamos tu pedido', 'Lo enviamos por agencia. Cualquier duda con el envío, escribinos.'];
+        if (d.entrega === 'interior') return ['Despachamos tu pedido', 'Lo enviamos por agencia. Por cualquier consulta sobre el envío, escribinos.'];
         return ['Tu pedido está en camino', d.entrega === 'montevideo' ? 'Ya va camino a tu casa.' : 'Ya salió hacia vos.'];
       case 'entregado':
         return retiro
@@ -231,7 +231,7 @@
       </section>
 
       <div class="ayuda">
-        <a class="boton-wa" href="${esc(enlaceWA(consulta))}" target="_blank" rel="noopener noreferrer">${ICONO_WA}¿Dudas? Escribinos por WhatsApp</a>
+        <a class="boton-wa" href="${esc(enlaceWA(consulta))}" target="_blank" rel="noopener noreferrer">${ICONO_WA}Consultas por WhatsApp</a>
         <a class="seguir" href="/">Seguir comprando</a>
       </div>`;
   }
