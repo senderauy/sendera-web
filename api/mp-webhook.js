@@ -143,12 +143,12 @@ export default async function handler(req, res) {
     // Al cliente solo se le confirma si pagó lo que correspondía; si no, el pedido queda para revisar
     if (montoOk) {
       const productosMsg = lineasProductos(orderTemp.productos);
+      const enlace = pedidoId ? enlaceSeguimiento(pedidoId, pedido.codigo) : '';
       if (orderTemp.celular) {
-        await enviarWhatsAppConfirmacion({ celular: orderTemp.celular, cliente: orderTemp.cliente, productos: productosMsg, total: totalTxt, envio: envioTxt })
+        await enviarWhatsAppConfirmacion({ celular: orderTemp.celular, cliente: orderTemp.cliente, productos: productosMsg, total: totalTxt, envio: envioTxt, enlace })
           .catch(e => console.error('Error enviando WhatsApp:', e.message));
       }
       if (orderTemp.email) {
-        const enlace = pedidoId ? enlaceSeguimiento(pedidoId, pedido.codigo) : '';
         const enviado = await enviarEmailConfirmacion({ email: orderTemp.email, cliente: orderTemp.cliente, productos: productosMsg, total: totalTxt, envio: envioTxt, estado: 'confirmado', enlace })
           .catch(e => { console.error('Error enviando email:', e.message); return false; });
         // Ese mail ya le contó que está confirmado: cuando el panel lo marque así no se le repite

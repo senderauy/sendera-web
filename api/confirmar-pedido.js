@@ -76,7 +76,7 @@ export default async function handler(req, res) {
       const productos = lineasProductos(pedido.productos);
       const celular = normalizarCelular(pedido.celular);
       if (celular && await dentroDelLimite(celular, token)) {
-        await enviarWhatsAppConfirmacion({ celular, cliente: pedido.cliente, productos, total, envio })
+        await enviarWhatsAppConfirmacion({ celular, cliente: pedido.cliente, productos, total, envio, enlace })
           .catch(e => console.error('confirmar-pedido WhatsApp:', e.message));
       }
       if (pedido.email) {

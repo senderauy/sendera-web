@@ -43,12 +43,14 @@ export function lineasProductos(productos) {
     .join('\n');
 }
 
-// WhatsApp automático de confirmación (plantilla aprobada por Meta "confirmacion_pedido")
-export async function enviarWhatsAppConfirmacion({ celular, cliente, productos, total, envio }) {
+// WhatsApp automático de confirmación (plantilla aprobada por Meta "confirmacion_pedido").
+// El link para seguir el pedido va en el último dato de la plantilla, que ya es texto libre.
+export async function enviarWhatsAppConfirmacion({ celular, cliente, productos, total, envio, enlace }) {
   const token = process.env.WHATSAPP_TOKEN;
   const to = normalizarCelular(celular);
   if (!token || !/^\d{8,15}$/.test(to)) return false;
   const envioTxt = mensajeEnvio(envio);
+  const seguimiento = /^https:\/\/[^\s|]+$/.test(String(enlace || '')) ? `Seguí tu pedido acá: ${enlace} | ` : '';
   const res = await fetch(`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -65,7 +67,7 @@ export async function enviarWhatsAppConfirmacion({ celular, cliente, productos, 
             { type: 'text', text: texto(cliente || 'Cliente', 80) },
             { type: 'text', text: texto(productos || '—', 900) },
             { type: 'text', text: texto(total || '0', 30) },
-            { type: 'text', text: (envioTxt ? envioTxt + ' | ' : '') + AVISO_AUTOMATICO }
+            { type: 'text', text: (envioTxt ? envioTxt + ' | ' : '') + seguimiento + AVISO_AUTOMATICO }
           ]
         }]
       }
