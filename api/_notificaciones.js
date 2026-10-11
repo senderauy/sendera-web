@@ -160,14 +160,18 @@ function armarMail({ etiqueta, cliente, mensaje, nota, productos, envio, total, 
   return { html, textoPlano };
 }
 
-async function enviarMail({ email, asunto, html, textoPlano }) {
+// Manda el mail (o lo deja programado para la hora "programado", en formato ISO).
+// Devuelve el id que le da Resend, o false si no salió.
+async function enviarMail({ email, asunto, html, textoPlano, programado }) {
   const apiKey = process.env.RESEND_API_KEY;
   const to = texto(email, 120).trim();
   if (!apiKey || !/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(to)) return false;
+  const cuerpo = { from: REMITENTE, to: [to], subject: asunto, html, text: textoPlano };
+  if (programado) cuerpo.scheduled_at = programado;
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: REMITENTE, to: [to], subject: asunto, html, text: textoPlano })
+    body: JSON.stringify(cuerpo)
   });
   if (!res.ok) {
     // Resend dice el motivo (por ejemplo, el dominio sin verificar): queda en los registros de Vercel
@@ -175,7 +179,34 @@ async function enviarMail({ email, asunto, html, textoPlano }) {
     console.error('Email: Resend respondió', res.status, motivo.slice(0, 300));
     return false;
   }
-  return true;
+  const { id } = await res.json().catch(() => ({}));
+  return id || true;
+}
+
+// Cancela un mail que estaba programado (por ejemplo, el recordatorio del carrito cuando la persona ya compró)
+export async function cancelarMailProgramado(id) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey || !/^[A-Za-z0-9-]{1,64}$/.test(String(id || ''))) return false;
+  const res = await fetch(`https://api.resend.com/emails/${id}/cancel`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}` }
+  });
+  if (!res.ok) console.error('Email: no se pudo cancelar el mail programado', res.status);
+  return res.ok;
+}
+
+// Recordatorio de carrito abandonado: queda programado para "cuando" y se cancela si la persona compra antes
+export function programarRecordatorioCarrito({ email, cliente, productos, envio, total, enlace, cuando }) {
+  const mail = armarMail({
+    etiqueta: 'Tu carrito',
+    cliente,
+    mensaje: 'Dejaste tu compra a mitad de camino. Te dejamos el carrito armado para que la termines cuando quieras.',
+    nota: 'Es el único recordatorio que te mandamos. Si ya hiciste tu compra, no tenés que hacer nada.',
+    productos, envio, total, enlace,
+    boton: 'Terminar mi compra',
+    notaBoton: 'Te lleva a la tienda con tu carrito armado.'
+  });
+  return enviarMail({ email, asunto: 'Te guardamos tu carrito — Sendera', ...mail, programado: cuando });
 }
 
 // Mail de confirmación de la compra, con el link para seguir el pedido

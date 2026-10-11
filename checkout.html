@@ -595,7 +595,10 @@
       const emailEl = document.getElementById('ch-email');
       if (nombreEl && profile.nombre && !nombreEl.value) nombreEl.value = profile.nombre;
       if (celularEl && profile.celular && !celularEl.value) celularEl.value = profile.celular;
-      if (emailEl && (profile.email || user.email) && !emailEl.value) emailEl.value = profile.email || user.email;
+      if (emailEl && (profile.email || user.email) && !emailEl.value) {
+        emailEl.value = profile.email || user.email;
+        avisarMailCarrito();
+      }
     });
   });
 
@@ -615,12 +618,25 @@
     carritoAbandonadoId = ref.key;
   }
 
-  function eliminarCarritoAbandonado() {
-    if (carritoAbandonadoId && typeof db !== 'undefined') {
-      db.ref('carritos_abandonados/' + carritoAbandonadoId).remove();
-      carritoAbandonadoId = null;
-    }
+  function eliminarCarritoAbandonado(id = carritoAbandonadoId) {
+    if (id && typeof db !== 'undefined') db.ref('carritos_abandonados/' + id).remove();
+    if (id === carritoAbandonadoId) carritoAbandonadoId = null;
   }
+
+  // Recordatorio por mail: cuando escribe su mail, el servidor programa un aviso con el carrito armado
+  // para dentro de unas horas. Si compra antes, se cancela solo.
+  let mailAvisado = '';
+  function avisarMailCarrito() {
+    const email = (document.getElementById('ch-email')?.value || '').trim().toLowerCase();
+    if (!carritoAbandonadoId || email === mailAvisado || !/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(email)) return;
+    mailAvisado = email;
+    fetch('/api/carrito', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: carritoAbandonadoId, email })
+    }).catch(() => {});
+  }
+  document.getElementById('ch-email')?.addEventListener('change', avisarMailCarrito);
 
   // ── MercadoPago Bricks ────────────────────────────────────
   const mp = new MercadoPago(PUBLIC_KEY, { locale: 'es-UY' });
@@ -879,11 +895,14 @@
     try { if (window.fbq) fbq('track', 'Purchase', datosMeta(pedido.total)); } catch (e) {}
     // Cuando el pedido quedó guardado, el servidor lo lee y manda (una sola vez) la notificación a los admins
     // y al cliente el WhatsApp automático y el email. El navegador ya no manda mensajes directamente.
+    // También le pasa el carrito: el servidor cancela el recordatorio que tuviera programado antes de que se borre
+    const carritoId = carritoAbandonadoId;
+    carritoAbandonadoId = null;
     refPedido.then(() => fetch('/api/confirmar-pedido', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pedidoId: refPedido.key })
-    })).catch(() => {});
+      body: JSON.stringify({ pedidoId: refPedido.key, carritoId: carritoId || '' })
+    })).catch(() => {}).finally(() => eliminarCarritoAbandonado(carritoId));
     // Guardar en historial del usuario si está logueado
     const user = auth.currentUser;
     if (user) {
@@ -895,7 +914,6 @@
     localStorage.removeItem('sendera_checkout');
     // Compra registrada: se vacía el carrito para que no siga armado al volver a la tienda
     localStorage.removeItem('sendera_cart');
-    eliminarCarritoAbandonado();
   }
 
   // ── Mostrar resultado ─────────────────────────────────────

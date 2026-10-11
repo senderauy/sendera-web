@@ -40,7 +40,7 @@ function texto(v) {
 }
 
 // Precio real de cada producto + variante, tal como está cargado en el panel (con el descuento del producto)
-function indexarPrecios(productos) {
+export function indexarPrecios(productos) {
   const precios = new Map();
   for (const prod of Object.values(productos || {})) {
     if (!prod || typeof prod !== 'object') continue;

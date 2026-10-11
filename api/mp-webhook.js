@@ -1,6 +1,7 @@
 import { GoogleAuth } from 'google-auth-library';
 import { notificarAdmins, enviarWhatsAppConfirmacion, enviarEmailConfirmacion, lineasProductos } from './_notificaciones.js';
 import { nuevoCodigo, enlaceSeguimiento, emailValido, anotarAvisos } from './_seguimiento.js';
+import { cerrarCarritos } from './_carritos.js';
 
 const DB_URL = 'https://sendera-34791-default-rtdb.firebaseio.com';
 
@@ -130,9 +131,9 @@ export default async function handler(req, res) {
 
     // Eliminar orden temporal y carrito abandonado
     await fbDelete(`pedidos_temp/${externalRef}`, fbToken);
-    if (orderTemp.carritoId) {
-      await fbDelete(`carritos_abandonados/${orderTemp.carritoId}`, fbToken);
-    }
+    // Ya compró: se cancela el recordatorio de carrito que tuviera programado y se borra el carrito abandonado
+    await cerrarCarritos({ carritoId: String(orderTemp.carritoId || ''), email: orderTemp.email }, fbToken)
+      .catch(e => console.error('mp-webhook carrito:', e.message));
 
     // Notificación a los admins y confirmación al cliente, directo desde el servidor (sin endpoints públicos)
     const totalTxt = esperado.toLocaleString('es-UY');

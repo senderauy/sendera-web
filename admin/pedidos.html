@@ -90,6 +90,8 @@
     .comprobante-mini { display: block; padding: 0; border: 0; background: none; cursor: zoom-in; border-radius: 10px; }
     .comprobante-mini img { display: block; width: 100%; max-height: 180px; object-fit: cover; border-radius: 10px; border: 1px solid var(--sa-linea); }
     .tarjeta-pie { display: flex; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid var(--sa-linea-2); }
+    .recordatorio { display: flex; align-items: flex-start; gap: 7px; margin: -2px 0 12px; font-size: 0.8rem; color: var(--sa-tinta-2); overflow-wrap: anywhere; }
+    .recordatorio .lucide { width: 15px; height: 15px; margin-top: 1px; color: var(--sa-tinta-3); flex-shrink: 0; }
     .tarjeta-pie .envio { display: inline-flex; align-items: center; gap: 6px; margin-right: auto; color: var(--sa-tinta-2); font-size: 0.82rem; }
     .tarjeta-pie .envio .lucide { width: 15px; height: 15px; color: var(--sa-tinta-3); }
     .tarjeta-pie .boton-wa:first-child { margin-right: auto; }
@@ -761,6 +763,18 @@
   }
 
   // ── Carritos abandonados ───────────────────────
+  // Recordatorio por mail: se programa cuando el cliente escribe su mail y se cancela solo si compra
+  function textoRecordatorio(c) {
+    if (!c.email) return '';
+    const para = c.recordatorio && Date.parse(c.recordatorio.para);
+    if (!para) return `${c.email}`;
+    if (para <= Date.now()) return `${c.email}. Ya le mandamos el recordatorio por mail.`;
+    const d = new Date(para);
+    const hora = d.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+    const hoy = d.toDateString() === new Date().toDateString();
+    return `${c.email}. Le llega un recordatorio por mail ${hoy ? 'hoy' : 'el ' + d.toLocaleDateString('es-UY', { day: 'numeric', month: 'numeric' })} a las ${hora}.`;
+  }
+
   function tarjetaCarrito(c) {
     const items = itemsDe(c);
     const entrega = entregaDe(c.envio);
@@ -781,6 +795,7 @@
         <ul class="mini-items">${items.map(i => `
           <li>${miniatura(fotoItem(i))}<span>${esc(i.nombre)}<small>${esc(i.variante)}${num(i.qty) > 1 ? `, ${num(i.qty)} unidades` : ''}</small></span><span class="sa-num">${pesos(num(i.precio) * num(i.qty))}</span></li>`).join('')}
         </ul>
+        ${c.email ? `<p class="recordatorio"><i data-lucide="mail"></i><span>${esc(textoRecordatorio(c))}</span></p>` : ''}
         <div class="tarjeta-pie">
           ${entrega.sinDato ? '<span class="envio"></span>' : `<span class="envio"><i data-lucide="${entrega.icono}"></i>${esc(entrega.nombre)}</span>`}
           ${wa ? `<a class="boton-wa" href="${esc(`https://wa.me/${wa}?text=${waMsg}`)}" target="_blank" rel="noopener"><i data-lucide="message-circle"></i>Recuperar</a>` : ''}
@@ -981,11 +996,32 @@
     if (e.key === 'Escape' && abierto && !document.querySelector('dialog[open]')) cerrarDetalle();
   });
 
-  $('carritos').addEventListener('click', e => {
+  $('carritos').addEventListener('click', async e => {
     const b = e.target.closest('[data-borrar-carrito]');
     if (!b) return;
     const c = datos.carritos.find(x => x.id === b.dataset.borrarCarrito);
-    if (c) borrar('carritos_abandonados/' + c.id, `¿Eliminar el carrito de ${c.cliente || 'este cliente'}?`, 'Carrito eliminado');
+    if (!c) return;
+    const pendiente = c.recordatorio && Date.parse(c.recordatorio.para) > Date.now();
+    if (!pendiente) return borrar('carritos_abandonados/' + c.id, `¿Eliminar el carrito de ${c.cliente || 'este cliente'}?`, 'Carrito eliminado');
+    // Tenía un recordatorio por mail programado: el servidor lo cancela y borra el carrito
+    const si = await panel.confirmar({
+      titulo: `¿Eliminar el carrito de ${c.cliente || 'este cliente'}?`,
+      texto: 'También se cancela el recordatorio por mail que tenía programado. No se puede recuperar.',
+      boton: 'Eliminar', peligro: true
+    });
+    if (!si) return;
+    try {
+      const token = await firebase.auth().currentUser.getIdToken();
+      const r = await fetch('/api/carrito', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ id: c.id, accion: 'cancelar' })
+      });
+      if (!r.ok) throw new Error(String(r.status));
+      panel.aviso('Carrito eliminado y recordatorio cancelado');
+    } catch (err) {
+      panel.aviso('No se pudo eliminar. Probá de nuevo.', true);
+    }
   });
   $('leads').addEventListener('click', e => {
     const ver = e.target.closest('[data-ver-lead]');

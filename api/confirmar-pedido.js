@@ -9,7 +9,8 @@ import {
   enviarWhatsAppConfirmacion, enviarEmailConfirmacion, notificarAdmins,
   normalizarCelular, lineasProductos
 } from './_notificaciones.js';
-import { asegurarCodigo, enlaceSeguimiento, anotarAvisos } from './_seguimiento.js';
+import { asegurarCodigo, enlaceSeguimiento, anotarAvisos, idValido } from './_seguimiento.js';
+import { cerrarCarritos } from './_carritos.js';
 
 const VENTANA_MINUTOS = 15;             // solo pedidos recién creados
 const MAX_WHATSAPP_POR_HORA = 3;        // por número de celular, para que no se use para mandar spam
@@ -62,6 +63,11 @@ export default async function handler(req, res) {
     if (pedido.metodo_pago === 'mercadopago') return res.status(200).json({ ok: true, omitido: 'mercadopago' });
 
     if (!(await marcarNotificado(id, token))) return res.status(200).json({ ok: true, yaNotificado: true });
+
+    // Ya compró: se cancela el recordatorio de carrito que tuviera programado y se borra el carrito abandonado
+    const carritoId = String(req.body?.carritoId || '');
+    await cerrarCarritos({ carritoId: idValido(carritoId) ? carritoId : '', email: pedido.email }, token)
+      .catch(e => console.error('confirmar-pedido carrito:', e.message));
 
     const total = (Number(pedido.total) || 0).toLocaleString('es-UY');
     const envio = String(pedido.envio || '—');

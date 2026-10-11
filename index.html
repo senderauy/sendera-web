@@ -743,6 +743,32 @@
       }
     }
 
+    // ── Carrito que vuelve desde el mail de recordatorio (?carrito=…) ──
+    // El link trae los productos, cantidades y precios; los precios se ponen al día cuando cargan los productos.
+    (function recuperarCarrito() {
+      const codigo = new URLSearchParams(location.search).get('carrito');
+      if (!codigo) return;
+      try {
+        const binario = atob(codigo.replace(/-/g, '+').replace(/_/g, '/'));
+        const items = JSON.parse(new TextDecoder().decode(Uint8Array.from(binario, c => c.charCodeAt(0))));
+        if (Array.isArray(items)) {
+          items.slice(0, 30).forEach(item => {
+            const [nombre, variante, qty, precio] = Array.isArray(item) ? item : [];
+            if (typeof nombre !== 'string' || typeof variante !== 'string' || !nombre) return;
+            const cantidad = Math.min(20, Math.max(1, parseInt(qty, 10) || 1));
+            const yaEsta = cart.find(i => i.name === nombre && i.variant === variante);
+            if (yaEsta) yaEsta.qty = Math.max(yaEsta.qty, cantidad);
+            else cart.push({ name: nombre.slice(0, 80), variant: variante.slice(0, 80), price: Math.max(0, Number(precio) || 0), qty: cantidad, id: STOCK_MAP[nombre + '-' + variante] || '' });
+          });
+          saveCart();
+          updateCartUI();
+          if (cart.length) setTimeout(toggleCart, 500);
+        }
+      } catch (e) { /* link incompleto: la tienda abre normal */ }
+      // Se saca el carrito de la dirección, así al recargar no se vuelve a agregar
+      history.replaceState(null, '', location.pathname + location.hash);
+    })();
+
     db.ref('productos').on('value', snapshot => {
       ultimosProductos = [];
       snapshot.forEach(c => { ultimosProductos.push({ id: c.key, ...c.val() }); });
@@ -751,6 +777,10 @@
       renderVidriera(ultimosProductos);
       renderDestacados(ultimosProductos);
       actualizarPreciosCarrito(ultimosProductos);
+      // Productos que llegaron por el link del mail: se les completa el código de color (el mismo del catálogo)
+      let completo = false;
+      cart.forEach(i => { if (!i.id && STOCK_MAP[i.name + '-' + i.variant]) { i.id = STOCK_MAP[i.name + '-' + i.variant]; completo = true; } });
+      if (completo) saveCart();
     });
 
     // ── VIDRIERA (portada) ────────────────────────────────────
