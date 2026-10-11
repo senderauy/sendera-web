@@ -14,7 +14,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="../firebase-config.js"></script>
-  <script src="admin-auth.js?v=2"></script>
+  <script src="admin-auth.js?v=3"></script>
   <link rel="stylesheet" href="admin.css?v=1" />
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
   <script src="admin-ui.js?v=1"></script>
@@ -25,6 +25,16 @@
     button, input, select, textarea { font-family: inherit; }
 
     .herramientas { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    /* Fotos guardadas dentro de los productos (forma vieja): aviso para pasarlas aparte */
+    .optimizar { display: flex; align-items: center; gap: 16px; padding: 16px 18px; margin-bottom: 20px; border-radius: 14px; background: var(--sa-ambar-fondo); border: 1px solid var(--sa-linea); }
+    .optimizar b { display: block; font-size: 0.92rem; font-weight: 600; }
+    .optimizar p { margin-top: 2px; font-size: 0.82rem; color: var(--sa-tinta-2); }
+    .optimizar .sa-boton { margin-left: auto; flex-shrink: 0; }
+    @media (max-width: 600px) {
+      .optimizar { flex-direction: column; align-items: stretch; }
+      .optimizar .sa-boton { margin-left: 0; }
+    }
 
     /* Catálogo */
     .catalogo { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; }
@@ -232,6 +242,14 @@
     <div><small>Productos</small><b id="r-total">—</b></div>
     <div><small>Colores</small><b id="r-variantes">—</b></div>
     <div><small>Categorías</small><b id="r-cats">—</b></div>
+  </div>
+
+  <div class="optimizar" id="optimizar" hidden>
+    <div>
+      <b>La tienda puede cargar más rápido</b>
+      <p id="optimizar-texto"></p>
+    </div>
+    <button type="button" class="sa-boton" id="btn-optimizar"><i data-lucide="zap"></i>Optimizar fotos</button>
   </div>
 
   <div class="sa-filtros" id="filtros" aria-label="Filtrar por categoría"></div>
@@ -684,6 +702,13 @@
     btn.disabled = true;
     btn.lastChild.textContent = 'Guardando…';
     try {
+      // Las fotos nuevas (o encuadradas) se guardan aparte y el producto queda solo con sus direcciones.
+      // Si eso falla, la foto se guarda dentro del producto como antes y "Optimizar fotos" la pasa después.
+      for (const v of variantes) {
+        v.fotos = await Promise.all(v.fotos.map(f => guardarImagen(f).catch(() => f)));
+        v.foto = v.fotos[0] || '';
+      }
+      if (prod.fotoAvatar) prod.fotoAvatar = await guardarImagen(prod.fotoAvatar).catch(() => prod.fotoAvatar);
       const ref = borrador.id ? db.ref('productos/' + borrador.id) : db.ref('productos').push();
       await ref.set(prod);
       const prodId = borrador.id || ref.key;
@@ -1324,6 +1349,80 @@
     addEventListener('resize', () => { if (dialogo.open) redibujar(); });
   })();
 
+  // ── Fotos guardadas dentro de los productos (forma vieja) ──
+  // Antes cada foto se guardaba dentro del producto y la tienda las bajaba todas juntas en cada visita.
+  // "Optimizar fotos" las pasa una sola vez a imagenes/ y deja sus direcciones (también colecciones y lookbook).
+  const otrasFotos = { colecciones: {}, lookbook: {} };
+
+  function fotosViejas() {
+    const lista = [];   // { ruta en la base, foto }
+    const sumar = (ruta, foto) => { if (esFotoBase64(foto)) lista.push({ ruta, foto }); };
+    estado.productos.forEach(p => {
+      const vars = Array.isArray(p.variantes) ? p.variantes.map((v, i) => [i, v]) : Object.entries(p.variantes || {});
+      vars.forEach(([k, v]) => {
+        if (!v || typeof v !== 'object') return;
+        (Array.isArray(v.fotos) ? v.fotos : []).forEach((f, n) => sumar(`productos/${p.id}/variantes/${k}/fotos/${n}`, f));
+        sumar(`productos/${p.id}/variantes/${k}/foto`, v.foto);
+      });
+      sumar(`productos/${p.id}/fotoAvatar`, p.fotoAvatar);
+    });
+    Object.entries(otrasFotos.colecciones).forEach(([cat, c]) => sumar(`colecciones/${cat}/foto`, c && c.foto));
+    Object.entries(otrasFotos.lookbook).forEach(([id, l]) => sumar(`lookbook/${id}/foto`, l && l.foto));
+    return lista;
+  }
+
+  function pintarOptimizar() {
+    const unicas = [...new Set(fotosViejas().map(x => x.foto))];
+    $('optimizar').hidden = !unicas.length;
+    if (!unicas.length || $('btn-optimizar').disabled) return;
+    const mb = (unicas.reduce((s, f) => s + f.length, 0) / 1024 / 1024).toLocaleString('es-UY', { maximumFractionDigits: 1 });
+    $('optimizar-texto').textContent = `Hay ${unicas.length} ${unicas.length === 1 ? 'foto guardada' : 'fotos guardadas'} dentro de los productos (${mb} MB) y la tienda las baja todas juntas en cada visita. Optimizalas una sola vez: después cargan de a una, mucho más rápido.`;
+  }
+
+  async function cargarOtrasFotos() {
+    try {
+      const [c, l] = await Promise.all([db.ref('colecciones').once('value'), db.ref('lookbook').once('value')]);
+      otrasFotos.colecciones = c.val() || {};
+      otrasFotos.lookbook = l.val() || {};
+    } catch (e) { /* si no se pueden leer, se optimizan solo los productos */ }
+  }
+
+  async function optimizarFotos() {
+    const lista = fotosViejas();
+    if (!lista.length) return pintarOptimizar();
+    const btn = $('btn-optimizar');
+    btn.disabled = true;
+    const direcciones = new Map();   // foto → su dirección nueva (la misma foto se guarda una sola vez)
+    const pendientes = [...new Set(lista.map(x => x.foto))];
+    let hechas = 0;
+    try {
+      // De a cuatro a la vez, para que no tarde tanto con muchas fotos
+      for (let i = 0; i < pendientes.length; i += 4) {
+        await Promise.all(pendientes.slice(i, i + 4).map(async foto => {
+          direcciones.set(foto, await guardarImagen(foto));
+          hechas++;
+          $('optimizar-texto').textContent = `Optimizando las fotos… ${hechas} de ${pendientes.length}. No cierres esta página.`;
+        }));
+      }
+      // Recién con todas las fotos guardadas se cambian las direcciones, todo junto
+      const cambios = {};
+      lista.forEach(({ ruta, foto }) => { cambios[ruta] = direcciones.get(foto); });
+      await db.ref().update(cambios);
+      panel.aviso('Listo: las fotos quedaron optimizadas');
+    } catch (e) {
+      const permiso = /permission/i.test(String(e && (e.code || e.message)));
+      panel.aviso(permiso
+        ? 'Firebase no dejó guardar las fotos: primero hay que publicar las reglas nuevas.'
+        : 'No se pudieron optimizar las fotos. Revisá la conexión y probá de nuevo.', true);
+    } finally {
+      btn.disabled = false;
+      await cargarOtrasFotos();
+      pintarOptimizar();
+    }
+  }
+  $('btn-optimizar').addEventListener('click', optimizarFotos);
+  cargarOtrasFotos().then(pintarOptimizar);
+
   // ── Datos en vivo ──────────────────────────────
   db.ref('productos').on('value', snap => {
     const lista = [];
@@ -1333,6 +1432,7 @@
     estado.productos = lista;
     estado.cargado = true;
     dibujarCatalogo();
+    pintarOptimizar();
   });
 </script>
 </body>

@@ -22,6 +22,14 @@
       ".read": true,
       ".write": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true"
     },
+    "imagenes": {
+      ".read": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+      "$huella": {
+        ".read": true,
+        ".write": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+        ".validate": "$huella.matches(/^[a-f0-9]{32}$/) && newData.isString() && newData.val().beginsWith('data:image/') && newData.val().length <= 4000000"
+      }
+    },
     "resenas": {
       ".read": true,
       ".write": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true"

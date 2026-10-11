@@ -14,7 +14,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="../firebase-config.js"></script>
-  <script src="admin-auth.js?v=2"></script>
+  <script src="admin-auth.js?v=3"></script>
   <link rel="stylesheet" href="admin.css?v=1" />
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
   <script src="admin-ui.js?v=1"></script>
@@ -160,7 +160,8 @@
     guardando.add(cat);
     dibujar();
     try {
-      await db.ref(ruta(cat, 'foto')).set(foto);
+      // La foto se guarda aparte y la colección queda con su dirección (si eso falla, se guarda como antes)
+      await db.ref(ruta(cat, 'foto')).set(await guardarImagen(foto).catch(() => foto));
       panel.aviso(`Portada de ${cat} actualizada`);
     } catch (e) {
       panel.aviso('No se pudo guardar la foto. Probá de nuevo.', true);

@@ -581,7 +581,7 @@
           <a class="coleccion-card" href="#productos"
              onclick="event.preventDefault();irAColeccion('${catSlug}');"
              style="${foto ? '' : 'background:' + solidBg + ';'}">
-            ${foto ? `<img class="coleccion-bg" src="${foto}" alt="${cat}" style="object-position:${pos}" />` : ''}
+            ${foto ? `<img class="coleccion-bg" src="${foto}" alt="${cat}" style="object-position:${pos}" loading="lazy" decoding="async" />` : ''}
             <div class="coleccion-overlay"></div>
             <div class="coleccion-card-content">
               <span class="coleccion-nombre">${cat}</span>
@@ -680,7 +680,7 @@
                     </div>
                   </div>`
                 : (v.foto
-                    ? `<img src="${v.foto}" alt="${p.nombre} ${v.nombre}" />`
+                    ? `<img src="${v.foto}" alt="${p.nombre} ${v.nombre}" loading="lazy" decoding="async" />`
                     : `<img src="img/logo.png" alt="${p.nombre}" style="object-fit:contain;padding:20px;background:#f2ede6;" />`
                   );
               const dto = Math.min(90, Math.max(0, parseInt(p.descuento, 10) || 0));

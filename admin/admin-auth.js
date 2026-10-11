@@ -72,6 +72,22 @@ function fotoLiviana(f) {
   return fotosLivianas.get(f);
 }
 
+// ── Fotos guardadas aparte ──
+// Cada foto se guarda una vez en imagenes/<huella> y donde se usa queda su dirección (/api/foto?h=<huella>).
+// Así la tienda baja solo los datos de los productos y cada foto llega aparte, desde la memoria de Vercel.
+// La huella sale del contenido: la misma foto da siempre la misma dirección, y si cambia, cambia la dirección.
+async function huellaDeFoto(texto) {
+  const resumen = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(texto));
+  return [...new Uint8Array(resumen)].slice(0, 16).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+const esFotoBase64 = f => typeof f === 'string' && /^data:image\/(jpeg|png|webp|gif);base64,/.test(f);
+async function guardarImagen(foto) {
+  if (!esFotoBase64(foto)) return foto;   // ya es una dirección o un link: queda igual
+  const huella = await huellaDeFoto(foto);
+  await db.ref('imagenes/' + huella).set(foto);
+  return '/api/foto?h=' + huella;
+}
+
 // Celular en formato internacional para wa.me, igual que en el servidor: 099 123 456 → 59899123456
 function celularWA(celular) {
   const d = String(celular ?? '').replace(/\D/g, '');

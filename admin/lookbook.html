@@ -14,7 +14,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="../firebase-config.js"></script>
-  <script src="admin-auth.js?v=2"></script>
+  <script src="admin-auth.js?v=3"></script>
   <link rel="stylesheet" href="admin.css?v=1" />
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
   <script src="admin-ui.js?v=1"></script>
@@ -194,7 +194,9 @@
     const btn = $('btn-agregar');
     btn.disabled = true;
     try {
-      await db.ref('lookbook').push({ foto, caption: $('lb-texto').value.trim(), fecha: new Date().toISOString() });
+      // La foto se guarda aparte y el lookbook queda con su dirección (si eso falla, se guarda como antes)
+      const guardada = await guardarImagen(foto).catch(() => foto);
+      await db.ref('lookbook').push({ foto: guardada, caption: $('lb-texto').value.trim(), fecha: new Date().toISOString() });
       limpiar();
       panel.aviso('Foto agregada al lookbook');
     } catch (e) {

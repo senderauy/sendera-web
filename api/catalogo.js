@@ -43,7 +43,10 @@ export function armarFilas(productos, stock) {
       const id = v.stockId || `${pid}-${i}`;
       const color = texto(v.nombre);
       const final = conDescuento(precio, p.descuento);
-      const linkFoto = k => `${SITIO}/api/foto?p=${encodeURIComponent(pid)}&v=${i}&n=${k}&h=${huella(fotos[k])}`;
+      // Las fotos guardadas aparte ya tienen su dirección (cambia sola si cambia la foto); las viejas usan la del color
+      const linkFoto = k => /^\/api\/foto\?h=[a-f0-9]{32}$/.test(fotos[k].trim())
+        ? SITIO + fotos[k].trim()
+        : `${SITIO}/api/foto?p=${encodeURIComponent(pid)}&v=${i}&n=${k}&h=${huella(fotos[k])}`;
       filas.push({
         id,
         item_group_id: pid,

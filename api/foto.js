@@ -1,12 +1,47 @@
-// Foto de un color con dirección propia: /api/foto?p=<producto>&v=<color>&n=<número de foto>
-// Las fotos se guardan en la base como texto base64 y Meta (catálogo) necesita un link de imagen.
-// El catálogo agrega &h=<huella de la foto>: si la foto cambia, cambia el link y se vuelve a bajar.
+// Fotos de la tienda con dirección propia.
+//
+// /api/foto?h=<huella>  Foto guardada aparte en imagenes/<huella> (así se guardan desde el panel).
+//                       La huella sale del contenido de la foto: si la foto cambia, cambia la dirección,
+//                       por eso se puede guardar un año en la memoria de Vercel y del navegador.
+//
+// /api/foto?p=<producto>&v=<color>&n=<número de foto>  Forma vieja, la que usa el catálogo de Meta
+//                       para fotos guardadas dentro del producto. Si la foto ya se guardó aparte, la sirve igual.
 import { DB_URL } from './_pedido.js';
 
 const ID_PRODUCTO = /^[A-Za-z0-9_-]{1,64}$/;
+const HUELLA = /^[a-f0-9]{32}$/;
+const FOTO_APARTE = /^\/api\/foto\?h=([a-f0-9]{32})$/;
 const SITIO = 'https://www.senderauy.com';
 
+// Manda la foto guardada como texto base64 (solo formatos de foto comunes: nunca SVG ni otra cosa)
+function mandarBase64(res, foto, cache) {
+  const base64 = /^data:(image\/(?:jpeg|png|webp|gif));base64,([A-Za-z0-9+/=\s]+)$/.exec(String(foto || '').trim());
+  if (!base64) return false;
+  res.setHeader('Content-Type', base64[1]);
+  res.setHeader('Cache-Control', cache);
+  res.status(200).send(Buffer.from(base64[2], 'base64'));
+  return true;
+}
+
+async function fotoAparte(res, huella) {
+  let foto;
+  try {
+    // Cada foto se puede leer sola sin clave; la lista entera no
+    const r = await fetch(`${DB_URL}/imagenes/${huella}.json`);
+    if (!r.ok) throw new Error(String(r.status));
+    foto = await r.json();
+  } catch (e) {
+    console.error('foto: no se pudo leer la imagen', huella, e.message);
+    return res.status(502).send('No se pudo leer la foto');
+  }
+  if (mandarBase64(res, foto, 'public, max-age=31536000, s-maxage=31536000, immutable')) return;
+  return res.status(404).send('Sin foto');
+}
+
 export default async function handler(req, res) {
+  const h = String(req.query?.h || '');
+  if (!req.query?.p && HUELLA.test(h)) return fotoAparte(res, h);
+
   const p = String(req.query?.p || '');
   const v = Number.parseInt(req.query?.v, 10);
   const n = Number.parseInt(req.query?.n ?? '0', 10);
@@ -31,12 +66,10 @@ export default async function handler(req, res) {
   const foto = typeof fotos[n] === 'string' ? fotos[n].trim() : '';
   if (!foto) return res.status(404).send('Sin foto');
 
-  const base64 = /^data:(image\/(?:jpeg|png|webp|gif));base64,([A-Za-z0-9+/=\s]+)$/.exec(foto);
-  if (base64) {
-    res.setHeader('Content-Type', base64[1]);
-    res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=31536000, immutable');
-    return res.status(200).send(Buffer.from(base64[2], 'base64'));
-  }
+  // La foto ya se guardó aparte: se sirve directo
+  const aparte = FOTO_APARTE.exec(foto);
+  if (aparte) return fotoAparte(res, aparte[1]);
+  if (mandarBase64(res, foto, 'public, max-age=86400, s-maxage=31536000, immutable')) return;
   // Fotos cargadas como link: se redirige a ese link
   if (/^https:\/\/[^\s"'<>]+$/i.test(foto)) {
     res.setHeader('Cache-Control', 'public, max-age=3600');
