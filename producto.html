@@ -594,9 +594,23 @@
 <body>
 
   <header class="navbar">
-    <a href="index.html" onclick="event.preventDefault();history.back();" class="btn-back">← Volver</a>
+    <a href="index.html" onclick="volverALaTienda(event)" class="btn-back" id="btn-volver">← Volver</a>
     <button type="button" class="cart-nav-btn" onclick="toggleCart()">🛒 <span id="cart-count" style="display:none;background:var(--color-compra);color:#fff;border-radius:50%;width:18px;height:18px;font-size:0.65rem;font-weight:700;align-items:center;justify-content:center;">0</span></button>
   </header>
+  <script>
+    // "Volver": si llegó navegando la tienda, vuelve a donde estaba (con la misma altura de la lista).
+    // Si entró directo (etiqueta de Instagram, anuncio, link compartido) no hay a dónde volver: lo lleva al inicio.
+    function vieneDeLaTienda() {
+      try { return history.length > 1 && !!document.referrer && new URL(document.referrer).origin === location.origin; }
+      catch (e) { return false; }
+    }
+    function volverALaTienda(e) {
+      if (!vieneDeLaTienda()) return;
+      e.preventDefault();
+      history.back();
+    }
+    if (!vieneDeLaTienda()) document.getElementById('btn-volver').textContent = '← Ir a la tienda';
+  </script>
 
   <div class="product-page" id="product-page">
     <div style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;min-height:80vh;font-size:0.82rem;color:#9a8f82;letter-spacing:0.1em;">
