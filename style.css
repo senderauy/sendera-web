@@ -2895,17 +2895,8 @@ nav a:hover::after {
 @media (max-width: 640px) {
   #categorias-firebase .categoria-cabeza { margin-top: 44px; padding-top: 28px; }
   #categorias-firebase .modelo-cabeza { margin-top: 30px; }
-  /* En el celular las etiquetas van en una sola fila que se desliza, para no ocupar tres renglones */
-  #categorias-firebase .subgrupo-rasgos {
-    flex-wrap: nowrap;
-    gap: 16px;
-    margin: 0 -16px 18px 0;
-    padding-right: 16px;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  #categorias-firebase .subgrupo-rasgos::-webkit-scrollbar { display: none; }
-  #categorias-firebase .subgrupo-rasgos li { flex-shrink: 0; }
+  /* En el celular las etiquetas bajan de renglón: en una fila deslizable se salían del ancho de la página */
+  #categorias-firebase .subgrupo-rasgos { gap: 6px 14px; margin-bottom: 18px; }
   #categorias-firebase .subgrupo-rasgos li { font-size: 0.76rem; }
 }
 
@@ -2924,3 +2915,10 @@ nav a:hover::after {
 
 /* "Lo nuevo" y "Lo más vendido": sin el cartel "Nuevo" / "Más vendido" en cada tarjeta, el título ya lo dice */
 .destacados .destacado-tag { display: none; }
+
+/* Espacios parejos entre secciones: sin hueco extra después de "Lo más vendido"
+   y con aire entre "Nuestra colección" y la primera categoría en el celular */
+.destacados-fila:last-child { margin-bottom: 0; }
+@media (max-width: 640px) {
+  #categorias-firebase .bloque-categoria:first-child .categoria-cabeza { padding-top: 40px; }
+}
