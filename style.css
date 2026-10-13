@@ -2922,3 +2922,15 @@ nav a:hover::after {
 @media (max-width: 640px) {
   #categorias-firebase .bloque-categoria:first-child .categoria-cabeza { padding-top: 40px; }
 }
+
+/* Celular: los productos de cada modelo se deslizan hasta el borde de la pantalla
+   (antes se cortaban 20px antes y quedaba una franja vacía a la derecha) */
+@media (max-width: 640px) {
+  #categorias-firebase .productos-grid {
+    margin-left: -20px;
+    margin-right: -20px;
+    padding-left: 20px;
+    padding-right: 20px;
+    scroll-padding-left: 20px;
+  }
+}
