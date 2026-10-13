@@ -2934,3 +2934,6 @@ nav a:hover::after {
     scroll-padding-left: 20px;
   }
 }
+
+/* Mientras carga la foto de portada se ve un verde oscuro parecido al de la foto, no un negro */
+.hero { background-color: #3f4b3d; }
