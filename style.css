@@ -2937,3 +2937,31 @@ nav a:hover::after {
 
 /* Mientras carga la foto de portada se ve un verde oscuro parecido al de la foto, no un negro */
 .hero { background-color: #3f4b3d; }
+
+/* Portada que entra limpia: la foto aparece con un fundido suave cuando terminó de cargar
+   (antes se veía el fondo y después la foto de golpe). index.html agrega .foto-lista. */
+.hero { background-image: none; isolation: isolate; }
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: url('/api/foto?portada=compu') center 40% / cover no-repeat;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.hero::before,
+.hero-overlay { z-index: 1; }
+.hero.foto-lista::after { opacity: 1; }
+@media (max-width: 720px) {
+  .hero { background-image: none; }
+  .hero::after { background-image: url('/api/foto?portada=celular'); background-position: center 20%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero::after { transition: none; }
+}
+
+/* La ventana de "Ingresar" cerrada queda oculta del todo: solo transparente, el iPhone la detectaba
+   y al entrar a la tienda ofrecía "Iniciar sesión / Rellenar contraseña" y abría el teclado */
+.login-overlay { visibility: hidden; transition: opacity 0.2s, visibility 0s linear 0.2s; }
+.login-overlay.open { visibility: visible; transition: opacity 0.2s, visibility 0s; }
