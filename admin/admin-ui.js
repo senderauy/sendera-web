@@ -7,6 +7,7 @@
     ['productos.html', 'Productos', 'tag'],
     ['stock.html', 'Stock', 'boxes'],
     null,
+    ['portada.html', 'Portada', 'images'],
     ['colecciones.html', 'Colecciones', 'layers'],
     ['lookbook.html', 'Lookbook', 'image'],
     ['finanzas.html', 'Finanzas', 'wallet']
@@ -40,7 +41,7 @@
     tope.className = 'sa-tope';
     tope.innerHTML = '<a href="dashboard.html"><img src="/img/logo-crema.png" alt="Sendera" /></a><span class="sa-avatar" data-sa-inicial>S</span>';
 
-    const enMas = ['colecciones.html', 'lookbook.html', 'finanzas.html'].includes(actual);
+    const enMas = ['portada.html', 'colecciones.html', 'lookbook.html', 'finanzas.html'].includes(actual);
     const barra = document.createElement('nav');
     barra.className = 'sa-barra';
     barra.setAttribute('aria-label', 'Menú');

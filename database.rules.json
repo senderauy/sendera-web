@@ -88,6 +88,13 @@
     "compras": {
       ".read": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
       ".write": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true"
+    },
+    "portada": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+      "$lado": {
+        ".validate": "(($lado === 'compu' || $lado === 'celular') && newData.isString() && newData.val().matches(/^\\/api\\/foto\\?h=[a-f0-9]{32}$/)) || ($lado === 'actualizado' && newData.isString() && newData.val().length <= 40)"
+      }
     }
   }
 }

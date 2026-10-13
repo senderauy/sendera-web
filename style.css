@@ -11,7 +11,7 @@
   --gold-light: #e0cb9a;
   --text: #f0ebe3;
   --text-muted: #a89880;
-  --cream: #f5ede0;
+  --cream: #fafaf8;
   --amber: #c8861a;
   --green: var(--color-compra); /* el verde de la marca se reemplazó por el color de compra */
   --text-dark: #1e1a12;
@@ -141,7 +141,7 @@ nav a:hover::after {
 /* HERO */
 .hero {
   min-height: 100vh;
-  background: url('img/hero-desktop-rio.webp') center 40% / cover no-repeat;
+  background: url('/api/foto?portada=compu') center 40% / cover no-repeat;
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
@@ -216,7 +216,7 @@ nav a:hover::after {
   .hero {
     align-items: flex-end;
     justify-content: flex-start;
-    background-image: url('img/hero-mobile.webp');
+    background-image: url('/api/foto?portada=celular');
     background-position: center 20%;
   }
   .hero-content {
@@ -726,7 +726,7 @@ nav a:hover::after {
 }
 
 .categorias .producto-img-wrap {
-  background: #f5f0e8;
+  background: #fafaf8;
 }
 
 .categorias .producto-info h3 { color: var(--text-dark); }
@@ -2198,7 +2198,7 @@ nav a:hover::after {
 }
 .login-overlay.open { opacity: 1; pointer-events: all; }
 .login-modal {
-  background: #f5f0e8;
+  background: #fafaf8;
   border-radius: 20px;
   padding: 32px 28px 28px;
   width: 100%;
@@ -2793,3 +2793,134 @@ nav a:hover::after {
   color: #fff;
 }
 .vidriera-btn:disabled { background: transparent; color: #9a9187; box-shadow: inset 0 0 0 1.5px #cfc4b4; }
+
+/* ── TÍTULOS DEL CATÁLOGO ──────────────────────────────────────
+   La categoría grande, con cuántos modelos tiene. El modelo como subtítulo, con la cantidad de colores
+   al lado y una línea fina. Su descripción en etiquetas con ícono, como en la página de producto. */
+#categorias-firebase .categoria-cabeza {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 72px 0 0;
+  padding-top: 48px;
+  border-top: 1px solid #e8e5de;
+}
+#categorias-firebase .bloque-categoria:first-child .categoria-cabeza {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+#categorias-firebase .categoria-titulo {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.7rem, 3.2vw, 2.3rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--text-dark);
+}
+#categorias-firebase .categoria-cuenta {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #8a7f73;
+}
+#categorias-firebase .modelo-cabeza {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 40px 0 12px;
+}
+#categorias-firebase .categoria-cabeza + .modelo-cabeza { margin-top: 24px; }
+/* Categoría sin modelos (por ejemplo Accesorios): separación entre el título y los productos */
+#categorias-firebase .categoria-cabeza + .subgrupo-rasgos,
+#categorias-firebase .categoria-cabeza + .subgrupo-desc,
+#categorias-firebase .categoria-cabeza + .productos-grid { margin-top: 24px; }
+#categorias-firebase .modelo-cabeza::after {
+  content: '';
+  order: 2;
+  flex: 1;
+  height: 1px;
+  background: #e8e5de;
+}
+#categorias-firebase .subgrupo-titulo {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-dark);
+}
+/* La cantidad de colores va pegada al nombre del modelo (al final de la línea quedaba perdida en la compu) */
+#categorias-firebase .modelo-cuenta {
+  order: 1;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #8a7f73;
+  white-space: nowrap;
+}
+/* Sin recuadros: ícono y texto livianos, como las características de la página de producto */
+#categorias-firebase .subgrupo-rasgos {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin: 0 0 20px;
+  padding: 0;
+}
+#categorias-firebase .subgrupo-rasgos li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #5a5046;
+}
+#categorias-firebase .subgrupo-rasgos svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: #6b5f54;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+#categorias-firebase .subgrupo-desc { margin: 0 0 22px; }
+@media (max-width: 640px) {
+  #categorias-firebase .categoria-cabeza { margin-top: 44px; padding-top: 28px; }
+  #categorias-firebase .modelo-cabeza { margin-top: 30px; }
+  /* En el celular las etiquetas van en una sola fila que se desliza, para no ocupar tres renglones */
+  #categorias-firebase .subgrupo-rasgos {
+    flex-wrap: nowrap;
+    gap: 16px;
+    margin: 0 -16px 18px 0;
+    padding-right: 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #categorias-firebase .subgrupo-rasgos::-webkit-scrollbar { display: none; }
+  #categorias-firebase .subgrupo-rasgos li { flex-shrink: 0; }
+  #categorias-firebase .subgrupo-rasgos li { font-size: 0.76rem; }
+}
+
+/* "Comprar" de la portada en blanco sólido: transparente se perdía sobre la foto */
+.hero .btn-hero-ghost {
+  background: #fff;
+  border: 2px solid #fff;
+  color: var(--text-dark);
+  backdrop-filter: none;
+}
+.hero .btn-hero-ghost:hover {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(255, 255, 255, 0.88);
+  color: var(--text-dark);
+}
+
+/* "Lo nuevo" y "Lo más vendido": sin el cartel "Nuevo" / "Más vendido" en cada tarjeta, el título ya lo dice */
+.destacados .destacado-tag { display: none; }

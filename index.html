@@ -45,8 +45,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Sendera" />
   <meta name="theme-color" content="#1a1510" />
-  <link rel="stylesheet" href="style.css?v=54" />
-  <link rel="stylesheet" href="carrito.css?v=1" />
+  <link rel="stylesheet" href="style.css?v=63" />
+  <link rel="stylesheet" href="carrito.css?v=2" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
@@ -278,7 +278,7 @@
   </section>
 
   <!-- LOOKBOOK -->
-  <section class="section" id="lookbook" style="padding: 60px 0; background: #f2ede6;">
+  <section class="section" id="lookbook" style="padding: 60px 0; background: #fafaf8;">
     <div class="container">
       <h2 style="font-family:'Cormorant Garamond',serif;font-size:2rem;color:#2a2218;text-align:center;margin-bottom:8px;">Comunidad Sendera</h2>
       <p style="text-align:center;color:#7a6e62;font-size:0.85rem;margin-bottom:32px;">Aventureros que ya eligieron Sendera</p>
@@ -530,6 +530,31 @@
       setupColeccionesCarousel();
     }
 
+    // La descripción de cada modelo ("Livianos y respirables · Impermeables · …", también separada con " . ", " - " o renglones)
+    // se muestra como etiquetas con ícono.
+    // Si no está escrita en partes cortas, queda como texto común.
+    const ICONOS_RASGO = [
+      [/visera/i, '<path d="M4 14a8 8 0 0 1 16 0"/><path d="M4 14h12c2.5 0 4.5 1 5 3H4z"/>'],
+      [/livian/i, '<path d="M12 3v3M12 18v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M3 12h3M18 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/><circle cx="12" cy="12" r="3"/>'],
+      [/respir|transpir/i, '<path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8"/>'],
+      [/imperme|agua|lluvia/i, '<path d="M12 2.7S6 9.5 6 14a6 6 0 0 0 12 0c0-4.5-6-11.3-6-11.3z"/>'],
+      [/ajust|regul/i, '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>'],
+      [/t[eé]rmic|calor|abrig/i, '<path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"/>'],
+      [/secado|r[aá]pid/i, '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'],
+      [/vers[aá]til|multiuso/i, '<path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/>'],
+      [/uv|protecci[oó]n solar/i, '<path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/>'],
+      [/correr|caminar|running|trail|trekking/i, '<circle cx="14" cy="4" r="2"/><path d="M6 20l3-6 3 2 1-5 3 3h3M9 11l2-3h4"/>']
+    ];
+    function rasgosDe(desc) {
+      const partes = String(desc).split(/\s*[·•|\n]\s*|\s+[-–—]\s+|\s*\.(?=\s|$)\s*/).map(s => s.trim()).filter(Boolean)
+        .map(s => s.charAt(0).toUpperCase() + s.slice(1));
+      if (partes.length < 2 || partes.length > 6 || partes.some(p => p.length > 40)) return '';
+      return `<ul class="subgrupo-rasgos">${partes.map(p => {
+        const icono = (ICONOS_RASGO.find(([re]) => re.test(p)) || [, '<path d="M20 6L9 17l-5-5"/>'])[1];
+        return `<li><svg viewBox="0 0 24 24" aria-hidden="true">${icono}</svg><span>${p}</span></li>`;
+      }).join('')}</ul>`;
+    }
+
     function renderCategorias(productos) {
 
       // Actualizar STOCK_MAP con los productos de Firebase
@@ -600,8 +625,8 @@
         });
 
         const html = subgruposOrdenados.map(([sg, data]) => `
-          ${sg ? `<div class="subgrupo-titulo">${sg}</div>` : ''}
-          ${data.desc ? `<div class="subgrupo-desc">${data.desc}</div>` : ''}
+          ${sg ? `<div class="modelo-cabeza"><h3 class="subgrupo-titulo">${sg}</h3><span class="modelo-cuenta">${data.variantes.length} ${data.variantes.length === 1 ? 'color' : 'colores'}</span></div>` : ''}
+          ${data.desc ? (rasgosDe(data.desc) || `<div class="subgrupo-desc">${data.desc}</div>`) : ''}
           <div class="productos-grid">
             ${data.variantes.map(({ v, i, p }) => {
               const fotos = v.fotos?.length > 1 ? v.fotos : null;
@@ -618,7 +643,7 @@
                   </div>`
                 : (v.foto
                     ? `<img src="${v.foto}" alt="${p.nombre} ${v.nombre}" loading="lazy" decoding="async" />`
-                    : `<img src="img/logo.png" alt="${p.nombre}" style="object-fit:contain;padding:20px;background:#f2ede6;" />`
+                    : `<img src="img/logo.png" alt="${p.nombre}" style="object-fit:contain;padding:20px;background:#fafaf8;" />`
                   );
               const dto = Math.min(90, Math.max(0, parseInt(p.descuento, 10) || 0));
               // .precio tiene que quedar solo con el precio final: cardChangeQty lo lee para el carrito
@@ -648,7 +673,14 @@
           </div>
         `).join('');
 
-        return `<div class="bloque-categoria" data-cat="${cat}"><div class="categoria-titulo">${cat}</div>${html}</div>`;
+        // Al lado del nombre de la categoría: cuántos modelos tiene, o cuántos colores si es un solo modelo, o cuántos productos si no se divide en modelos
+        const modelos = subgruposOrdenados.filter(([sg]) => sg).length;
+        const opciones = subgruposOrdenados.reduce((s, [, d]) => s + d.variantes.length, 0);
+        const sinModelo = subgruposOrdenados.some(([sg]) => !sg);
+        const cuenta = modelos >= 2 ? `${modelos} modelos`
+          : !sinModelo ? `${opciones} ${opciones === 1 ? 'color' : 'colores'}`
+          : `${opciones} ${opciones === 1 ? 'producto' : 'productos'}`;
+        return `<div class="bloque-categoria" data-cat="${cat}"><div class="categoria-cabeza"><h2 class="categoria-titulo">${cat}</h2><span class="categoria-cuenta">${cuenta}</span></div>${html}</div>`;
       }).join('');
 
       // Revisar stock de los nuevos productos
@@ -720,7 +752,7 @@
     // Lee de la foto el color de fondo (esquinas) y el color del gorro (centro)
     function coloresDeFoto(src) {
       return new Promise(resolve => {
-        const fallo = { bg: '#f5ede0', oscuro: false, gorro: '#c8c0b4' };
+        const fallo = { bg: '#fafaf8', oscuro: false, gorro: '#c8c0b4' };
         const img = new Image();
         img.onload = () => {
           try {

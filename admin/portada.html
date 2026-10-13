@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="apple-touch-icon" href="../img/logo.png" />
+  <link rel="icon" type="image/png" href="../img/logo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Sendera Admin" />
+  <meta name="theme-color" content="#182417" />
+  <title>Sendera - Portada</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="../firebase-config.js"></script>
+  <script src="admin-auth.js?v=3"></script>
+  <link rel="stylesheet" href="admin.css?v=1" />
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="admin-ui.js?v=2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { min-height: 100vh; font-size: 14px; line-height: 1.5; }
+    button, input { font-family: inherit; }
+
+    .portadas { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+    .portada { display: flex; flex-direction: column; gap: 14px; }
+    .portada h2 { display: flex; align-items: center; gap: 8px; font-size: 0.98rem; font-weight: 600; }
+    .portada h2 .lucide { width: 18px; height: 18px; color: var(--sa-tinta-2); }
+    .portada > p { color: var(--sa-tinta-2); font-size: 0.82rem; margin-top: -8px; }
+
+    /* Vista previa: la foto con el título de la tienda encima, como se ve en el inicio */
+    .vista {
+      position: relative; overflow: hidden; border-radius: 14px; background: var(--sa-papel-2) center / cover no-repeat;
+      border: 1px solid var(--sa-linea); cursor: pointer;
+    }
+    .vista.compu { aspect-ratio: 16 / 9; }
+    .vista.celular { aspect-ratio: 9 / 16; max-height: 520px; margin: 0 auto; width: 100%; max-width: 292px; }
+    .vista::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55)); }
+    .vista .texto { position: absolute; left: 7%; bottom: 10%; color: #fff; font-family: 'Montserrat', sans-serif; line-height: 1.05; pointer-events: none; }
+    .vista .texto b { display: block; font-weight: 800; font-size: clamp(1rem, 3.2vw, 1.9rem); }
+    .vista .texto i { display: block; font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: clamp(1rem, 3vw, 1.8rem); }
+    .vista.celular .texto b { font-size: 1.3rem; }
+    .vista.celular .texto i { font-size: 1.25rem; }
+    .vista .marca {
+      position: absolute; top: 10px; left: 10px; padding: 4px 10px; border-radius: 999px;
+      background: rgba(255, 253, 248, 0.92); color: var(--sa-tinta); font-size: 0.72rem; font-weight: 600;
+    }
+    .vista .marca.nueva { background: var(--sa-noche); color: #fff; }
+    .vista.encima { outline: 2px dashed var(--sa-tinta); outline-offset: 3px; }
+    .archivo { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+    .acciones { display: flex; gap: 10px; flex-wrap: wrap; }
+    .ayuda { color: var(--sa-tinta-3); font-size: 0.76rem; }
+
+    @media (max-width: 900px) {
+      .portadas { grid-template-columns: minmax(0, 1fr); }
+      .acciones .sa-boton, .acciones .sa-boton-sec { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<main class="sa-pagina">
+  <header class="sa-encabezado">
+    <div>
+      <h1>Portada</h1>
+      <p>La foto grande del inicio de la tienda. Podés poner una para la compu y otra para el celular.</p>
+    </div>
+  </header>
+
+  <div class="portadas">
+    <section class="sa-panel portada" data-lado="compu" aria-labelledby="t-compu">
+      <h2 id="t-compu"><i data-lucide="monitor"></i>En la compu</h2>
+      <p>Foto horizontal. Lo ideal: 1920 × 1080 o más grande.</p>
+      <label class="vista compu" data-vista>
+        <span class="marca" data-marca>Foto actual</span>
+        <span class="texto"><b>Donde empieza</b><i>la aventura.</i></span>
+        <input class="archivo" type="file" accept="image/*" data-archivo />
+      </label>
+      <div class="acciones">
+        <button type="button" class="sa-boton-sec" data-elegir><i data-lucide="image-plus"></i>Elegir foto</button>
+        <button type="button" class="sa-boton" data-guardar hidden><i data-lucide="check"></i>Guardar portada</button>
+        <button type="button" class="sa-boton-sec" data-cancelar hidden>Cancelar</button>
+        <button type="button" class="sa-boton-sec" data-original hidden><i data-lucide="rotate-ccw"></i>Volver a la original</button>
+      </div>
+    </section>
+
+    <section class="sa-panel portada" data-lado="celular" aria-labelledby="t-celular">
+      <h2 id="t-celular"><i data-lucide="smartphone"></i>En el celular</h2>
+      <p>Foto vertical. Lo ideal: 1080 × 1920.</p>
+      <label class="vista celular" data-vista>
+        <span class="marca" data-marca>Foto actual</span>
+        <span class="texto"><b>Donde empieza</b><i>la aventura.</i></span>
+        <input class="archivo" type="file" accept="image/*" data-archivo />
+      </label>
+      <div class="acciones">
+        <button type="button" class="sa-boton-sec" data-elegir><i data-lucide="image-plus"></i>Elegir foto</button>
+        <button type="button" class="sa-boton" data-guardar hidden><i data-lucide="check"></i>Guardar portada</button>
+        <button type="button" class="sa-boton-sec" data-cancelar hidden>Cancelar</button>
+        <button type="button" class="sa-boton-sec" data-original hidden><i data-lucide="rotate-ccw"></i>Volver a la original</button>
+      </div>
+    </section>
+  </div>
+  <p class="ayuda" style="margin-top:16px">Después de guardar, la tienda muestra la foto nueva en unos minutos. Si no la ves, recargá la página.</p>
+</main>
+
+<script>
+  // La tienda pide /api/foto?portada=compu|celular: si acá hay una foto guardada, muestra esa; si no, la original
+  const ORIGINAL = { compu: '/img/hero-desktop-rio.webp', celular: '/img/hero-mobile.webp' };
+  const MAXIMO = { compu: 2200, celular: 1400 };   // ancho/alto máximo al achicarla
+  let portada = {};                                // lo guardado en la base: { compu, celular }
+  const elegidas = {};                             // foto nueva elegida y todavía sin guardar (base64)
+
+  const caja = lado => document.querySelector(`.portada[data-lado="${lado}"]`);
+
+  function pintar(lado) {
+    const c = caja(lado);
+    const nueva = elegidas[lado];
+    const guardada = typeof portada[lado] === 'string' ? portada[lado] : '';
+    c.querySelector('[data-vista]').style.backgroundImage = `url("${nueva || guardada || ORIGINAL[lado]}")`;
+    const marca = c.querySelector('[data-marca]');
+    marca.textContent = nueva ? 'Vista previa, sin guardar' : guardada ? 'Foto actual' : 'Foto original';
+    marca.classList.toggle('nueva', !!nueva);
+    c.querySelector('[data-guardar]').hidden = !nueva;
+    c.querySelector('[data-cancelar]').hidden = !nueva;
+    c.querySelector('[data-elegir]').hidden = !!nueva;
+    c.querySelector('[data-original]').hidden = !!nueva || !guardada;
+  }
+
+  // Se achica antes de guardar (en la base va como texto base64, y así la tienda carga rápido)
+  function achicarFoto(archivo, max) {
+    return new Promise((resolver, rechazar) => {
+      const lector = new FileReader();
+      lector.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > max || h > max) {
+            if (w > h) { h = Math.round(h * max / w); w = max; }
+            else { w = Math.round(w * max / h); h = max; }
+          }
+          const lienzo = document.createElement('canvas');
+          lienzo.width = w; lienzo.height = h;
+          lienzo.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolver(lienzo.toDataURL('image/jpeg', 0.82));
+        };
+        img.onerror = () => rechazar(new Error('foto'));
+        img.src = e.target.result;
+      };
+      lector.onerror = () => rechazar(new Error('foto'));
+      lector.readAsDataURL(archivo);
+    });
+  }
+
+  async function usarArchivo(lado, archivo) {
+    if (!archivo || !archivo.type.startsWith('image/')) { panel.aviso('Elegí un archivo de foto.', true); return; }
+    try {
+      elegidas[lado] = await achicarFoto(archivo, MAXIMO[lado]);
+      pintar(lado);
+    } catch (e) {
+      panel.aviso('No se pudo leer esa foto. Probá con otra.', true);
+    }
+  }
+
+  ['compu', 'celular'].forEach(lado => {
+    const c = caja(lado);
+    const vista = c.querySelector('[data-vista]');
+    const archivo = c.querySelector('[data-archivo]');
+    archivo.addEventListener('change', e => { usarArchivo(lado, e.target.files[0]); e.target.value = ''; });
+    c.querySelector('[data-elegir]').addEventListener('click', () => archivo.click());
+    ['dragenter', 'dragover'].forEach(t => vista.addEventListener(t, e => { e.preventDefault(); vista.classList.add('encima'); }));
+    ['dragleave', 'drop'].forEach(t => vista.addEventListener(t, () => vista.classList.remove('encima')));
+    vista.addEventListener('drop', e => { e.preventDefault(); usarArchivo(lado, e.dataTransfer.files[0]); });
+
+    c.querySelector('[data-cancelar]').addEventListener('click', () => { delete elegidas[lado]; pintar(lado); });
+
+    c.querySelector('[data-guardar]').addEventListener('click', async () => {
+      const btn = c.querySelector('[data-guardar]');
+      btn.disabled = true;
+      try {
+        // La foto se guarda aparte (imagenes/<huella>) y la portada queda con su dirección
+        const direccion = await guardarImagen(elegidas[lado]);
+        await db.ref('portada').update({ [lado]: direccion, actualizado: new Date().toISOString() });
+        delete elegidas[lado];
+        panel.aviso('Portada guardada. En unos minutos se ve en la tienda.');
+      } catch (e) {
+        panel.aviso('No se pudo guardar la portada. Probá de nuevo.', true);
+      }
+      btn.disabled = false;
+      pintar(lado);
+    });
+
+    c.querySelector('[data-original]').addEventListener('click', async () => {
+      const si = await panel.confirmar({
+        titulo: '¿Volver a la foto original?',
+        texto: `La portada ${lado === 'compu' ? 'de la compu' : 'del celular'} vuelve a ser la de siempre. Después podés poner otra cuando quieras.`,
+        boton: 'Volver a la original'
+      });
+      if (!si) return;
+      try {
+        await db.ref('portada/' + lado).remove();
+        panel.aviso('Listo, vuelve la foto original.');
+      } catch (e) {
+        panel.aviso('No se pudo cambiar. Probá de nuevo.', true);
+      }
+    });
+  });
+
+  // ── Datos en vivo ──────────────────────────────
+  db.ref('portada').on('value', snap => {
+    portada = snap.val() || {};
+    ['compu', 'celular'].forEach(pintar);
+  });
+  ['compu', 'celular'].forEach(pintar);
+  panel.iconos();
+</script>
+</body>
+</html>

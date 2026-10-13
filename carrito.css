@@ -7,8 +7,8 @@
   --car-texto: #3a3026;
   --car-suave: #8a7f73;
   --car-borde: #e6ddd0;
-  --car-fondo: #faf7f2;
-  --car-foto: #efe9e0;
+  --car-fondo: #fafaf8;
+  --car-foto: #f0f0ed;
   --car-compra: var(--color-compra, #182417);
   --car-compra-hover: var(--color-compra-hover, #0c140b);
   --car-compra-suave: var(--color-compra-suave, rgba(24, 36, 23, 0.1));

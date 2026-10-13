@@ -38,7 +38,30 @@ async function fotoAparte(res, huella) {
   return res.status(404).send('Sin foto');
 }
 
+// /api/foto?portada=compu|celular  La foto grande del inicio. Se cambia desde el panel (admin/portada.html):
+//                       si hay una guardada en portada/<lado>, lleva a esa; si no, a la foto original.
+//                       Se guarda pocos minutos en la memoria, así un cambio se ve enseguida.
+const PORTADA_ORIGINAL = { compu: '/img/hero-desktop-rio.webp', celular: '/img/hero-mobile.webp' };
+
+async function portada(res, lado) {
+  let guardada = '';
+  try {
+    const r = await fetch(`${DB_URL}/portada/${lado}.json`);
+    if (r.ok) guardada = String((await r.json()) || '');
+  } catch (e) {
+    console.error('foto: no se pudo leer la portada', e.message);
+  }
+  const aparte = FOTO_APARTE.exec(guardada);
+  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400');
+  return res.redirect(302, aparte ? `/api/foto?h=${aparte[1]}` : PORTADA_ORIGINAL[lado]);
+}
+
 export default async function handler(req, res) {
+  if (req.query?.portada !== undefined) {
+    const lado = String(req.query.portada);
+    if (!Object.hasOwn(PORTADA_ORIGINAL, lado)) return res.status(400).send('Foto no válida');
+    return portada(res, lado);
+  }
   const h = String(req.query?.h || '');
   if (!req.query?.p && HUELLA.test(h)) return fotoAparte(res, h);
 
