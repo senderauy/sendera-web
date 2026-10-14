@@ -133,17 +133,10 @@
       };
       var lado = matchMedia('(max-width: 720px)').matches ? 'celular' : 'compu';
       // Mientras carga se ve una versión chiquita y borrosa de la portada (guardada en la visita anterior)
-      // (se guarda dentro de un SVG con desenfoque: estirada sola se ve pixelada)
-      var borrosa = function (foto, w, h) {
-        var svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 " + w + ' ' + h + "'>" +
-          "<filter id='b' color-interpolation-filters='sRGB'><feGaussianBlur stdDeviation='1'/>" +
-          "<feComponentTransfer><feFuncA type='discrete' tableValues='1 1'/></feComponentTransfer></filter>" +
-          "<image width='" + w + "' height='" + h + "' preserveAspectRatio='none' filter='url(#b)' href='" + foto + "'/></svg>";
-        return 'data:image/svg+xml,' + encodeURIComponent(svg);
-      };
       try {
         var mini = localStorage.getItem('portadaMini-' + lado);
-        if (mini) hero.style.setProperty('--portada-mini', 'url("' + mini + '")');
+        // (solo la foto común: la del 14/10 iba dentro de un SVG que en el iPhone tardaba en aparecer)
+        if (mini && mini.indexOf('data:image/jpeg') === 0) hero.style.setProperty('--portada-mini', 'url(' + mini + ')');
       } catch (e) {}
       var img = new Image();
       img.onload = function () {
@@ -153,7 +146,7 @@
           c.width = 24;
           c.height = Math.max(1, Math.round(24 * img.naturalHeight / img.naturalWidth));
           c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-          localStorage.setItem('portadaMini-' + lado, borrosa(c.toDataURL('image/jpeg', 0.6), c.width, c.height));
+          localStorage.setItem('portadaMini-' + lado, c.toDataURL('image/jpeg', 0.6));
         } catch (e) {}
       };
       img.onerror = lista;
