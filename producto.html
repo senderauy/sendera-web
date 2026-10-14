@@ -21,6 +21,8 @@
   <meta name="theme-color" content="#e8ddc8" />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="carrito.css?v=2" />
+  <!-- Los productos se piden de entrada a la copia de Vercel (más rápida que esperar a que conecte Firebase) -->
+  <script>window.__productosRapidos = fetch('/api/catalogo?formato=json').then(r => r.ok ? r.json() : null).catch(() => null);</script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -809,37 +811,57 @@
     const productId = params.get('id');
     const initialVariant = Math.max(0, parseInt(params.get('v') || '0') || 0);
 
+    // El producto llega de tres lados, del más rápido al más nuevo: lo guardado por el inicio (sendera_productos),
+    // la copia de Vercel (/api/catalogo?formato=json, pedida desde el <head>) y Firebase. Solo se redibuja si cambió.
+    let firmaProducto = '';
+    let todosLosProductos = null;
+    let relacionadosHechos = false;
+
+    function mostrarProducto(datos) {
+      if (!datos || typeof datos !== 'object') return;
+      const firma = JSON.stringify(datos);
+      if (firma === firmaProducto) return;
+      const primeraVez = !firmaProducto;
+      firmaProducto = firma;
+      productoActual = { id: productId, ...datos };
+      actualizarPreciosCarrito([productoActual]);
+      // Actualizar STOCK_MAP igual que el catálogo: v.stockId o prod.id + '-' + i como fallback
+      (productoActual.variantes || []).forEach((v, i) => {
+        STOCK_MAP[productoActual.nombre + '-' + v.nombre] = v.stockId || (productoActual.id + '-' + i);
+      });
+      renderProducto(productoActual, primeraVez ? initialVariant : variantActual);
+      if (primeraVez) verProductoMeta(productoActual, variantActual);
+      if (todosLosProductos) cargarRelacionados(productoActual);
+    }
+
+    function aplicarStock(data) {
+      if (!productoActual || !data) return;
+      Object.values(STOCK_MAP).forEach(id => { stockCache[id] = 0; });
+      (productoActual.variantes || []).forEach(v => { if (v.stockId) stockCache[v.stockId] = 0; });
+      Object.keys(data).forEach(id => { stockCache[id] = data[id]; });
+      stockCargado = true;
+      actualizarBtnStock(productoActual.variantes[variantActual]);
+    }
+
+    function recibirTodos(productos) {
+      if (!productos || typeof productos !== 'object') return;
+      todosLosProductos = productos;
+      mostrarProducto(productos[productId]);
+    }
+
     if (!productId) { window.location.href = 'index.html'; }
     else {
+      try { recibirTodos(JSON.parse(localStorage.getItem('sendera_productos') || 'null')); } catch (e) {}
+      (window.__productosRapidos || Promise.resolve(null)).then(d => {
+        if (!d) return;
+        recibirTodos(d.productos);
+        if (!stockCargado) aplicarStock(d.stock);
+      });
       db.ref('productos/' + productId).once('value', snap => {
         if (!snap.exists()) { window.location.href = 'index.html'; return; }
-        productoActual = { id: snap.key, ...snap.val() };
-        actualizarPreciosCarrito([productoActual]);
-        // Actualizar STOCK_MAP igual que el catálogo: v.stockId o prod.id + '-' + i como fallback
-        (productoActual.variantes || []).forEach((v, i) => {
-          STOCK_MAP[productoActual.nombre + '-' + v.nombre] = v.stockId || (productoActual.id + '-' + i);
-        });
-        renderProducto(productoActual, initialVariant);
-        verProductoMeta(productoActual, variantActual);
-        cargarRelacionados(productoActual);
-        // Cargar stock en cadena, luego registrar listener en tiempo real
-        db.ref('stock').once('value', stockSnap => {
-          const data = stockSnap.val() || {};
-          Object.values(STOCK_MAP).forEach(id => { stockCache[id] = 0; });
-          // Pre-init stockIds propios del producto
-          (productoActual.variantes || []).forEach(v => { if (v.stockId) stockCache[v.stockId] = 0; });
-          Object.keys(data).forEach(id => { stockCache[id] = data[id]; });
-          stockCargado = true;
-          actualizarBtnStock(productoActual.variantes[variantActual]);
-          // Listener tiempo real para cambios de stock posteriores
-          db.ref('stock').on('value', (snapshot) => {
-            const data2 = snapshot.val() || {};
-            Object.values(STOCK_MAP).forEach(id => { stockCache[id] = 0; });
-            (productoActual.variantes || []).forEach(v => { if (v.stockId) stockCache[v.stockId] = 0; });
-            Object.keys(data2).forEach(id => { stockCache[id] = data2[id]; });
-            if (productoActual) actualizarBtnStock(productoActual.variantes[variantActual]);
-          });
-        });
+        mostrarProducto(snap.val());
+        // Stock en vivo: se carga y queda escuchando los cambios
+        db.ref('stock').on('value', snapshot => aplicarStock(snapshot.val() || {}));
       });
     }
 
@@ -914,9 +936,12 @@
     // ── TAMBIÉN TE PUEDE GUSTAR ───────────────────────────────────
     // Otros productos de la misma categoría (un color por tarjeta); si no hay, de cualquier categoría
     function cargarRelacionados(prod) {
-      db.ref('productos').once('value', snap => {
-        const todos = [];
-        snap.forEach(c => { todos.push({ id: c.key, ...c.val() }); });
+      if (relacionadosHechos || !todosLosProductos) return;
+      relacionadosHechos = true;
+      {
+        const todos = Object.entries(todosLosProductos)
+          .filter(([, v]) => v && typeof v === 'object')
+          .map(([id, v]) => ({ id, ...v }));
         const otros = todos.filter(p => p.id !== prod.id);
         const misma = otros.filter(p => p.categoria === prod.categoria);
         const lista = (misma.length ? misma : otros)
@@ -932,7 +957,7 @@
             <span>${v.nombre} · ${precioFinal(v.precio || p.precio, p.descuento) !== (v.precio || p.precio || 0) ? `<s class="precio-antes">$${(v.precio || p.precio || 0).toLocaleString()}</s> ` : ''}$${precioFinal(v.precio || p.precio, p.descuento).toLocaleString()}</span>
           </a>`).join('');
         document.getElementById('relacionados').style.display = '';
-      });
+      }
     }
 
     window.relacionadosMover = function(dir) {
