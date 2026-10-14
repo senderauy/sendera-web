@@ -52,8 +52,9 @@ async function portada(res, lado) {
     console.error('foto: no se pudo leer la portada', e.message);
   }
   const aparte = FOTO_APARTE.exec(guardada);
-  // El navegador lo guarda 5 minutos; Vercel lo da al instante y se actualiza por detrás (un cambio se ve en 1 o 2 visitas)
-  res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=60, stale-while-revalidate=31536000');
+  // El navegador lo guarda una hora (así entra sin esperas); Vercel lo da al instante y se actualiza por detrás.
+  // Una portada nueva se ve enseguida en quien entra por primera vez y en hasta una hora en quien ya había entrado.
+  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=60, stale-while-revalidate=31536000');
   return res.redirect(302, aparte ? `/api/foto?h=${aparte[1]}` : PORTADA_ORIGINAL[lado]);
 }
 

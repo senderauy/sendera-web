@@ -50,7 +50,7 @@
   <!-- La foto de portada se pide de entrada, antes de leer los estilos: así no se ve el fondo negro mientras carga -->
   <link rel="preload" as="image" href="/api/foto?portada=compu" media="(min-width: 721px)" fetchpriority="high" />
   <link rel="preload" as="image" href="/api/foto?portada=celular" media="(max-width: 720px)" fetchpriority="high" />
-  <link rel="stylesheet" href="style.css?v=69" />
+  <link rel="stylesheet" href="style.css?v=71" />
   <link rel="stylesheet" href="carrito.css?v=2" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
 </head>
@@ -125,10 +125,31 @@
       var avisar;
       // Los productos esperan a la portada (así sus fotos no le sacan velocidad); ver recibirProductos
       window.__portadaLista = new Promise(function (r) { avisar = r; });
-      var lista = function () { hero.classList.add('foto-lista'); avisar(); };
+      var lista = function () {
+        // Si la foto llegó enseguida, aparece directo: un fundido tan seguido de la entrada se ve como un parpadeo
+        if (performance.now() < 700) hero.classList.add('sin-fundido');
+        hero.classList.add('foto-lista');
+        avisar();
+      };
+      var lado = matchMedia('(max-width: 720px)').matches ? 'celular' : 'compu';
+      // Mientras carga se ve una versión chiquita y borrosa de la portada (guardada en la visita anterior)
+      try {
+        var mini = localStorage.getItem('portadaMini-' + lado);
+        if (mini) hero.style.setProperty('--portada-mini', 'url(' + mini + ')');
+      } catch (e) {}
       var img = new Image();
-      img.onload = img.onerror = lista;
-      img.src = matchMedia('(max-width: 720px)').matches ? '/api/foto?portada=celular' : '/api/foto?portada=compu';
+      img.onload = function () {
+        lista();
+        try {
+          var c = document.createElement('canvas');
+          c.width = 24;
+          c.height = Math.max(1, Math.round(24 * img.naturalHeight / img.naturalWidth));
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          localStorage.setItem('portadaMini-' + lado, c.toDataURL('image/jpeg', 0.6));
+        } catch (e) {}
+      };
+      img.onerror = lista;
+      img.src = '/api/foto?portada=' + lado;
       if (img.complete) lista();
       setTimeout(lista, 2500);
     })();

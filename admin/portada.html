@@ -102,7 +102,7 @@
       </div>
     </section>
   </div>
-  <p class="ayuda" style="margin-top:16px">Después de guardar, la tienda muestra la foto nueva en unos minutos. Si no la ves, recargá la página.</p>
+  <p class="ayuda" style="margin-top:16px">Después de guardar, quien entra por primera vez ve la foto nueva enseguida; en los celulares que ya habían entrado puede tardar hasta una hora.</p>
 </main>
 
 <script>
@@ -183,7 +183,7 @@
         const direccion = await guardarImagen(elegidas[lado]);
         await db.ref('portada').update({ [lado]: direccion, actualizado: new Date().toISOString() });
         delete elegidas[lado];
-        panel.aviso('Portada guardada. En unos minutos se ve en la tienda.');
+        panel.aviso('Portada guardada. Puede tardar hasta una hora en verse en todos los celulares.');
       } catch (e) {
         panel.aviso('No se pudo guardar la portada. Probá de nuevo.', true);
       }

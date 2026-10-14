@@ -2965,3 +2965,12 @@ nav a:hover::after {
    y al entrar a la tienda ofrecía "Iniciar sesión / Rellenar contraseña" y abría el teclado */
 .login-overlay { visibility: hidden; transition: opacity 0.2s, visibility 0s linear 0.2s; }
 .login-overlay.open { visibility: visible; transition: opacity 0.2s, visibility 0s; }
+
+/* Vista previa borrosa de la portada (la pone index.html si ya se había entrado antes) */
+.hero { background-image: var(--portada-mini, none); background-size: cover; background-position: center 40%; }
+@media (max-width: 720px) {
+  .hero { background-image: var(--portada-mini, none); background-position: center 20%; }
+}
+
+/* Portada que llegó enseguida: sin fundido */
+.hero.sin-fundido::after { transition: none; }
