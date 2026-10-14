@@ -80,6 +80,11 @@ export default async function handler(req, res) {
       if (!r.ok) throw new Error(`${ruta}: ${r.status}`);
       return r.json();
     }));
+    // La tienda pide los productos acá para mostrarlos enseguida (después se actualizan en vivo con Firebase)
+    if (req.query?.formato === 'json') {
+      res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30, stale-while-revalidate=86400');
+      return res.status(200).json({ productos: productos || {}, stock: stock || {} });
+    }
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=900');
     return res.status(200).send(aCsv(armarFilas(productos, stock)));

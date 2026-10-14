@@ -45,6 +45,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Sendera" />
   <meta name="theme-color" content="#1a1510" />
+  <!-- Los productos se piden de entrada a la copia de Vercel (más rápida que esperar a que conecte Firebase) -->
+  <script>window.__productosRapidos = fetch('/api/catalogo?formato=json').then(r => r.ok ? r.json() : null).catch(() => null);</script>
   <!-- La foto de portada se pide de entrada, antes de leer los estilos: así no se ve el fondo negro mientras carga -->
   <link rel="preload" as="image" href="/api/foto?portada=compu" media="(min-width: 721px)" fetchpriority="high" />
   <link rel="preload" as="image" href="/api/foto?portada=celular" media="(max-width: 720px)" fetchpriority="high" />
@@ -743,9 +745,18 @@
       history.replaceState(null, '', location.pathname + location.hash);
     })();
 
-    db.ref('productos').on('value', snapshot => {
-      ultimosProductos = [];
-      snapshot.forEach(c => { ultimosProductos.push({ id: c.key, ...c.val() }); });
+    // Los productos llegan de tres lados, del más rápido al más nuevo: lo guardado de la visita anterior,
+    // la copia de Vercel (/api/catalogo?formato=json, pedida desde el <head>) y Firebase en vivo.
+    // Solo se vuelve a dibujar si cambió algo.
+    let firmaProductos = '';
+    function recibirProductos(datos) {
+      if (!datos || typeof datos !== 'object') return;
+      const firma = JSON.stringify(datos);
+      if (firma === firmaProductos) return;
+      firmaProductos = firma;
+      ultimosProductos = Object.entries(datos)
+        .filter(([, v]) => v && typeof v === 'object')
+        .map(([id, v]) => ({ id, ...v }));
       renderCategorias(ultimosProductos);
       initCardCarousels();
       renderVidriera(ultimosProductos);
@@ -755,6 +766,13 @@
       let completo = false;
       cart.forEach(i => { if (!i.id && STOCK_MAP[i.name + '-' + i.variant]) { i.id = STOCK_MAP[i.name + '-' + i.variant]; completo = true; } });
       if (completo) saveCart();
+    }
+    try { recibirProductos(JSON.parse(localStorage.getItem('sendera_productos') || 'null')); } catch (e) {}
+    (window.__productosRapidos || Promise.resolve(null)).then(d => d && recibirProductos(d.productos));
+    db.ref('productos').on('value', snapshot => {
+      const datos = snapshot.val() || {};
+      recibirProductos(datos);
+      try { localStorage.setItem('sendera_productos', JSON.stringify(datos)); } catch (e) {}
     });
 
     // ── VIDRIERA (portada) ────────────────────────────────────
