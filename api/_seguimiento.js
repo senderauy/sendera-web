@@ -27,9 +27,11 @@ export function mismoCodigo(guardado, recibido) {
 // Cómo se entrega. El envío se guarda como texto ("Montevideo · $200", "Interior · Por agencia…", "Pick up · Cordón…")
 export function entregaDe(envio) {
   const t = String(envio ?? '').toLowerCase();
-  if (/pick ?up|retir/.test(t)) return 'retiro';
+  // Primero el interior: "Interior · San José · Retiro en agencia" es un envío por agencia, no un retiro en Cordón
   if (t.includes('interior')) return 'interior';
+  if (/pick ?up|cord[oó]n|coordinar retiro/.test(t)) return 'retiro';
   if (t.includes('montevideo')) return 'montevideo';
+  if (/retir/.test(t)) return 'retiro';
   return 'otro';
 }
 
