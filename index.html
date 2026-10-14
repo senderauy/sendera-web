@@ -122,7 +122,10 @@
     // La foto de portada aparece con un fundido cuando ya cargó (si ya estaba guardada, aparece directo)
     (function () {
       var hero = document.getElementById('inicio');
-      var lista = function () { hero.classList.add('foto-lista'); };
+      var avisar;
+      // Los productos esperan a la portada (así sus fotos no le sacan velocidad); ver recibirProductos
+      window.__portadaLista = new Promise(function (r) { avisar = r; });
+      var lista = function () { hero.classList.add('foto-lista'); avisar(); };
       var img = new Image();
       img.onload = img.onerror = lista;
       img.src = matchMedia('(max-width: 720px)').matches ? '/api/foto?portada=celular' : '/api/foto?portada=compu';
@@ -749,7 +752,13 @@
     // la copia de Vercel (/api/catalogo?formato=json, pedida desde el <head>) y Firebase en vivo.
     // Solo se vuelve a dibujar si cambió algo.
     let firmaProductos = '';
+    // Primero se termina de cargar la foto de portada (o pasa 1,2 s) y después se dibujan los productos:
+    // si sus fotos se bajan a la vez, la portada tarda más y se ve el fondo verde
+    const portadaLista = Promise.race([window.__portadaLista || Promise.resolve(), new Promise(r => setTimeout(r, 1200))]);
     function recibirProductos(datos) {
+      portadaLista.then(() => dibujarProductos(datos));
+    }
+    function dibujarProductos(datos) {
       if (!datos || typeof datos !== 'object') return;
       const firma = JSON.stringify(datos);
       if (firma === firmaProductos) return;
