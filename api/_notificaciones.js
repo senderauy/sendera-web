@@ -43,6 +43,12 @@ export function lineasProductos(productos) {
     .join('\n');
 }
 
+// Meta no acepta saltos de renglón, tabulaciones ni más de 4 espacios seguidos en los datos de una plantilla
+// (la rechaza con un 400): la lista de productos va en un solo renglón, separada con " · "
+function datoPlantilla(v, max) {
+  return texto(String(v ?? '').replace(/^• /gm, '').split(/\s*[\r\n]+\s*/).filter(Boolean).join(' · ').replace(/\s+/g, ' ').trim(), max);
+}
+
 // WhatsApp automático de confirmación (plantilla aprobada por Meta "confirmacion_pedido").
 // El link para seguir el pedido va en el último dato de la plantilla, que ya es texto libre.
 export async function enviarWhatsAppConfirmacion({ celular, cliente, productos, total, envio, enlace }) {
@@ -64,17 +70,20 @@ export async function enviarWhatsAppConfirmacion({ celular, cliente, productos, 
         components: [{
           type: 'body',
           parameters: [
-            { type: 'text', text: texto(cliente || 'Cliente', 80) },
-            { type: 'text', text: texto(productos || '—', 900) },
-            { type: 'text', text: texto(total || '0', 30) },
-            { type: 'text', text: (envioTxt ? envioTxt + ' | ' : '') + seguimiento + AVISO_AUTOMATICO }
+            { type: 'text', text: datoPlantilla(cliente || 'Cliente', 80) },
+            { type: 'text', text: datoPlantilla(productos || '—', 900) },
+            { type: 'text', text: datoPlantilla(total || '0', 30) },
+            { type: 'text', text: datoPlantilla((envioTxt ? envioTxt + ' | ' : '') + seguimiento + AVISO_AUTOMATICO, 1000) }
           ]
         }]
       }
     })
   });
   if (!res.ok) {
-    console.error('WhatsApp confirmación: la API respondió', res.status);
+    // Meta dice el motivo (código y mensaje, sin datos del cliente): queda en los registros de Vercel
+    const { error } = await res.json().catch(() => ({}));
+    console.error('WhatsApp confirmación: la API respondió', res.status, error?.code ?? '', error?.error_subcode ?? '',
+      texto(error?.error_data?.details || error?.message || '', 300));
     return false;
   }
   return true;
