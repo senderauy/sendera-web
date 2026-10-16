@@ -11,6 +11,10 @@
     {
       "source": "/seguimiento",
       "destination": "/seguimiento.html"
+    },
+    {
+      "source": "/producto.html",
+      "destination": "/api/catalogo?formato=pagina"
     }
   ],
   "headers": [

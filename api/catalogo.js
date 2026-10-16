@@ -72,7 +72,122 @@ export function aCsv(filas) {
   return [COLUMNAS.join(','), ...filas.map(f => COLUMNAS.map(c => celda(f[c])).join(','))].join('\n') + '\n';
 }
 
+// ── Página de cada producto (/producto.html?id=…&v=…) ─────────────────────
+// La página arma el producto con JavaScript, y los robots que revisan los links (Meta, WhatsApp, Google)
+// no lo esperan: veían una página vacía, "Sendera | Producto". Acá se le agregan de entrada el nombre,
+// la foto, el precio y la descripción del color que se pidió. El resto de la página no cambia.
+const escapar = v => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+let paginaBase = null;   // producto-base.html (queda en memoria mientras la función está despierta)
+const origenDe = req => `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`;
+
+async function leerPaginaBase(req) {
+  if (paginaBase) return paginaBase;
+  const r = await fetch(`${origenDe(req)}/producto-base.html`);
+  if (!r.ok) throw new Error('producto-base: ' + r.status);
+  return (paginaBase = await r.text());
+}
+
+// Los productos y el stock salen de la copia que Vercel ya tiene guardada (/api/catalogo?formato=json, la misma
+// que usa la tienda): está en el mismo lugar que esta función y contesta enseguida. Si falla, se le piden a Firebase.
+async function productosYStock(origen) {
+  try {
+    const r = await fetch(`${origen}/api/catalogo?formato=json`);
+    if (r.ok) {
+      const d = await r.json();
+      if (d && d.productos) return d;
+    }
+  } catch (e) { /* se piden a Firebase */ }
+  const [productos, stock] = await Promise.all(['productos', 'stock'].map(ruta =>
+    fetch(`${DB_URL}/${ruta}.json`).then(x => (x.ok ? x.json() : null)).catch(() => null)));
+  return { productos, stock };
+}
+
+async function datosDelProducto(origen, id, nVariante) {
+  const { productos, stock } = await productosYStock(origen);
+  const p = productos && productos[id];
+  if (!p || typeof p !== 'object' || !texto(p.nombre)) return null;
+  // Mismo número de color que usa la tienda (la posición en la lista, como en armarFilas)
+  const variantes = Array.isArray(p.variantes) ? p.variantes : Object.values(p.variantes || {});
+  const i = nVariante >= 0 && nVariante < variantes.length ? nVariante : 0;
+  const v = variantes[i] && typeof variantes[i] === 'object' ? variantes[i] : {};
+  const fila = armarFilas({ [id]: p }, {}).find(f => f.link.includes(`&v=${i}&`)) || null;
+  const precio = Math.round(Number(v.precio || p.precio) || 0);
+  const stockId = v.stockId || `${id}-${i}`;
+  const enStock = !stock || (Number(stock[stockId]) || 0) > 0;
+  const color = texto(v.nombre);
+  return {
+    titulo: `${texto(p.nombre)}${variantes.length > 1 && color ? ' ' + color : ''}`,
+    descripcion: (texto(p.descripcion) || `${texto(p.nombre)}${color ? ', color ' + color : ''}.`).slice(0, 300),
+    foto: fila ? fila.image_link : '',
+    precio: precio ? conDescuento(precio, p.descuento) : 0,
+    enStock,
+    link: `${SITIO}/producto.html?id=${encodeURIComponent(id)}&v=${i}`
+  };
+}
+
+function conDatosDelProducto(html, d) {
+  const titulo = `${d.titulo} | ${MARCA}`;
+  const precio = d.precio ? `$U ${d.precio.toLocaleString('es-UY')}` : '';
+  const ld = {
+    '@context': 'https://schema.org', '@type': 'Product', name: d.titulo, description: d.descripcion,
+    brand: { '@type': 'Brand', name: MARCA }, url: d.link, ...(d.foto ? { image: d.foto } : {}),
+    ...(d.precio ? { offers: { '@type': 'Offer', price: d.precio, priceCurrency: 'UYU', url: d.link,
+      availability: d.enStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock' } } : {})
+  };
+  const cabeza = [
+    `<title>${escapar(titulo)}</title>`,
+    `<meta name="description" content="${escapar(d.descripcion)}" />`,
+    `<link rel="canonical" href="${escapar(d.link)}" />`,
+    `<meta property="og:type" content="product" />`,
+    `<meta property="og:site_name" content="${MARCA}" />`,
+    `<meta property="og:title" content="${escapar(titulo)}" />`,
+    `<meta property="og:description" content="${escapar([precio, d.descripcion].filter(Boolean).join(' · '))}" />`,
+    `<meta property="og:url" content="${escapar(d.link)}" />`,
+    d.foto ? `<meta property="og:image" content="${escapar(d.foto)}" />` : '',
+    d.precio ? `<meta property="product:price:amount" content="${d.precio}" />\n  <meta property="product:price:currency" content="UYU" />` : '',
+    `<meta property="product:availability" content="${d.enStock ? 'in stock' : 'out of stock'}" />`,
+    `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`
+  ].filter(Boolean).join('\n  ');
+  // Para quien no tiene JavaScript (y los robots): el producto a la vista mientras carga la página
+  const sinJs = `<noscript><div style="max-width:520px;margin:100px auto 40px;padding:0 16px;font-family:Montserrat,sans-serif;color:#2a2218">
+      ${d.foto ? `<img src="${escapar(d.foto)}" alt="${escapar(d.titulo)}" style="width:100%;border-radius:12px" />` : ''}
+      <h1 style="font-size:1.6rem;margin:16px 0 6px">${escapar(d.titulo)}</h1>
+      ${precio ? `<p style="font-size:1.2rem;font-weight:600">${escapar(precio)}</p>` : ''}
+      <p style="margin-top:10px;line-height:1.5">${escapar(d.descripcion)}</p>
+    </div></noscript>`;
+  return html
+    .replace('<title>Sendera | Producto</title>', cabeza)
+    .replace('<div class="product-page" id="product-page">', `<div class="product-page" id="product-page">\n    ${sinJs}`);
+}
+
+async function paginaProducto(req, res) {
+  const id = String(req.query?.id || '');
+  const idValido = /^[A-Za-z0-9_-]{1,64}$/.test(id);
+  // La página y los datos del producto se piden a la vez; sin los datos, la página anda igual
+  const [html, d] = await Promise.all([
+    leerPaginaBase(req),
+    idValido
+      ? datosDelProducto(origenDe(req), id, Number.parseInt(req.query?.v, 10) || 0)
+          .catch(e => { console.error('catalogo pagina:', e.message); return null; })
+      : null
+  ]);
+  const pagina = d ? conDatosDelProducto(html, d) : html;
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=86400');
+  return res.status(200).send(pagina);
+}
+
 export default async function handler(req, res) {
+  if (req.query?.formato === 'pagina') {
+    try {
+      return await paginaProducto(req, res);
+    } catch (e) {
+      console.error('catalogo pagina:', e.message);
+      // Si no se pudo leer la página, se manda a la copia sin datos (así nunca queda en blanco)
+      const q = new URLSearchParams(Object.entries(req.query || {}).filter(([k]) => k !== 'formato').map(([k, v]) => [k, String(v)])).toString();
+      return res.redirect(302, '/producto-base.html' + (q ? '?' + q : ''));
+    }
+  }
   try {
     // productos y stock se leen sin clave, igual que la tienda
     const [productos, stock] = await Promise.all(['productos', 'stock'].map(async ruta => {
