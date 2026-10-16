@@ -84,7 +84,9 @@ export async function enviarWhatsAppConfirmacion({ celular, cliente, productos, 
 // Todo lo que viene del pedido se escapa antes de ir al HTML.
 const REMITENTE = 'Sendera <pedidos@senderauy.com>';
 
-function armarMail({ etiqueta, cliente, mensaje, nota, productos, envio, total, enlace, boton = 'Ver mi pedido', notaBoton = 'Ahí ves en qué paso está tu pedido.' }) {
+// foto: dirección completa de una foto para mostrar en el mail (el comprobante del envío)
+function armarMail({ etiqueta, cliente, mensaje, nota, foto, productos, envio, total, enlace, boton = 'Ver mi pedido', notaBoton = 'Ahí ves en qué paso está tu pedido.' }) {
+  const fotoSegura = /^https:\/\/www\.senderauy\.com\/api\/foto\?h=[a-f0-9]{32}$/.test(String(foto || '')) ? foto : '';
   const nombre = texto(String(cliente ?? '').trim().split(/\s+/)[0], 40);
   const saludo = nombre ? `¡Hola ${nombre}!` : '¡Hola!';
   const lineas = String(productos || '').split('\n').filter(Boolean).map(l => l.replace(/^• /, ''));
@@ -108,6 +110,11 @@ function armarMail({ etiqueta, cliente, mensaje, nota, productos, envio, total, 
           <td style="padding:36px 40px">
             <p style="margin:0 0 8px;font-size:18px;color:#3a3026;font-weight:600">${escaparHtml(saludo)} 👋</p>
             <p style="margin:0 0 28px;font-size:14px;color:#7a6e62;line-height:1.6">${escaparHtml(mensaje)}</p>
+            ${fotoSegura ? `
+            <a href="${fotoSegura}" style="display:block;margin:0 0 6px;text-decoration:none">
+              <img src="${fotoSegura}" alt="Comprobante del envío" width="480" style="display:block;width:100%;max-width:480px;height:auto;border-radius:10px;border:1px solid #e8dfd2" />
+            </a>
+            <p style="margin:0 0 28px;font-size:12px;color:#9a8f82">Comprobante del envío. Tocalo para verlo en grande.</p>` : ''}
             ${enlace ? `
             <table cellpadding="0" cellspacing="0" style="margin:0 0 8px">
               <tr><td style="background:#182417;border-radius:10px">
@@ -150,6 +157,8 @@ function armarMail({ etiqueta, cliente, mensaje, nota, productos, envio, total, 
   // Versión en texto, para los programas de correo que no muestran HTML
   const textoPlano = [
     saludo, '', mensaje, '',
+    fotoSegura ? `Comprobante del envío: ${fotoSegura}
+` : '',
     enlace ? `${boton}: ${enlace}\n` : '',
     ...lineas.map(l => `- ${l}`),
     total ? `\nEnvío: ${texto(envio || '—', 200)}\nTotal: $${texto(total, 30)}` : '',
@@ -228,7 +237,7 @@ export async function enviarEmailConfirmacion({ email, cliente, productos, total
 const PEDIR_RESENA = { boton: 'Dejar mi reseña', notaBoton: 'Te lleva un minuto y ayuda a otros a elegir.', ancla: '#resena' };
 
 // Qué dice el mail de cada paso, según cómo se entrega y cómo se paga
-function textosDeEstado(paso, entrega, metodoPago) {
+function textosDeEstado(paso, entrega, metodoPago, conFoto) {
   const retiro = entrega === 'retiro';
   if (paso === 'confirmado') {
     return {
@@ -253,7 +262,9 @@ function textosDeEstado(paso, entrega, metodoPago) {
       return {
         asunto: '📦 Despachamos tu pedido — Sendera',
         etiqueta: 'Pedido despachado',
-        mensaje: 'Despachamos tu pedido por agencia. Por cualquier consulta sobre el envío, escribinos.'
+        mensaje: conFoto
+          ? 'Despachamos tu pedido por agencia. Te dejamos la foto del comprobante del envío; guardala por si la agencia te la pide.'
+          : 'Despachamos tu pedido por agencia. Por cualquier consulta sobre el envío, escribinos.'
       };
     }
     return {
@@ -271,14 +282,28 @@ function textosDeEstado(paso, entrega, metodoPago) {
 }
 
 // Mail cuando el panel cambia el estado del pedido (confirmado, en camino o listo para retirar, entregado)
-export async function enviarEmailEstado({ email, cliente, paso, envio, metodoPago, productos, total, enlace }) {
-  const t = textosDeEstado(paso, entregaDe(envio), metodoPago);
+// (foto: el comprobante del envío por agencia, que va en el mail de "despachado")
+export async function enviarEmailEstado({ email, cliente, paso, envio, metodoPago, productos, total, enlace, foto }) {
+  const entrega = entregaDe(envio);
+  const conFoto = !!foto && paso === 'camino' && entrega === 'interior';
+  const t = textosDeEstado(paso, entrega, metodoPago, conFoto);
   if (!t) return false;
   const mail = armarMail({
-    etiqueta: t.etiqueta, cliente, mensaje: t.mensaje, nota: t.nota, productos, envio, total,
+    etiqueta: t.etiqueta, cliente, mensaje: t.mensaje, nota: t.nota, foto: conFoto ? foto : '', productos, envio, total,
     enlace: enlace && t.ancla ? enlace + t.ancla : enlace, boton: t.boton, notaBoton: t.notaBoton
   });
   return enviarMail({ email, asunto: t.asunto, ...mail });
+}
+
+// Mail solo con la foto del comprobante del envío (cuando se sube después de marcarlo en camino)
+export async function enviarEmailComprobanteEnvio({ email, cliente, foto, enlace }) {
+  const mail = armarMail({
+    etiqueta: 'Comprobante de envío',
+    cliente,
+    mensaje: 'Te dejamos la foto del comprobante del envío de tu pedido por agencia. Guardala por si la agencia te la pide.',
+    foto, enlace
+  });
+  return enviarMail({ email, asunto: '📦 El comprobante de tu envío — Sendera', ...mail });
 }
 
 // Notificación push a los admins. Las suscripciones que ya no existen (404/410) se borran solas.

@@ -14,6 +14,14 @@ export const emailValido = e => String(e ?? '').length <= 120 && /^[^\s@<>"]+@[^
 
 export const nuevoCodigo = () => randomBytes(12).toString('base64url');
 
+// Foto del comprobante del envío por agencia: se sube desde el panel y queda como /api/foto?h=<huella>.
+// Devuelve la huella, o '' si el pedido no tiene una válida.
+export function huellaComprobanteEnvio(pedido) {
+  const m = /^\/api\/foto\?h=([a-f0-9]{32})$/.exec(String(pedido?.envioComprobante ?? ''));
+  return m ? m[1] : '';
+}
+export const fotoComprobanteEnvio = huella => `${SITIO}/api/foto?h=${huella}`;
+
 export function enlaceSeguimiento(id, codigo) {
   return `${SITIO}/seguimiento?p=${encodeURIComponent(id)}&c=${encodeURIComponent(codigo)}`;
 }
@@ -85,6 +93,11 @@ export function marcarAviso(id, paso, token) {
 // Si el mail no salió, se borra la marca para que se pueda volver a intentar
 export async function desmarcarAviso(id, paso, token) {
   await fb(`pedidos/${id}/avisos/${paso}`, token, { method: 'DELETE' }).catch(() => {});
+}
+
+// Anota qué foto del comprobante del envío ya le llegó por mail (si se cambia la foto, la nueva se puede mandar)
+export async function anotarComprobanteAvisado(id, huella, token) {
+  await fb(`pedidos/${id}/avisos/comprobante`, token, { method: 'PUT', body: JSON.stringify(huella) }).catch(() => {});
 }
 
 // Deja anotados los pasos que ya cubrió el mail de confirmación de la compra

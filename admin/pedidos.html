@@ -169,6 +169,23 @@
     .comprobante b { display: block; font-weight: 600; }
     .comprobante small { display: block; color: var(--sa-tinta-3); font-size: 0.78rem; }
     .comprobante .sa-boton-sec { padding: 8px 14px; }
+
+    /* Comprobante del envío por agencia (pedidos al interior) */
+    .envio-comprobante { margin-top: 12px; }
+    .envio-comprobante .comprobante { margin-top: 0; }
+    .envio-comprobante .comprobante img { cursor: zoom-in; }
+    .envio-comprobante .enviado { color: var(--sa-verde); }
+    .envio-comprobante .acciones { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .envio-comprobante .acciones .sa-boton-sec { padding: 8px 14px; }
+    .subir-comprobante {
+      display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px; border: 1.5px dashed var(--sa-linea); border-radius: 12px;
+      background: none; color: var(--sa-tinta); font: inherit; text-align: left; cursor: pointer;
+    }
+    .subir-comprobante:hover { border-color: var(--sa-tinta-3); background: var(--sa-papel-2); }
+    .subir-comprobante:disabled { opacity: 0.6; cursor: progress; }
+    .subir-comprobante .icono { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--sa-papel-2); color: var(--sa-tinta-2); flex-shrink: 0; }
+    .subir-comprobante b { display: block; font-weight: 600; }
+    .subir-comprobante small { display: block; color: var(--sa-tinta-3); font-size: 0.78rem; }
     .detalle footer { display: flex; align-items: center; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--sa-linea-2); background: var(--sa-papel); }
     .detalle footer .eliminar { display: inline-flex; align-items: center; gap: 6px; padding: 8px 6px; border: 0; border-radius: 8px; background: none; color: var(--sa-rojo); font-size: 0.85rem; font-weight: 600; cursor: pointer; }
     .detalle footer .eliminar:hover { background: var(--sa-rojo-fondo); }
@@ -277,6 +294,7 @@
 <div class="velo-detalle" id="velo-detalle"></div>
 <aside class="detalle" id="detalle" role="dialog" aria-labelledby="detalle-titulo"></aside>
 
+<input type="file" id="archivo-envio" accept="image/*" hidden />
 <dialog class="visor" id="visor" aria-label="Comprobante">
   <img id="visor-img" alt="Comprobante de pago" />
   <button type="button" aria-label="Cerrar"><i data-lucide="x"></i></button>
@@ -610,6 +628,7 @@
         <section>
           <h3>Entrega</h3>
           <div class="dato-linea"><i data-lucide="${entrega.icono}"></i><span><b>${esc(entrega.nombre)}</b>${entrega.texto && entrega.texto !== entrega.nombre ? `<small>${esc(entrega.texto)}</small>` : ''}</span></div>
+          ${entrega.aCargo ? comprobanteEnvioHtml(p, paso) : ''}
         </section>
         <section>
           <h3>Pago</h3>
@@ -622,6 +641,106 @@
         <button type="button" class="eliminar" data-eliminar aria-label="Eliminar pedido"><i data-lucide="trash-2"></i><span class="texto-eliminar">Eliminar</span></button>
         ${siguiente ? `<button type="button" class="sa-boton" data-avanzar="${siguiente}"><i data-lucide="check"></i>Marcar como ${nombres[paso + 1].toLowerCase()}</button>` : ''}
       </footer>`;
+  }
+
+  // ── Comprobante del envío por agencia ──────────
+  // La foto del ticket se guarda aparte (imagenes/<huella>) y el pedido queda con su dirección.
+  // Le llega al cliente por mail (sola o en el mail de "despachado") y la ve en su página de seguimiento.
+  const FOTO_GUARDADA = /^\/api\/foto\?h=([a-f0-9]{32})$/;
+  const fotosRecienSubidas = new Map();   // dirección → foto en base64, para mostrarla sin esperar a que cargue
+  const fotoEnvioDe = p => (FOTO_GUARDADA.test(String(p.envioComprobante || '')) ? p.envioComprobante : '');
+  function comprobanteAvisado(p) {
+    const m = FOTO_GUARDADA.exec(fotoEnvioDe(p));
+    return !!m && !!p.avisos && p.avisos.comprobante === m[1];
+  }
+
+  function comprobanteEnvioHtml(p, paso) {
+    const foto = fotoEnvioDe(p);
+    if (!foto) {
+      return `<div class="envio-comprobante">
+        <button type="button" class="subir-comprobante" data-subir-envio><span class="icono"><i data-lucide="camera"></i></span><span><b>Subir comprobante de envío</b><small>La foto del ticket de la agencia. Le llega al cliente y queda en su página de seguimiento.</small></span></button>
+      </div>`;
+    }
+    const avisado = comprobanteAvisado(p);
+    const estado = avisado ? '<span class="enviado">Ya se lo mandamos por mail</span>'
+      : !p.email ? 'No dejó mail: mandáselo por WhatsApp'
+      : paso < 2 ? 'Va en el mail de "en camino" cuando lo marques'
+      : 'Todavía no se lo mandaste por mail';
+    const botones = [
+      p.email && !avisado ? '<button type="button" class="sa-boton-sec" data-mail-envio><i data-lucide="mail"></i>Mandar por mail</button>' : '',
+      celularWA(p.celular) ? '<button type="button" class="sa-boton-sec" data-wa-envio><i data-lucide="message-circle"></i>Mandar por WhatsApp</button>' : ''
+    ].join('');
+    return `<div class="envio-comprobante">
+      <div class="comprobante"><img src="${esc(fotosRecienSubidas.get(foto) || foto)}" alt="Comprobante de envío" data-ver-envio /><div><b>Comprobante de envío</b><small>${estado}</small></div><button type="button" class="sa-boton-sec" data-subir-envio>Cambiar</button></div>
+      ${botones ? `<div class="acciones">${botones}</div>` : ''}
+    </div>`;
+  }
+
+  // Se achica antes de guardar: un ticket se lee bien a 1600 px y así carga rápido en el mail
+  function achicarFoto(archivo, max = 1600) {
+    return new Promise((resolver, rechazar) => {
+      const img = new Image();
+      const url = URL.createObjectURL(archivo);
+      img.onload = () => {
+        let w = img.naturalWidth, h = img.naturalHeight;
+        const escala = Math.min(1, max / Math.max(w, h));
+        w = Math.round(w * escala); h = Math.round(h * escala);
+        const lienzo = document.createElement('canvas');
+        lienzo.width = w; lienzo.height = h;
+        lienzo.getContext('2d').drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        resolver(lienzo.toDataURL('image/jpeg', 0.82));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); rechazar(new Error('foto')); };
+      img.src = url;
+    });
+  }
+
+  let subiendoPara = null;
+  async function subirComprobanteEnvio(archivo) {
+    const p = datos.pedidos.find(x => x.id === subiendoPara);
+    subiendoPara = null;
+    if (!p || !archivo) return;
+    if (!archivo.type.startsWith('image/')) return panel.aviso('Elegí una foto del comprobante.', true);
+    const boton = $('detalle').querySelector('.subir-comprobante');
+    if (boton) boton.disabled = true;
+    try {
+      const foto = await achicarFoto(archivo);
+      const direccion = await guardarImagen(foto);
+      fotosRecienSubidas.set(direccion, foto);
+      await db.ref('pedidos/' + p.id).update({ envioComprobante: direccion, envioComprobanteFecha: new Date().toISOString() });
+      panel.aviso('Comprobante guardado');
+    } catch (e) {
+      panel.aviso('No se pudo guardar el comprobante. Probá de nuevo.', true);
+      if (boton) boton.disabled = false;
+    }
+  }
+
+  async function mandarComprobantePorMail(p) {
+    try {
+      const token = await firebase.auth().currentUser.getIdToken();
+      const r = await fetch('/api/avisar-estado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ pedidoId: p.id, tipo: 'comprobante' })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (d.enviado) panel.aviso(`Le mandamos el comprobante por mail a ${primerNombre(p.cliente)}`);
+      else if (d.motivo === 'ya-avisado') panel.aviso('Ese comprobante ya se lo habíamos mandado.');
+      else panel.aviso(`No le pudimos mandar el mail a ${primerNombre(p.cliente)}. Probá de nuevo.`, true);
+    } catch (e) {
+      panel.aviso(`No le pudimos mandar el mail a ${primerNombre(p.cliente)}. Probá de nuevo.`, true);
+    }
+  }
+
+  function mandarComprobantePorWA(p) {
+    const foto = fotoEnvioDe(p);
+    if (!foto) return;
+    const msg = `Hola ${primerNombre(p.cliente)}! ${String.fromCodePoint(0x1F44B)} Te escribimos de *Sendera*.\n\n` +
+      `Despachamos tu pedido por agencia ${String.fromCodePoint(0x1F4E6)} Te dejamos la foto del comprobante del envío:\n` +
+      `https://www.senderauy.com${foto}` +
+      (codigoSeguimiento(p) ? `\n\nSeguí tu pedido acá: ${enlaceSeguimiento(p)}` : '');
+    window.open(`https://wa.me/${celularWA(p.celular)}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
   }
 
   function abrirDetalle(id) {
@@ -979,6 +1098,10 @@
     if (e.target.closest('[data-pdf]')) return abrirPDF(p.id);
     if (e.target.closest('[data-ver-comprobante]')) return verImagen(imgSegura(p.comprobante));
     if (e.target.closest('[data-eliminar]')) return eliminarPedido(p);
+    if (e.target.closest('[data-subir-envio]')) { subiendoPara = p.id; return $('archivo-envio').click(); }
+    if (e.target.closest('[data-ver-envio]')) return verImagen(e.target.closest('[data-ver-envio]').src);
+    if (e.target.closest('[data-mail-envio]')) return mandarComprobantePorMail(p);
+    if (e.target.closest('[data-wa-envio]')) return mandarComprobantePorWA(p);
     if (e.target.closest('[data-copiar-seguimiento]')) {
       return navigator.clipboard.writeText(enlaceSeguimiento(p))
         .then(() => panel.aviso('Link copiado. Pegalo en WhatsApp o donde quieras.'))
@@ -991,6 +1114,7 @@
     const p = datos.pedidos.find(x => x.id === abierto);
     if (p && e.target.matches('[data-estado]')) cambiarEstado(p, e.target.value);
   });
+  $('archivo-envio').addEventListener('change', e => { subirComprobanteEnvio(e.target.files[0]); e.target.value = ''; });
   $('velo-detalle').addEventListener('click', cerrarDetalle);
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && abierto && !document.querySelector('dialog[open]')) cerrarDetalle();

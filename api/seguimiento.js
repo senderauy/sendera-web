@@ -4,7 +4,9 @@
 //   POST: la reseña del cliente cuando ya recibió el pedido (una por pedido). Queda esperando aprobación
 //         en el panel, marcada como compra verificada.
 import { DB_URL, getFirebaseToken } from './_pedido.js';
-import { idValido, codigoValido, mismoCodigo, pasoDe, entregaDe, primerNombre, ponerSiVacio } from './_seguimiento.js';
+import {
+  idValido, codigoValido, mismoCodigo, pasoDe, entregaDe, primerNombre, ponerSiVacio, huellaComprobanteEnvio
+} from './_seguimiento.js';
 
 const NO_ENCONTRADO = { error: 'No encontramos ese pedido' };
 
@@ -33,7 +35,7 @@ async function verPedido(req, res) {
   if (!idValido(id) || !codigoValido(codigo)) return res.status(404).json(NO_ENCONTRADO);
   const leer = lectorDe(id, await getFirebaseToken());
   if (!mismoCodigo(await leer('codigo'), codigo)) return res.status(404).json(NO_ENCONTRADO);
-  const CAMPOS = ['cliente', 'fecha', 'estado', 'envio', 'metodo_pago', 'productos', 'total', 'resena'];
+  const CAMPOS = ['cliente', 'fecha', 'estado', 'envio', 'metodo_pago', 'productos', 'total', 'resena', 'envioComprobante'];
   const valores = await Promise.all(CAMPOS.map(leer));
   const pedido = Object.fromEntries(CAMPOS.map((c, i) => [c, valores[i]]));
   return res.status(200).json({
@@ -46,7 +48,9 @@ async function verPedido(req, res) {
     metodoPago: String(pedido.metodo_pago || ''),
     productos: items(pedido.productos),
     total: Number(pedido.total) || 0,
-    resena: !!pedido.resena
+    resena: !!pedido.resena,
+    // Foto del comprobante del envío por agencia, si ya se subió desde el panel
+    comprobanteEnvio: huellaComprobanteEnvio(pedido) ? `/api/foto?h=${huellaComprobanteEnvio(pedido)}` : ''
   });
 }
 
