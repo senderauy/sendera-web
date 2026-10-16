@@ -541,7 +541,7 @@
         <div class="campo campo--ancho">
           <label for="ch-email">Email</label>
           <input type="email" id="ch-email" placeholder="tu@email.com" autocomplete="email" inputmode="email" />
-          <span class="campo-ayuda">Te mandamos el link para seguir tu pedido.</span>
+          <span class="campo-ayuda">Por acá te avisamos cada paso de tu pedido.</span>
         </div>
       </div>
       <p class="aviso-falta" id="aviso-datos" role="alert"></p>
@@ -881,21 +881,34 @@
     el.classList.add('sacudir');
   }
 
-  // Nombre y celular son obligatorios: si falta alguno se marca y se lleva a la persona hasta el campo
+  // Nombre, celular y mail son obligatorios (por mail le llegan la confirmación y cada paso del pedido):
+  // si falta alguno se marca y se lleva a la persona hasta el campo
+  const MAIL_VALIDO = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
+  const CAMPOS_OBLIGATORIOS = [
+    { id: 'ch-nombre', nombre: 'tu nombre', ok: v => !!v },
+    { id: 'ch-celular', nombre: 'tu celular', ok: v => !!v },
+    { id: 'ch-email', nombre: 'tu mail', ok: v => MAIL_VALIDO.test(v) }
+  ];
   function datosCompletos() {
     const aviso = document.getElementById('aviso-datos');
-    const faltan = ['ch-nombre', 'ch-celular'].map(id => document.getElementById(id)).filter(el => !el.value.trim());
+    const faltan = CAMPOS_OBLIGATORIOS.filter(c => !c.ok(document.getElementById(c.id).value.trim()));
     document.querySelectorAll('.campo input').forEach(el => el.classList.remove('falta'));
     if (!faltan.length) { aviso.textContent = ''; return true; }
-    faltan.forEach(el => el.classList.add('falta'));
-    aviso.textContent = faltan.length === 2 ? 'Completá tu nombre y tu celular.' : faltan[0].id === 'ch-nombre' ? 'Completá tu nombre.' : 'Completá tu celular.';
-    faltan[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
-    faltan[0].focus({ preventScroll: true });
-    sacudir(faltan[0]);
+    faltan.forEach(c => document.getElementById(c.id).classList.add('falta'));
+    const mail = document.getElementById('ch-email').value.trim();
+    if (faltan.length === 1 && faltan[0].id === 'ch-email' && mail) aviso.textContent = 'Revisá tu mail: parece que le falta algo.';
+    else {
+      const nombres = faltan.map(c => c.nombre);
+      aviso.textContent = 'Completá ' + (nombres.length > 1 ? nombres.slice(0, -1).join(', ') + ' y ' + nombres[nombres.length - 1] : nombres[0]) + '.';
+    }
+    const primero = document.getElementById(faltan[0].id);
+    primero.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    primero.focus({ preventScroll: true });
+    sacudir(primero);
     return false;
   }
-  ['ch-nombre', 'ch-celular'].forEach(id => document.getElementById(id).addEventListener('input', e => {
-    if (e.target.value.trim()) e.target.classList.remove('falta');
+  CAMPOS_OBLIGATORIOS.forEach(c => document.getElementById(c.id).addEventListener('input', e => {
+    if (c.ok(e.target.value.trim())) e.target.classList.remove('falta');
   }));
 
   // ── MercadoPago Bricks ────────────────────────────────────
