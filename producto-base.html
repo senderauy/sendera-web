@@ -591,6 +591,48 @@
         min-height: auto;
       }
     }
+
+    /* ── Foto en grande: se abre al tocar la foto del producto ───────── */
+    .product-main-img { cursor: zoom-in; }
+    dialog.visor-foto {
+      width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0;
+      background: #0f130e; color: #fff; overflow: hidden;
+    }
+    dialog.visor-foto[open] { display: flex; align-items: center; justify-content: center; animation: visor-entra 220ms cubic-bezier(0.23, 1, 0.32, 1); }
+    dialog.visor-foto::backdrop { background: transparent; }
+    @keyframes visor-entra { from { opacity: 0; } to { opacity: 1; } }
+    .visor-foto .visor-img {
+      max-width: min(92vw, 1100px); max-height: calc(100dvh - 140px); width: auto; height: auto; object-fit: contain;
+      border-radius: 20px; user-select: none; -webkit-user-drag: none; touch-action: pinch-zoom;
+      transition: opacity 180ms ease;
+    }
+    .visor-foto[open] .visor-img { animation: visor-foto-entra 260ms cubic-bezier(0.23, 1, 0.32, 1); }
+    @keyframes visor-foto-entra { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+    .visor-foto .visor-img.cambiando { opacity: 0.25; }
+    .visor-foto .visor-cerrar, .visor-foto .visor-flecha {
+      position: absolute; display: grid; place-items: center; border: 0; border-radius: 50%; cursor: pointer;
+      background: rgba(255, 255, 255, 0.14); color: #fff; transition: background-color 160ms ease, transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .visor-foto .visor-cerrar { top: max(16px, env(safe-area-inset-top)); right: 16px; width: 46px; height: 46px; }
+    .visor-foto .visor-flecha { top: 50%; width: 52px; height: 52px; margin-top: -26px; }
+    .visor-foto .visor-flecha.ant { left: 20px; }
+    .visor-foto .visor-flecha.sig { right: 20px; }
+    .visor-foto .visor-flecha[hidden] { display: none; }
+    .visor-foto .visor-cerrar:active, .visor-foto .visor-flecha:active { transform: scale(0.94); }
+    .visor-foto svg { width: 22px; height: 22px; }
+    .visor-foto .visor-puntos { position: absolute; bottom: max(24px, env(safe-area-inset-bottom)); left: 0; right: 0; display: flex; justify-content: center; gap: 8px; }
+    .visor-foto .visor-puntos button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.35); cursor: pointer; transition: background-color 160ms ease, transform 160ms ease; }
+    .visor-foto .visor-puntos button[aria-current="true"] { background: #fff; transform: scale(1.25); }
+    @media (hover: hover) and (pointer: fine) {
+      .visor-foto .visor-cerrar:hover, .visor-foto .visor-flecha:hover { background: rgba(255, 255, 255, 0.24); }
+    }
+    @media (max-width: 720px) {
+      .visor-foto .visor-flecha { display: none; }   /* en el celular se pasa deslizando */
+      .visor-foto .visor-img { max-width: 100vw; border-radius: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      dialog.visor-foto[open], .visor-foto[open] .visor-img { animation: none; }
+    }
   </style>
 </head>
 <body>
@@ -631,6 +673,15 @@
     </div>
     <div class="relacionados-track" id="relacionados-track"></div>
   </section>
+
+  <!-- Foto en grande (se abre al tocar la foto del producto) -->
+  <dialog class="visor-foto" id="visor-foto" aria-label="Foto del producto en grande">
+    <img class="visor-img" id="visor-img" alt="" />
+    <button type="button" class="visor-cerrar" id="visor-cerrar" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <button type="button" class="visor-flecha ant" id="visor-ant" aria-label="Foto anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <button type="button" class="visor-flecha sig" id="visor-sig" aria-label="Foto siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+    <div class="visor-puntos" id="visor-puntos"></div>
+  </dialog>
 
   <script src="pixel.js?v=1"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -1130,6 +1181,64 @@
         else irFoto(Math.max(fotoIdx - 1, 0));
         startX = 0;
       }, { passive: true });
+    })();
+
+    // ── FOTO EN GRANDE ──────────────────────────────────────────────
+    // Tocar la foto del producto la abre a pantalla completa; se pasa entre las fotos del color con flechas,
+    // deslizando el dedo o con el teclado. Al cerrar, la página queda en la foto que se estaba mirando.
+    (function() {
+      const visor = document.getElementById('visor-foto');
+      const img = document.getElementById('visor-img');
+      const puntos = document.getElementById('visor-puntos');
+      let fotos = [], idx = 0, inicioX = 0, inicioY = 0;
+
+      function mostrar(n) {
+        idx = (n + fotos.length) % fotos.length;
+        img.classList.add('cambiando');
+        const nueva = new Image();
+        nueva.onload = nueva.onerror = () => { img.src = fotos[idx]; img.classList.remove('cambiando'); };
+        nueva.src = fotos[idx];
+        const v = productoActual && productoActual.variantes ? productoActual.variantes[variantActual] : null;
+        img.alt = `${productoActual ? productoActual.nombre : 'Producto'} ${v ? v.nombre : ''}, foto ${idx + 1} de ${fotos.length}`;
+        const varias = fotos.length > 1;
+        document.getElementById('visor-ant').hidden = !varias;
+        document.getElementById('visor-sig').hidden = !varias;
+        puntos.innerHTML = varias ? fotos.map((_, i) => `<button type="button" aria-label="Foto ${i + 1}"${i === idx ? ' aria-current="true"' : ''} data-i="${i}"></button>`).join('') : '';
+      }
+
+      function abrir() {
+        if (!productoActual || typeof visor.showModal !== 'function') return;
+        fotos = getFotos(productoActual.variantes[variantActual]).filter(f => f && f !== 'img/logo.png');
+        if (!fotos.length) return;
+        img.src = fotos[fotoIdx] || fotos[0];
+        mostrar(Math.min(fotoIdx, fotos.length - 1));
+        visor.showModal();
+      }
+
+      document.addEventListener('click', e => { if (e.target.id === 'product-main-img') abrir(); });
+      document.getElementById('visor-cerrar').addEventListener('click', () => visor.close());
+      document.getElementById('visor-ant').addEventListener('click', () => mostrar(idx - 1));
+      document.getElementById('visor-sig').addEventListener('click', () => mostrar(idx + 1));
+      puntos.addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) mostrar(+b.dataset.i); });
+      // Tocar fuera de la foto también cierra
+      visor.addEventListener('click', e => { if (e.target === visor) visor.close(); });
+      visor.addEventListener('keydown', e => {
+        if (e.key === 'ArrowLeft') mostrar(idx - 1);
+        if (e.key === 'ArrowRight') mostrar(idx + 1);
+      });
+      visor.addEventListener('touchstart', e => {
+        if (e.touches.length !== 1) { inicioX = 0; return; }   // con dos dedos es zoom, no se cambia de foto
+        inicioX = e.touches[0].clientX; inicioY = e.touches[0].clientY;
+      }, { passive: true });
+      visor.addEventListener('touchend', e => {
+        if (!inicioX || !fotos.length) return;
+        const dx = e.changedTouches[0].clientX - inicioX, dy = e.changedTouches[0].clientY - inicioY;
+        inicioX = 0;
+        if (fotos.length > 1 && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) mostrar(idx + (dx < 0 ? 1 : -1));
+        else if (dy > 90 && Math.abs(dy) > Math.abs(dx)) visor.close();   // deslizar hacia abajo cierra
+      }, { passive: true });
+      // Al cerrar, la foto de la página queda en la que se estaba mirando
+      visor.addEventListener('close', () => { if (fotos.length > 1 && idx !== fotoIdx) irFoto(idx); });
     })();
   </script>
 </body>
