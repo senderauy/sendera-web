@@ -50,7 +50,7 @@
   <!-- La foto de portada se pide de entrada, antes de leer los estilos: así no se ve el fondo negro mientras carga -->
   <link rel="preload" as="image" href="/api/foto?portada=compu" media="(min-width: 721px)" fetchpriority="high" />
   <link rel="preload" as="image" href="/api/foto?portada=celular" media="(max-width: 720px)" fetchpriority="high" />
-  <link rel="stylesheet" href="style.css?v=74" />
+  <link rel="stylesheet" href="style.css?v=76" />
   <link rel="stylesheet" href="carrito.css?v=2" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
 </head>
@@ -1525,7 +1525,7 @@
       function armar(c) {
         const lam = document.createElement('div');
         const conCompu = FOTO.test(c.compu || '');
-        lam.className = 'portada-campana ' + (conCompu ? 'con-compu' : 'solo-celular') + (c.conTexto === false ? ' sin-texto-en-foto' : ' texto-en-foto');
+        lam.className = 'portada-campana ' + (conCompu ? 'con-compu' : 'solo-celular') + (c.conTexto === false ? ' sin-texto-en-foto' : ' texto-en-foto') + (c.titulo || c.texto ? '' : ' sin-titulo');
         lam.setAttribute('aria-hidden', 'true');
         const pic = document.createElement('picture');
         if (conCompu) {
@@ -1535,6 +1535,18 @@
         }
         const img = document.createElement('img');
         img.className = 'foto'; img.src = c.celular; img.alt = c.titulo || ''; img.decoding = 'async';
+        // Si el lado izquierdo de la foto es oscuro, el título y el botón van en claro (y al revés)
+        img.addEventListener('load', () => {
+          try {
+            const cv = document.createElement('canvas'); cv.width = 24; cv.height = 16;
+            const g = cv.getContext('2d'); g.drawImage(img, 0, 0, 24, 16);
+            const d = g.getImageData(0, 0, 10, 16).data;
+            let luz = 0;
+            for (let i = 0; i < d.length; i += 4) luz += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+            lam.classList.toggle('foto-oscura', luz / (d.length / 4) < 110);
+            if (lam.classList.contains('activa')) puntos.classList.toggle('sobre-claro', !lam.classList.contains('foto-oscura') && !lam.classList.contains('sin-texto-en-foto'));
+          } catch (e) {}
+        });
         pic.append(img);
         if (!conCompu) {
           const relleno = document.createElement('img');
@@ -1571,7 +1583,7 @@
           const b = lam.querySelector('.boton-campana');
           if (b) b.tabIndex = ver ? 0 : -1;
         });
-        puntos.classList.toggle('sobre-claro', actual > 0 && !laminas[actual - 1].classList.contains('sin-texto-en-foto'));
+        puntos.classList.toggle('sobre-claro', actual > 0 && !laminas[actual - 1].classList.contains('sin-texto-en-foto') && !laminas[actual - 1].classList.contains('foto-oscura'));
         puntos.querySelectorAll('button').forEach((b, i) => {
           b.classList.remove('activo'); void b.offsetWidth; b.classList.toggle('activo', i === actual);
           b.setAttribute('aria-current', String(i === actual));
