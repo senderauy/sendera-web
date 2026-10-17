@@ -22,7 +22,11 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     [hidden] { display: none !important; }
     body { min-height: 100vh; font-size: 14px; line-height: 1.5; }
-    button, input { font-family: inherit; }
+    button, input, select { font-family: inherit; }
+
+    .titulo-seccion { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 40px 0 6px; }
+    .titulo-seccion h2 { font: 600 1.6rem/1.1 var(--sa-serif); }
+    .titulo-seccion + p { color: var(--sa-tinta-3); font-size: 0.86rem; margin-bottom: 18px; max-width: 70ch; }
 
     .portadas { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 20px; align-items: start; }
     .portada { display: flex; flex-direction: column; gap: 14px; }
@@ -53,9 +57,60 @@
     .acciones { display: flex; gap: 10px; flex-wrap: wrap; }
     .ayuda { color: var(--sa-tinta-3); font-size: 0.76rem; }
 
+    /* ── Portadas de campaña ─────────────────────── */
+    .campanas { display: grid; gap: 12px; }
+    .campana {
+      display: grid; grid-template-columns: 74px 132px minmax(0, 1fr) auto; gap: 16px; align-items: center;
+      padding: 12px 14px 12px 12px; border-radius: 16px; background: var(--sa-papel); border: 1px solid var(--sa-linea);
+    }
+    .campana.apagada { opacity: 0.6; }
+    .campana .mini { border-radius: 10px; background: var(--sa-papel-2) center / cover no-repeat; border: 1px solid var(--sa-linea-2); }
+    .campana .mini.cel { aspect-ratio: 9 / 16; width: 74px; }
+    .campana .mini.pc { aspect-ratio: 16 / 9; width: 132px; display: grid; place-items: center; color: var(--sa-tinta-3); font-size: 0.7rem; text-align: center; }
+    .campana b { display: block; font-size: 0.95rem; }
+    .campana small { display: block; color: var(--sa-tinta-3); font-size: 0.8rem; margin-top: 2px; overflow-wrap: anywhere; }
+    .campana .controles { display: flex; align-items: center; gap: 4px; }
+    .campana .controles .sa-icono-btn:hover { color: var(--sa-tinta); }
+    .campana .controles .borrar:hover { color: var(--sa-rojo); }
+    .campana .controles .sa-interruptor { margin: 0 8px; }
+    .campanas .sa-vacio { background: var(--sa-papel); border: 1px dashed var(--sa-linea); border-radius: 16px; }
+    @media (max-width: 760px) {
+      .campana { grid-template-columns: 58px minmax(0, 1fr); grid-template-areas: "cel info" "cel ctrl"; row-gap: 8px; }
+      .campana .mini.cel { width: 58px; grid-area: cel; }
+      .campana .mini.pc { display: none; }
+      .campana .info { grid-area: info; }
+      .campana .controles { grid-area: ctrl; }
+    }
+
+    /* Editor de una portada de campaña */
+    .editor { display: grid; gap: 18px; padding: 20px; border-radius: 18px; background: var(--sa-papel); border: 1px solid var(--sa-tinta-3); margin-bottom: 14px; }
+    .editor h3 { font: 600 1.3rem/1.1 var(--sa-serif); }
+    .editor .fotos { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 16px; align-items: start; }
+    .editor .foto-campo { display: grid; gap: 8px; }
+    .editor .foto-campo > span { font-size: 0.8rem; font-weight: 600; }
+    .editor .foto-campo > span small { display: block; font-weight: 400; color: var(--sa-tinta-3); }
+    .editor .caja-foto {
+      position: relative; border-radius: 12px; border: 1.5px dashed var(--sa-linea); background: var(--sa-papel-2) center / cover no-repeat;
+      display: grid; place-items: center; color: var(--sa-tinta-3); font-size: 0.8rem; cursor: pointer; text-align: center; padding: 10px;
+    }
+    .editor .caja-foto.con-foto { border-style: solid; color: transparent; }
+    .editor .caja-foto.cel { aspect-ratio: 9 / 16; }
+    .editor .caja-foto.pc { aspect-ratio: 16 / 9; }
+    .editor .caja-foto.encima { border-color: var(--sa-tinta); }
+    .editor .campos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .editor label.campo { display: grid; gap: 6px; font-size: 0.8rem; font-weight: 600; }
+    .editor label.campo small { font-weight: 400; color: var(--sa-tinta-3); }
+    .editor .ancho { grid-column: 1 / -1; }
+    .editor .tilde { display: flex; gap: 10px; align-items: flex-start; font-size: 0.86rem; cursor: pointer; }
+    .editor .tilde input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--sa-noche); }
+    .editor .tilde small { display: block; color: var(--sa-tinta-3); font-size: 0.78rem; }
+    .editor .sa-acciones { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+
     @media (max-width: 900px) {
       .portadas { grid-template-columns: minmax(0, 1fr); }
       .acciones .sa-boton, .acciones .sa-boton-sec { flex: 1; }
+      .editor .fotos { grid-template-columns: 140px minmax(0, 1fr); }
+      .editor .campos { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -65,9 +120,12 @@
   <header class="sa-encabezado">
     <div>
       <h1>Portada</h1>
-      <p>La foto grande del inicio de la tienda. Podés poner una para la compu y otra para el celular.</p>
+      <p>La foto grande del inicio. Además de la principal, podés sumar portadas de campaña que van rotando.</p>
     </div>
   </header>
+
+  <div class="titulo-seccion"><h2>Portada principal</h2></div>
+  <p>Es la primera que se ve, con "Donde empieza la aventura" y los botones de siempre. Podés poner una foto para la compu y otra para el celular.</p>
 
   <div class="portadas">
     <section class="sa-panel portada" data-lado="compu" aria-labelledby="t-compu">
@@ -103,9 +161,51 @@
     </section>
   </div>
   <p class="ayuda" style="margin-top:16px">Después de guardar, quien entra por primera vez ve la foto nueva enseguida; en los celulares que ya habían entrado puede tardar hasta una hora.</p>
+
+  <div class="titulo-seccion">
+    <h2>Portadas de campaña</h2>
+    <button type="button" class="sa-boton" id="nueva-campana"><i data-lucide="plus"></i>Nueva portada</button>
+  </div>
+  <p>Rotan después de la principal, cada 6 segundos. Para cada una: una foto vertical para el celular (9:16, puede traer el título) y, si querés, una horizontal para la compu (16:9, sin texto y con el lado izquierdo libre: la web le pone el título).</p>
+
+  <div id="editor-lugar"></div>
+  <div class="campanas" id="campanas"></div>
 </main>
 
+<template id="tpl-editor">
+  <form class="editor" novalidate>
+    <h3 data-titulo-editor>Nueva portada de campaña</h3>
+    <div class="fotos">
+      <div class="foto-campo">
+        <span>Celular <small>Vertical 9:16</small></span>
+        <label class="caja-foto cel" data-caja="celular">Tocá para elegir la foto<input class="archivo" type="file" accept="image/*" /></label>
+      </div>
+      <div class="foto-campo">
+        <span>Compu <small>Horizontal 16:9, sin texto. Opcional: si no hay, se usa la del celular.</small></span>
+        <label class="caja-foto pc" data-caja="compu">Tocá para elegir la foto<input class="archivo" type="file" accept="image/*" /></label>
+      </div>
+    </div>
+    <div class="campos">
+      <label class="campo ancho">Título <small>Va encima de la foto de la compu (y del celular, si la foto no lo trae)</small>
+        <input class="sa-campo" name="titulo" maxlength="80" placeholder="Hechos para seguirte el ritmo" /></label>
+      <label class="campo ancho">Texto corto <small>Opcional, debajo del título</small>
+        <input class="sa-campo" name="texto" maxlength="140" placeholder="Gorros livianos y respirables para correr." /></label>
+      <label class="campo">Texto del botón
+        <input class="sa-campo" name="boton" maxlength="40" placeholder="Ver los Anth Co" /></label>
+      <label class="campo">El botón lleva a
+        <select class="sa-campo" name="enlace" data-enlaces><option value="#productos">La tienda (todos los productos)</option></select></label>
+      <label class="tilde ancho"><input type="checkbox" name="conTexto" checked />
+        <span>La foto del celular ya trae el título<small>Así no se le pone texto encima en el celular; solo el botón.</small></span></label>
+    </div>
+    <div class="sa-acciones">
+      <button type="button" class="sa-boton-sec" data-cancelar-editor>Cancelar</button>
+      <button type="submit" class="sa-boton"><i data-lucide="check"></i>Guardar portada</button>
+    </div>
+  </form>
+</template>
+
 <script>
+  // ── Portada principal ─────────────────────────
   // La tienda pide /api/foto?portada=compu|celular: si acá hay una foto guardada, muestra esa; si no, la original
   const ORIGINAL = { compu: '/img/hero-desktop-rio.webp', celular: '/img/hero-mobile.webp' };
   const MAXIMO = { compu: 2200, celular: 1400 };   // ancho/alto máximo al achicarla
@@ -207,12 +307,186 @@
     });
   });
 
-  // ── Datos en vivo ──────────────────────────────
   db.ref('portada').on('value', snap => {
     portada = snap.val() || {};
     ['compu', 'celular'].forEach(pintar);
   });
   ['compu', 'celular'].forEach(pintar);
+
+  // ── Portadas de campaña ───────────────────────
+  // Se guardan en portadas/<id>: { celular, compu, titulo, texto, boton, enlace, conTexto, activa, orden }.
+  // Las fotos van aparte (imagenes/<huella>), igual que la principal.
+  const FOTO_GUARDADA = /^\/api\/foto\?h=[a-f0-9]{32}$/;
+  const MAXIMO_CAMPANA = { celular: 1400, compu: 2200 };
+  let campanas = [];             // [{ id, ...datos }] ordenadas
+  let enlaces = [['#productos', 'La tienda (todos los productos)']];
+  const nombreEnlace = e => (enlaces.find(([v]) => v === e) || [e, e === '#productos' ? 'La tienda' : 'Un producto'])[1];
+
+  function dibujarCampanas() {
+    const lista = document.getElementById('campanas');
+    if (!campanas.length) {
+      lista.innerHTML = '<div class="sa-vacio"><i data-lucide="images"></i>Todavía no hay portadas de campaña. Con "Nueva portada" sumás la primera.</div>';
+      panel.iconos();
+      return;
+    }
+    lista.innerHTML = campanas.map((c, i) => `
+      <article class="campana${c.activa ? '' : ' apagada'}" data-id="${esc(c.id)}">
+        <span class="mini cel" style="background-image:url('${esc(c.celular)}')"></span>
+        <span class="mini pc"${FOTO_GUARDADA.test(c.compu || '') ? ` style="background-image:url('${esc(c.compu)}')"` : ''}>${FOTO_GUARDADA.test(c.compu || '') ? '' : 'Sin foto de compu'}</span>
+        <div class="info">
+          <b>${esc(c.titulo || 'Sin título')}</b>
+          <small>${c.boton ? `Botón "${esc(c.boton)}" → ${esc(nombreEnlace(c.enlace))}` : 'Sin botón'}${c.activa ? '' : ' · Apagada'}</small>
+        </div>
+        <div class="controles">
+          <button type="button" class="sa-icono-btn" data-subir aria-label="Subir"${i === 0 ? ' disabled' : ''}><i data-lucide="arrow-up"></i></button>
+          <button type="button" class="sa-icono-btn" data-bajar aria-label="Bajar"${i === campanas.length - 1 ? ' disabled' : ''}><i data-lucide="arrow-down"></i></button>
+          <button type="button" class="sa-interruptor" role="switch" aria-checked="${!!c.activa}" aria-label="Mostrar en el inicio" data-prender></button>
+          <button type="button" class="sa-icono-btn" data-editar aria-label="Editar"><i data-lucide="pencil"></i></button>
+          <button type="button" class="sa-icono-btn borrar" data-borrar aria-label="Borrar"><i data-lucide="trash-2"></i></button>
+        </div>
+      </article>`).join('');
+    panel.iconos();
+  }
+
+  db.ref('portadas').on('value', snap => {
+    const v = snap.val() || {};
+    campanas = Object.entries(v)
+      .filter(([, c]) => c && typeof c === 'object')
+      .map(([id, c]) => ({ id, ...c }))
+      .sort((a, b) => (Number(a.orden) || 0) - (Number(b.orden) || 0));
+    dibujarCampanas();
+  });
+
+  // Productos para elegir a dónde lleva el botón (uno por modelo, al primer color)
+  db.ref('productos').once('value').then(snap => {
+    const productos = snap.val() || {};
+    const vistos = new Set();
+    const lista = [];
+    Object.entries(productos).forEach(([id, p]) => {
+      if (!p || !p.nombre) return;
+      const nombre = String(p.subgrupo || p.nombre).trim();
+      if (vistos.has(nombre.toLowerCase())) return;
+      vistos.add(nombre.toLowerCase());
+      lista.push([`producto.html?id=${id}`, nombre]);
+    });
+    lista.sort((a, b) => a[1].localeCompare(b[1], 'es'));
+    enlaces = [['#productos', 'La tienda (todos los productos)'], ...lista];
+    document.querySelectorAll('[data-enlaces]').forEach(llenarEnlaces);
+    dibujarCampanas();
+  });
+
+  function llenarEnlaces(select) {
+    const actual = select.value;
+    select.innerHTML = enlaces.map(([v, n]) => `<option value="${esc(v)}">${esc(n)}</option>`).join('');
+    if (enlaces.some(([v]) => v === actual)) select.value = actual;
+  }
+
+  // Abre el editor para una portada nueva o para editar una existente
+  function abrirEditor(campana) {
+    const lugar = document.getElementById('editor-lugar');
+    lugar.innerHTML = '';
+    const form = document.getElementById('tpl-editor').content.firstElementChild.cloneNode(true);
+    lugar.append(form);
+    const fotos = { celular: campana?.celular || '', compu: campana?.compu || '' };   // dirección guardada o base64 nueva
+    form.querySelector('[data-titulo-editor]').textContent = campana ? 'Editar portada de campaña' : 'Nueva portada de campaña';
+    const select = form.querySelector('[data-enlaces]');
+    llenarEnlaces(select);
+    if (campana) {
+      form.titulo.value = campana.titulo || '';
+      form.texto.value = campana.texto || '';
+      form.boton.value = campana.boton || '';
+      if (campana.enlace && !enlaces.some(([v]) => v === campana.enlace)) select.insertAdjacentHTML('beforeend', `<option value="${esc(campana.enlace)}">Producto guardado</option>`);
+      select.value = campana.enlace || '#productos';
+      form.conTexto.checked = campana.conTexto !== false;
+    }
+
+    const pintarCaja = lado => {
+      const c = form.querySelector(`[data-caja="${lado}"]`);
+      c.classList.toggle('con-foto', !!fotos[lado]);
+      c.style.backgroundImage = fotos[lado] ? `url("${fotos[lado]}")` : '';
+    };
+    ['celular', 'compu'].forEach(lado => {
+      const c = form.querySelector(`[data-caja="${lado}"]`);
+      const input = c.querySelector('input');
+      const usar = async archivo => {
+        if (!archivo || !archivo.type.startsWith('image/')) return panel.aviso('Elegí un archivo de foto.', true);
+        try { fotos[lado] = await achicarFoto(archivo, MAXIMO_CAMPANA[lado]); pintarCaja(lado); }
+        catch (e) { panel.aviso('No se pudo leer esa foto. Probá con otra.', true); }
+      };
+      input.addEventListener('change', e => { usar(e.target.files[0]); e.target.value = ''; });
+      ['dragenter', 'dragover'].forEach(t => c.addEventListener(t, e => { e.preventDefault(); c.classList.add('encima'); }));
+      ['dragleave', 'drop'].forEach(t => c.addEventListener(t, () => c.classList.remove('encima')));
+      c.addEventListener('drop', e => { e.preventDefault(); usar(e.dataTransfer.files[0]); });
+      pintarCaja(lado);
+    });
+
+    form.querySelector('[data-cancelar-editor]').addEventListener('click', () => { lugar.innerHTML = ''; });
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      if (!fotos.celular) return panel.aviso('Falta la foto del celular.', true);
+      if (form.boton.value.trim() && !select.value) return panel.aviso('Elegí a dónde lleva el botón.', true);
+      const btn = form.querySelector('[type="submit"]');
+      btn.disabled = true;
+      try {
+        const datos = {
+          celular: await guardarImagen(fotos.celular),
+          titulo: form.titulo.value.trim().slice(0, 80),
+          texto: form.texto.value.trim().slice(0, 140),
+          boton: form.boton.value.trim().slice(0, 40),
+          enlace: select.value || '#productos',
+          conTexto: form.conTexto.checked,
+          activa: campana ? campana.activa !== false : true,
+          orden: campana ? Number(campana.orden) || 0 : (campanas.length ? Math.max(...campanas.map(c => Number(c.orden) || 0)) + 1 : 1),
+          actualizado: new Date().toISOString()
+        };
+        if (fotos.compu) datos.compu = await guardarImagen(fotos.compu);
+        if (campana) await db.ref('portadas/' + campana.id).set(datos);
+        else await db.ref('portadas').push(datos);
+        lugar.innerHTML = '';
+        panel.aviso(campana ? 'Portada actualizada.' : 'Portada sumada. Ya rota en el inicio.');
+      } catch (err) {
+        panel.aviso('No se pudo guardar la portada. Probá de nuevo.', true);
+        btn.disabled = false;
+      }
+    });
+    panel.iconos();
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  document.getElementById('nueva-campana').addEventListener('click', () => abrirEditor(null));
+
+  document.getElementById('campanas').addEventListener('click', async e => {
+    const art = e.target.closest('.campana');
+    if (!art) return;
+    const i = campanas.findIndex(c => c.id === art.dataset.id);
+    const c = campanas[i];
+    if (!c) return;
+    try {
+      if (e.target.closest('[data-editar]')) return abrirEditor(c);
+      if (e.target.closest('[data-prender]')) {
+        await db.ref(`portadas/${c.id}/activa`).set(!c.activa);
+        return panel.aviso(c.activa ? 'Portada apagada: ya no se muestra en el inicio.' : 'Portada prendida: vuelve a rotar en el inicio.');
+      }
+      const mover = e.target.closest('[data-subir]') ? -1 : e.target.closest('[data-bajar]') ? 1 : 0;
+      if (mover) {
+        const otra = campanas[i + mover];
+        if (!otra) return;
+        // Se intercambian los lugares (si tenían el mismo número, se renumeran todas)
+        const cambios = {};
+        campanas.forEach((x, k) => { cambios[`${x.id}/orden`] = k + 1; });
+        cambios[`${c.id}/orden`] = i + mover + 1;
+        cambios[`${otra.id}/orden`] = i + 1;
+        return db.ref('portadas').update(cambios);
+      }
+      if (e.target.closest('[data-borrar]')) {
+        const si = await panel.confirmar({ titulo: '¿Borrar esta portada?', texto: `"${c.titulo || 'Sin título'}" deja de rotar en el inicio. Si solo querés sacarla un tiempo, apagala con el interruptor.`, boton: 'Borrar portada', peligro: true });
+        if (si) { await db.ref('portadas/' + c.id).remove(); panel.aviso('Portada borrada.'); }
+      }
+    } catch (err) {
+      panel.aviso('No se pudo hacer el cambio. Probá de nuevo.', true);
+    }
+  });
+
   panel.iconos();
 </script>
 </body>

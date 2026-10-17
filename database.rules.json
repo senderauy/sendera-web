@@ -95,6 +95,24 @@
       "$lado": {
         ".validate": "(($lado === 'compu' || $lado === 'celular') && newData.isString() && newData.val().matches(/^\\/api\\/foto\\?h=[a-f0-9]{32}$/)) || ($lado === 'actualizado' && newData.isString() && newData.val().length <= 40)"
       }
+    },
+    "portadas": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true",
+      "$id": {
+        ".validate": "newData.hasChildren(['celular', 'activa', 'orden'])",
+        "celular": { ".validate": "newData.isString() && newData.val().matches(/^\\/api\\/foto\\?h=[a-f0-9]{32}$/)" },
+        "compu": { ".validate": "newData.isString() && newData.val().matches(/^\\/api\\/foto\\?h=[a-f0-9]{32}$/)" },
+        "titulo": { ".validate": "newData.isString() && newData.val().length <= 80" },
+        "texto": { ".validate": "newData.isString() && newData.val().length <= 140" },
+        "boton": { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "enlace": { ".validate": "newData.isString() && newData.val().matches(/^(#productos|producto\\.html\\?id=[A-Za-z0-9_-]{1,64})$/)" },
+        "conTexto": { ".validate": "newData.isBoolean()" },
+        "activa": { ".validate": "newData.isBoolean()" },
+        "orden": { ".validate": "newData.isNumber()" },
+        "actualizado": { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "$otro": { ".validate": false }
+      }
     }
   }
 }

@@ -2975,3 +2975,65 @@ nav a:hover::after {
 
 /* Portada que llegó enseguida: sin fundido */
 .hero.sin-fundido::after { transition: none; }
+
+/* ── Portadas de campaña: rotan después de la principal (se cargan en el panel, Portada) ── */
+.hero .portada-campana {
+  position: absolute; inset: 0; z-index: 4; overflow: hidden; background: #efe7dc;
+  opacity: 0; visibility: hidden; transition: opacity 700ms ease, visibility 0s linear 700ms;
+}
+.hero .portada-campana.activa { opacity: 1; visibility: visible; transition: opacity 700ms ease, visibility 0s; }
+.portada-campana .foto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.portada-campana .relleno { display: none; }
+/* Sombra suave arriba para que el menú blanco se lea sobre fotos claras */
+.portada-campana::before { content: ''; position: absolute; inset: 0 0 auto; height: 120px; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(20,24,18,0.45), rgba(20,24,18,0)); }
+.portada-campana .texto-campana { position: absolute; z-index: 2; left: 24px; right: 24px; bottom: 120px; color: #fff; font-family: 'Montserrat', sans-serif; }
+.portada-campana .texto-campana h2 { margin: 0; font-weight: 800; font-size: clamp(2rem, 8vw, 2.6rem); line-height: 1; letter-spacing: -0.03em; }
+.portada-campana .texto-campana p { margin: 12px 0 0; font-size: 0.95rem; line-height: 1.5; opacity: 0.9; }
+/* En el celular, si la foto no trae el título, va abajo sobre una sombra */
+.portada-campana.sin-texto-en-foto::after { content: ''; position: absolute; inset: 40% 0 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(10,14,9,0), rgba(10,14,9,0.75)); }
+.portada-campana.texto-en-foto .texto-campana { display: none; }
+@media (min-width: 721px) { .portada-campana.con-compu.texto-en-foto .texto-campana { display: block; } }
+.portada-campana .boton-campana {
+  position: absolute; left: 50%; bottom: 58px; transform: translateX(-50%); z-index: 3;
+  display: inline-flex; align-items: center; gap: 10px; padding: 15px 28px; border-radius: 999px;
+  background: #182417; color: #fff; font: 700 0.86rem 'Montserrat', sans-serif; text-decoration: none; white-space: nowrap;
+  box-shadow: 0 10px 30px -10px rgba(24,36,23,0.5); transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.portada-campana .boton-campana:active { transform: translateX(-50%) scale(0.97); }
+.portada-campana.sin-texto-en-foto .boton-campana { left: 24px; transform: none; bottom: 58px; background: #fff; color: #182417; }
+.portada-campana.sin-texto-en-foto .boton-campana:active { transform: scale(0.97); }
+.portada-campana .boton-campana svg { width: 18px; height: 18px; }
+
+.hero .portadas-puntos { position: absolute; left: 0; right: 0; bottom: 24px; z-index: 6; display: flex; justify-content: center; gap: 8px; }
+.portadas-puntos button { width: 28px; height: 4px; padding: 0; border: 0; border-radius: 4px; background: rgba(255,255,255,0.45); cursor: pointer; overflow: hidden; position: relative; }
+.portadas-puntos button::before { content: ''; position: absolute; inset: -12px -4px; }  /* más fácil de tocar */
+.portadas-puntos.sobre-claro button { background: rgba(24,36,23,0.22); }
+.portadas-puntos button i { position: absolute; inset: 0; transform-origin: left; transform: scaleX(0); background: #fff; }
+.portadas-puntos.sobre-claro button i { background: #182417; }
+.portadas-puntos button.activo i { animation: avance-portada 6s linear forwards; }
+.portadas-puntos.pausa button.activo i { animation-play-state: paused; }
+@keyframes avance-portada { to { transform: scaleX(1); } }
+
+@media (min-width: 721px) {
+  .portada-campana .foto { object-position: right center; }
+  /* Sin foto de compu se usa la del celular, entera, sobre la misma foto desenfocada */
+  .portada-campana.solo-celular .foto { object-fit: contain; object-position: center; }
+  .portada-campana.solo-celular .relleno { display: block; position: absolute; inset: -40px; width: calc(100% + 80px); height: calc(100% + 80px); object-fit: cover; filter: blur(28px) saturate(1.1); opacity: 0.85; }
+  .portada-campana.con-compu::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(90deg, rgba(239,231,220,0.97) 0%, rgba(239,231,220,0.9) 28%, rgba(239,231,220,0) 52%); }
+  /* Sin foto de compu y sin título en la foto: el título va abajo a la izquierda, como en el celular */
+  .portada-campana.solo-celular.sin-texto-en-foto .texto-campana { left: max(48px, calc((100vw - 1180px) / 2)); right: auto; max-width: 40vw; bottom: 120px; }
+  .portada-campana.solo-celular.sin-texto-en-foto .texto-campana h2 { font-size: clamp(2.4rem, 4.2vw, 3.8rem); }
+  .portada-campana.solo-celular.sin-texto-en-foto .boton-campana { left: max(48px, calc((100vw - 1180px) / 2)); }
+  .portada-campana.con-compu .texto-campana {
+    display: block; left: max(48px, calc((100vw - 1180px) / 2)); right: auto; top: 50%; bottom: auto; transform: translateY(-50%); max-width: 34vw; color: #182417;
+  }
+  .portada-campana.con-compu .texto-campana h2 { font-size: clamp(2.4rem, 4.6vw, 4.4rem); line-height: 0.98; }
+  .portada-campana.con-compu .texto-campana p { margin-top: 18px; font-size: 1.05rem; color: rgba(24,36,23,0.75); opacity: 1; }
+  .portada-campana.con-compu .boton-campana { left: max(48px, calc((100vw - 1180px) / 2)); bottom: auto; top: calc(50% + 130px); transform: none; background: #182417; color: #fff; }
+  .portada-campana.con-compu .boton-campana:active { transform: scale(0.97); }
+  .portada-campana.con-compu.sin-texto-en-foto::after { background: linear-gradient(90deg, rgba(239,231,220,0.97) 0%, rgba(239,231,220,0.9) 28%, rgba(239,231,220,0) 52%); inset: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero .portada-campana, .hero .portada-campana.activa { transition: none; }
+}
