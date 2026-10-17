@@ -4,7 +4,7 @@
 //   · le crea el código del link de seguimiento
 //   · manda al cliente el WhatsApp automático y el email de confirmación (con el link para seguir el pedido)
 // Mercado Pago no pasa por acá: esas confirmaciones las manda el webhook al aprobarse el pago.
-import { DB_URL, getFirebaseToken } from './_pedido.js';
+import { DB_URL, getFirebaseToken, usarCodigo } from './_pedido.js';
 import {
   enviarWhatsAppConfirmacion, enviarEmailConfirmacion, notificarAdmins,
   normalizarCelular, lineasProductos
@@ -63,6 +63,9 @@ export default async function handler(req, res) {
     if (pedido.metodo_pago === 'mercadopago') return res.status(200).json({ ok: true, omitido: 'mercadopago' });
 
     if (!(await marcarNotificado(id, token))) return res.status(200).json({ ok: true, yaNotificado: true });
+
+    // Si usó un código de un solo uso (los de la ruleta), deja de servir
+    if (pedido.cupon) await usarCodigo(pedido.cupon, token).catch(e => console.error('confirmar-pedido cupón:', e.message));
 
     // Ya compró: se cancela el recordatorio de carrito que tuviera programado y se borra el carrito abandonado
     const carritoId = String(req.body?.carritoId || '');

@@ -2,6 +2,7 @@ import { GoogleAuth } from 'google-auth-library';
 import { notificarAdmins, enviarWhatsAppConfirmacion, enviarEmailConfirmacion, lineasProductos } from './_notificaciones.js';
 import { nuevoCodigo, enlaceSeguimiento, emailValido, anotarAvisos } from './_seguimiento.js';
 import { cerrarCarritos } from './_carritos.js';
+import { usarCodigo } from './_pedido.js';
 
 const DB_URL = 'https://sendera-34791-default-rtdb.firebaseio.com';
 
@@ -119,6 +120,11 @@ export default async function handler(req, res) {
     // El mail queda en el pedido para avisarle los cambios de estado
     if (emailValido(orderTemp.email)) pedido.email = String(orderTemp.email).trim();
 
+    // El código de descuento queda anotado en el pedido; si era de un solo uso (ruleta), deja de servir
+    if (orderTemp.codigo) {
+      pedido.cupon = String(orderTemp.codigo).slice(0, 40);
+      await usarCodigo(orderTemp.codigo, fbToken).catch(e => console.error('mp-webhook cupón:', e.message));
+    }
     const guardado = await fbPost('pedidos', pedido, fbToken);
     const pedidoId = guardado && guardado.name;
 

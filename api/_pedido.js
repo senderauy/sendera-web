@@ -32,6 +32,19 @@ async function fbGet(path, token) {
   return res.json();
 }
 
+// Los códigos de un solo uso (los de la ruleta) dejan de servir cuando se usan en una compra
+export async function usarCodigo(codigo, token) {
+  const c = String(codigo ?? '').trim().toUpperCase();
+  if (!/^[A-Z0-9_-]{1,40}$/.test(c)) return;
+  const dato = await fbGet(`codigos_descuento/${encodeURIComponent(c)}`, token).catch(() => null);
+  if (!dato || !dato.unUso || !dato.activo) return;
+  await fetch(`${DB_URL}/codigos_descuento/${encodeURIComponent(c)}.json`, {
+    method: 'PATCH',
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ activo: false, usado: new Date().toISOString() })
+  }).catch(() => {});
+}
+
 // Error que se le puede mostrar al cliente (pedido inválido), distinto de una falla interna
 export class PedidoInvalido extends Error {}
 
@@ -102,10 +115,12 @@ export async function calcularPedido(body, token) {
     if (!/^[A-Z0-9_-]{1,40}$/.test(codigo)) throw new PedidoInvalido('Código de descuento inválido.');
     const dato = await fbGet(`codigos_descuento/${encodeURIComponent(codigo)}`, token);
     if (!dato || !dato.activo) throw new PedidoInvalido('El código de descuento no es válido.');
+    if (dato.vence && !(Date.parse(dato.vence) > Date.now())) throw new PedidoInvalido('El código de descuento ya venció.');
     const valor = Number(dato.descuento) || 0;
+    // tipo "envio": envío gratis (lo que cuesta el envío de este pedido; el interior y el retiro ya son sin costo)
     descuento = dato.tipo === 'porcentaje'
       ? Math.round((subtotal + envio.costo) * valor / 100)
-      : valor;
+      : dato.tipo === 'envio' ? envio.costo : valor;
     descuento = Math.min(Math.max(0, descuento), subtotal + envio.costo);
   } else {
     codigo = '';

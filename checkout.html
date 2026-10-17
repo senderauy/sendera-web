@@ -766,9 +766,10 @@
     const snap = await db.ref('codigos_descuento/' + codigo).once('value');
     const data = snap.val();
 
-    if (!data || !data.activo) {
+    const vencido = !!(data && data.vence && !(Date.parse(data.vence) > Date.now()));
+    if (!data || !data.activo || vencido) {
       msg.style.color = 'var(--falta)';
-      msg.textContent = 'Ese código no existe o ya no está disponible.';
+      msg.textContent = vencido ? 'Ese código ya venció.' : 'Ese código no existe o ya no está disponible.';
       descuentoAplicado = 0;
       codigoAplicado = '';
       document.getElementById('descuento-row').style.display = 'none';
@@ -782,6 +783,10 @@
     if (data.tipo === 'porcentaje') {
       descuentoAplicado = Math.round(subtotal * data.descuento / 100);
       document.getElementById('descuento-label').textContent = `Descuento (${data.descuento}%)`;
+    } else if (data.tipo === 'envio') {
+      // Envío gratis: descuenta lo que cuesta el envío (el interior y el retiro ya son sin costo)
+      descuentoAplicado = envio?.costo || 0;
+      document.getElementById('descuento-label').textContent = 'Envío gratis';
     } else {
       descuentoAplicado = data.descuento;
       document.getElementById('descuento-label').textContent = 'Descuento';
@@ -794,6 +799,20 @@
     msg.textContent = `Código ${codigo} aplicado.`;
     actualizarTotal();
   }
+  // Si ganó un código en la ruleta del inicio (y no venció), se pone solo; si ya no sirve, se olvida sin avisar
+  (async () => {
+    let premio = null;
+    try { premio = JSON.parse(localStorage.getItem('sendera_premio') || 'null'); } catch (e) {}
+    if (!premio || !premio.codigo || !(Date.parse(premio.vence) > Date.now()) || !pedidoData) return;
+    const input = document.getElementById('cupon-input');
+    input.value = premio.codigo;
+    try { await aplicarCupon(); } catch (e) {}
+    if (!codigoAplicado) {
+      input.value = '';
+      document.getElementById('cupon-msg').textContent = '';
+      try { localStorage.removeItem('sendera_premio'); } catch (e) {}
+    }
+  })();
   document.getElementById('cupon-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); aplicarCupon(); }
   });
@@ -1156,7 +1175,8 @@
     };
     if (email) pedido.email = email.slice(0, 120);
     // Con transferencia o efectivo el total ya trae el descuento: queda anotado qué código se usó
-    if (codigoAplicado) pedido.codigo = codigoAplicado;
+    // (pedido.codigo es el del link de seguimiento: el de descuento va en "cupon")
+    if (codigoAplicado) pedido.cupon = codigoAplicado;
     if (comprobanteBase64) pedido.comprobante = comprobanteBase64;
     const refPedido = db.ref('pedidos').push(pedido);
     try { if (window.fbq) fbq('track', 'Purchase', datosMeta(pedido.total)); } catch (e) {}

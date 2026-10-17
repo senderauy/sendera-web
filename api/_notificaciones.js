@@ -315,6 +315,22 @@ export async function enviarEmailComprobanteEnvio({ email, cliente, foto, enlace
   return enviarMail({ email, asunto: '📦 El comprobante de tu envío — Sendera', ...mail });
 }
 
+// Mail con el premio de la ruleta del inicio ("Girá y ganá")
+export async function enviarEmailRuleta({ email, premio, codigo, vence, enlace }) {
+  const que = premio === 'envio' ? 'envío gratis a Montevideo' : `${premio}% de descuento en toda la tienda`;
+  const hasta = new Date(vence).toLocaleString('es-UY', { timeZone: 'America/Montevideo', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+  const mail = armarMail({
+    etiqueta: 'Tu premio',
+    cliente: '',
+    mensaje: `¡Ganaste ${que}! Usá el código ${codigo} en la página de pago. Sirve para una compra y vence el ${hasta}.`,
+    nota: `Tu código: ${codigo}`,
+    enlace,
+    boton: 'Ir a la tienda',
+    notaBoton: 'Elegí lo que te guste y poné el código al pagar.'
+  });
+  return enviarMail({ email, asunto: `🎁 Tu código de ${premio === 'envio' ? 'envío gratis' : premio + '% OFF'} — Sendera`, ...mail });
+}
+
 // Notificación push a los admins. Las suscripciones que ya no existen (404/410) se borran solas.
 export async function notificarAdmins({ cliente, total, envio }, fbToken) {
   if (!process.env.VAPID_PRIVATE_KEY) return 0;

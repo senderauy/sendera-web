@@ -11,6 +11,7 @@ import { programarRecordatorioCarrito, cancelarMailProgramado, lineasProductos }
 import { idValido, emailValido, SITIO } from './_seguimiento.js';
 import { leer, itemsDelCatalogo, envioDe, codigoDeCarrito, cerrarCarritos } from './_carritos.js';
 import { emailDeSesion, esAdmin, tokenDeSesion } from './_admin.js';
+import { girarRuleta } from './_ruleta.js';
 
 const HORAS_HASTA_EL_RECORDATORIO = 3;
 const VENTANA_MINUTOS = 180;          // el carrito tiene que ser de las últimas 3 horas
@@ -51,6 +52,11 @@ async function cancelarDesdeElPanel(req, res) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
   res.setHeader('Cache-Control', 'no-store');
+  // La ruleta del inicio ("Girá y ganá") también pasa por acá: ver api/_ruleta.js
+  if (req.body?.accion === 'ruleta') {
+    try { return await girarRuleta(req, res); }
+    catch (e) { console.error('ruleta:', e.message); return res.status(500).json({ error: 'No se pudo girar. Probá de nuevo.' }); }
+  }
   if (req.body?.accion === 'cancelar') {
     try { return await cancelarDesdeElPanel(req, res); }
     catch (e) { console.error('carrito cancelar:', e.message); return res.status(500).json({ error: 'No se pudo cancelar' }); }

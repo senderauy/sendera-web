@@ -385,7 +385,10 @@
 
   // ── Códigos de descuento ───────────────────────
   function dibujarCodigos() {
-    const entradas = Object.entries(estado.codigos);
+    // Los de la ruleta (uno por persona) no se listan: solo se cuentan
+    const todas = Object.entries(estado.codigos);
+    const entradas = todas.filter(([, d]) => !d || d.origen !== 'ruleta');
+    const ruleta = todas.length - entradas.length;
     $('codigos').innerHTML = entradas.length
       ? entradas.map(([codigo, d]) => `
         <li>
@@ -395,6 +398,7 @@
           <button type="button" class="sa-icono-btn" data-borrar-codigo="${esc(codigo)}" aria-label="Borrar ${esc(codigo)}"><i data-lucide="trash-2"></i></button>
         </li>`).join('')
       : '<li class="sa-vacio">Todavía no hay códigos. Creá uno para tus promociones.</li>';
+    if (ruleta) $('codigos').insertAdjacentHTML('beforeend', `<li class="sa-vacio">${ruleta} ${ruleta === 1 ? 'código ganado' : 'códigos ganados'} en la ruleta del inicio (de un solo uso, vencen a las 48 h).</li>`);
     panel.iconos();
   }
 

@@ -50,7 +50,7 @@
   <!-- La foto de portada se pide de entrada, antes de leer los estilos: así no se ve el fondo negro mientras carga -->
   <link rel="preload" as="image" href="/api/foto?portada=compu" media="(min-width: 721px)" fetchpriority="high" />
   <link rel="preload" as="image" href="/api/foto?portada=celular" media="(max-width: 720px)" fetchpriority="high" />
-  <link rel="stylesheet" href="style.css?v=76" />
+  <link rel="stylesheet" href="style.css?v=78" />
   <link rel="stylesheet" href="carrito.css?v=2" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
 </head>
@@ -1616,6 +1616,151 @@
         }, { passive: true });
         ir(0);
       }).catch(() => {});
+    })();
+  </script>
+  <!-- RULETA "GIRÁ Y GANÁ": aparece una vez por persona; el premio lo elige el servidor (api/_ruleta.js) -->
+  <div class="ruleta-velo" id="ruleta-velo" aria-hidden="true">
+    <div class="ruleta" role="dialog" aria-modal="true" aria-labelledby="ruleta-titulo">
+      <button type="button" class="cerrar" data-cerrar aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <h2 id="ruleta-titulo">Girá y ganá <em>tu descuento.</em></h2>
+      <p class="bajada">Una vuelta por persona.<br />El premio te llega al mail.</p>
+      <div class="rueda-caja">
+        <svg class="rueda-flecha" viewBox="0 0 30 34" aria-hidden="true"><path d="M15 34 L1 6 Q0 0 6 0 L24 0 Q30 0 29 6 Z" fill="#c8ef4f" stroke="#182417" stroke-width="2.5"/></svg>
+        <div class="rueda" id="rueda"></div>
+        <div class="rueda-centro"><img src="img/logo-modal.png" alt="" /></div>
+      </div>
+      <form id="ruleta-form" novalidate>
+        <input type="email" id="ruleta-mail" placeholder="tu@mail.com" autocomplete="email" inputmode="email" aria-label="Tu mail" />
+        <p class="error" id="ruleta-error" aria-live="polite"></p>
+        <button type="submit" class="girar" id="ruleta-girar">GIRAR LA RUEDA</button>
+        <button type="button" class="ahora-no" data-cerrar>Ahora no</button>
+        <p class="legal">Te mandamos el código y novedades de Sendera. Podés darte de baja cuando quieras.</p>
+      </form>
+      <div class="resultado" aria-live="polite">
+        <p class="premio" id="premio-texto"></p>
+        <div class="codigo-premio"><b id="premio-codigo"></b><button type="button" id="copiar-premio">Copiar</button></div>
+        <p class="vence" id="premio-vence">Vence en 48 h · Un solo uso · También te lo mandamos al mail</p>
+        <a class="ir" href="#productos" data-cerrar>Ir a la tienda</a>
+      </div>
+    </div>
+  </div>
+  <script>
+    // ── RULETA "GIRÁ Y GANÁ" ──────────────────────────────────────
+    // Una vez por persona: a los 12 segundos o cuando está por irse (mouse hacia arriba en la compu).
+    // El navegador solo anima la rueda hasta el gajo que le dice el servidor.
+    (function () {
+      const VISTA = 'sendera_ruleta';           // ya se le mostró
+      const PREMIO = 'sendera_premio';          // { codigo, vence }: el checkout lo pone solo
+      const GAJOS = [
+        { t: '5% OFF', f: '#182417', c: '#fff' },
+        { t: 'Casi…', f: '#f6d5cc', c: '#182417' },
+        { t: '10% OFF', f: '#c8ef4f', c: '#182417' },
+        { t: '5% OFF', f: '#e2daf3', c: '#182417' },
+        { t: 'Envío gratis', f: '#182417', c: '#fff', sub: 'Montevideo' },
+        { t: 'Casi…', f: '#d3e5f0', c: '#182417' },
+        { t: '10% OFF', f: '#d7e6cf', c: '#182417' },
+        { t: '5% OFF', f: '#fafaf8', c: '#182417' }
+      ];
+      const leer = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+      const guardar = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+      if (leer(VISTA) || /[?&]carrito=/.test(location.search)) return;
+
+      const N = GAJOS.length, ANG = 360 / N, R = 150, rad = a => (a - 90) * Math.PI / 180;
+      let svg = '<svg viewBox="0 0 300 300" aria-hidden="true">';
+      GAJOS.forEach((g, i) => {
+        const a0 = i * ANG, a1 = (i + 1) * ANG, am = a0 + ANG / 2;
+        svg += `<path d="M150 150 L${150 + R * Math.cos(rad(a0))} ${150 + R * Math.sin(rad(a0))} A${R} ${R} 0 0 1 ${150 + R * Math.cos(rad(a1))} ${150 + R * Math.sin(rad(a1))} Z" fill="${g.f}" stroke="#182417" stroke-width="1.5"/>`;
+        svg += `<g transform="rotate(${am} 150 150)"><text x="150" y="${g.sub ? 52 : 58}" text-anchor="middle" fill="${g.c}" font-family="Montserrat, sans-serif" font-weight="800" font-size="${g.t.length > 8 ? 13 : 16}">${g.t}</text>${g.sub ? `<text x="150" y="68" text-anchor="middle" fill="${g.c}" font-family="Montserrat, sans-serif" font-weight="600" font-size="10">${g.sub}</text>` : ''}</g>`;
+      });
+      const rueda = document.getElementById('rueda');
+      rueda.innerHTML = svg + '</svg>';
+
+      const velo = document.getElementById('ruleta-velo');
+      const caja = velo.querySelector('.ruleta');
+      const form = document.getElementById('ruleta-form');
+      const mail = document.getElementById('ruleta-mail');
+      const error = document.getElementById('ruleta-error');
+      const boton = document.getElementById('ruleta-girar');
+      let giro = 0, ocupado = false, mostrada = false;
+
+      function abrir() {
+        if (mostrada || leer(VISTA)) return;
+        // No interrumpe si tiene el carrito o el menú abiertos: lo intenta un poco después
+        if (document.querySelector('.carrito.open') || document.body.classList.contains('carrito-abierto')) { setTimeout(abrir, 8000); return; }
+        mostrada = true;
+        guardar(VISTA, new Date().toISOString());
+        document.body.classList.add('ruleta-abierta');
+        velo.classList.add('abierta');
+        velo.setAttribute('aria-hidden', 'false');
+      }
+      function cerrar() {
+        document.body.classList.remove('ruleta-abierta');
+        velo.classList.remove('abierta');
+        velo.setAttribute('aria-hidden', 'true');
+      }
+      velo.addEventListener('click', e => { if (e.target === velo || e.target.closest('[data-cerrar]')) cerrar(); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape' && velo.classList.contains('abierta')) cerrar(); });
+
+      function girarHasta(i, alTerminar) {
+        // La flecha está arriba: el gajo i queda arriba cuando la rueda gira hasta -(centro del gajo)
+        const destino = 360 - (i * ANG + ANG / 2) + (Math.random() * ANG * 0.5 - ANG * 0.25);
+        giro = giro - (giro % 360) + 360 * 6 + destino;
+        rueda.classList.add('girando');
+        rueda.style.transform = `rotate(${giro}deg)`;
+        let listo = false;
+        const fin = () => { if (listo) return; listo = true; alTerminar(); };
+        rueda.addEventListener('transitionend', fin, { once: true });
+        setTimeout(fin, 5200);   // por si el navegador no avisa el final de la animación
+      }
+
+      function mostrarPremio(d) {
+        document.getElementById('premio-texto').innerHTML = d.premio === 'envio'
+          ? 'Envío gratis<small>a Montevideo, en tu próxima compra</small>'
+          : `${d.premio}% OFF<small>en toda la tienda</small>`;
+        document.getElementById('premio-codigo').textContent = d.codigo;
+        if (d.repetido) document.getElementById('premio-vence').textContent = 'Ya habías girado con este mail: este es tu código.';
+        guardar(PREMIO, JSON.stringify({ codigo: d.codigo, vence: d.vence }));
+        caja.classList.add('con-premio');
+      }
+
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+        if (ocupado) return;
+        const email = mail.value.trim();
+        if (!/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(email)) { mail.classList.add('falta'); error.textContent = 'Escribí tu mail para girar.'; mail.focus(); return; }
+        mail.classList.remove('falta'); error.textContent = '';
+        ocupado = true; boton.disabled = true; boton.textContent = 'GIRANDO…';
+        let d;
+        try {
+          const r = await fetch('/api/carrito', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ accion: 'ruleta', email }) });
+          d = await r.json();
+          if (!r.ok) throw new Error(d.error || 'error');
+        } catch (err) {
+          error.textContent = (err && err.message && err.message !== 'error') ? err.message : 'No se pudo girar. Probá de nuevo.';
+          ocupado = false; boton.disabled = false; boton.textContent = 'GIRAR LA RUEDA';
+          return;
+        }
+        girarHasta(Number(d.gajo) || 0, () => {
+          if (d.otraVuelta) {
+            error.textContent = '¡Casi! Tenés otra vuelta.';
+            ocupado = false; boton.disabled = false; boton.textContent = 'GIRAR OTRA VEZ';
+            return;
+          }
+          mostrarPremio(d);
+        });
+      });
+      document.getElementById('copiar-premio').addEventListener('click', e => {
+        if (navigator.clipboard) navigator.clipboard.writeText(document.getElementById('premio-codigo').textContent).catch(() => {});
+        e.target.textContent = 'Copiado'; setTimeout(() => { e.target.textContent = 'Copiar'; }, 1500);
+      });
+
+      setTimeout(abrir, 12000);
+      // En la compu, si el mouse sale por arriba (está por cerrar o cambiar de pestaña), aparece antes
+      if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        document.addEventListener('mouseout', e => {
+          if (!e.relatedTarget && e.clientY <= 0 && performance.now() > 4000) abrir();
+        });
+      }
     })();
   </script>
 </body>
