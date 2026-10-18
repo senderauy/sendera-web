@@ -1693,7 +1693,8 @@
       ];
       const leer = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
       const guardar = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
-      if (leer(VISTA) || /[?&](carrito|premio)=/.test(location.search)) return;
+      // A los admins (navegador donde se entró al panel) no les sale: siempre están probando la tienda
+      if (leer(VISTA) || leer('sendera_admin') === '1' || /[?&](carrito|premio)=/.test(location.search)) return;
 
       const N = GAJOS.length, ANG = 360 / N, R = 150, rad = a => (a - 90) * Math.PI / 180;
       let svg = '<svg viewBox="0 0 300 300" aria-hidden="true">';
