@@ -630,6 +630,10 @@
       .visor-foto .visor-flecha { display: none; }   /* en el celular se pasa deslizando */
       .visor-foto .visor-img { max-width: 100vw; border-radius: 0; }
     }
+    /* Con el color de fondo de la foto: la foto se funde con la pantalla y los controles van oscuros */
+    .visor-foto.claro .visor-cerrar, .visor-foto.claro .visor-flecha { background: rgba(24, 36, 23, 0.78); }
+    .visor-foto.claro .visor-puntos button { background: rgba(24, 36, 23, 0.25); }
+    .visor-foto.claro .visor-puntos button[aria-current="true"] { background: #182417; }
     @media (prefers-reduced-motion: reduce) {
       dialog.visor-foto[open], .visor-foto[open] .visor-img { animation: none; }
     }
@@ -1222,6 +1226,14 @@
         fotos = getFotos(productoActual.variantes[variantActual]).filter(f => f && f !== 'img/logo.png');
         if (!fotos.length) return;
         img.src = fotos[fotoIdx] || fotos[0];
+        // El fondo del visor es el de la foto (guardado desde el panel o el que ya tiene la página): sin bandas negras
+        const v = productoActual.variantes[variantActual] || {};
+        const fondo = /^rgb\(\d{1,3},\d{1,3},\d{1,3}\)$/.test(v.fondo || '') ? v.fondo
+          : getComputedStyle(document.documentElement).getPropertyValue('--prod-bg').trim();
+        const m = /rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(fondo || '');
+        const claro = !!m && (0.299 * m[1] + 0.587 * m[2] + 0.114 * m[3]) > 140;
+        visor.style.background = m ? fondo : '';
+        visor.classList.toggle('claro', claro);
         mostrar(Math.min(fotoIdx, fotos.length - 1));
         visor.showModal();
       }
