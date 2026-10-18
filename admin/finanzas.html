@@ -296,11 +296,7 @@
 
 <dialog class="sa-dialogo importar" id="dialogo-importar" aria-labelledby="importar-titulo">
   <h3 id="importar-titulo">Importar Excel</h3>
-  <p>Si ya importaste las ventas y los gastos, elegí solo compras para no duplicar datos.</p>
-  <div class="opciones-importar">
-    <label><input type="radio" name="importar-tipo" value="todo" checked /><span>Todo<small>Ventas, gastos y compras. Para la primera vez.</small></span></label>
-    <label><input type="radio" name="importar-tipo" value="compras" /><span>Solo compras de mercadería<small>Si las ventas y los gastos ya están cargados.</small></span></label>
-  </div>
+  <p>Subí la planilla de Sendera (ventas, gastos y compras). Lo que se importó antes se <b>reemplaza</b> por lo de esta planilla, así nunca queda repetido. Lo cargado a mano en el panel no se toca.</p>
   <label class="soltar" id="soltar-excel">
     <i data-lucide="file-spreadsheet"></i>Elegí o arrastrá el archivo
     <small>Por ejemplo SENDERA 2026.xlsx</small>
@@ -318,6 +314,26 @@ const ESTADOS_VENTA = ['aprobado', 'confirmado', 'camino', 'entregado'];
 const AÑO = new Date().getFullYear();
 const POCO_STOCK = 3;
 const PALETA = ['#182417', '#c8861a', '#507a3a', '#3e5b86', '#684d86', '#0f766e', '#a5432f', '#8e8273'];
+
+// La planilla de Lore ya anota las ventas de la web ("Página Web"): un pedido de la tienda se cuenta solo
+// si la planilla todavía no tiene una venta del mismo comprador en esos días (así no se suma dos veces).
+const palabrasNombre = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z\s]/g, ' ').trim().split(/\s+/).filter(Boolean);
+function mismoComprador(a, b) {
+  const x = palabrasNombre(a), y = palabrasNombre(b);
+  if (!x.length || !y.length || x[0] !== y[0]) return false;
+  return x.length < 2 || y.length < 2 || x[1] === y[1];
+}
+const DOS_DIAS = 2 * 864e5;
+function pedidosQueCuentan() {
+  const dePlanilla = todasVentas.filter(v => v.importado && v.comprador);
+  return todosPedidos.filter(p => {
+    if (!ESTADOS_VENTA.includes(p.estado) || p.prueba) return false;
+    const f = fechaLocal(String(p.fecha || '').slice(0, 10));
+    return !dePlanilla.some(v => Math.abs(fechaLocal(v.fecha) - f) <= DOS_DIAS && mismoComprador(v.comprador, p.cliente));
+  });
+}
+// Las compras importadas de la planilla ya están en sus gastos (grupo "Mercadería"): se muestran pero no se suman
+const sumaCompra = c => !c.importado;
 
 let mesFiltro = new Date().getMonth();
 let todosPedidos = [], todasVentas = [], todosGastos = [], todasCompras = [];
@@ -371,7 +387,7 @@ function renderPills() {
 // ── Resumen y tablas ───────────────────────────────────────
 function renderTodo() {
   const ventasMes = [
-    ...todosPedidos.filter(p => ESTADOS_VENTA.includes(p.estado) && esPeriodo(p.fecha))
+    ...pedidosQueCuentan().filter(p => esPeriodo(p.fecha))
       .map(p => ({ id: p.id, tipo: 'auto', fecha: p.fecha, desc: p.cliente || 'Pedido web', canal: p.origen === 'whatsapp' ? 'WhatsApp' : 'Web', importe: num(p.total) })),
     ...todasVentas.filter(v => esPeriodo(v.fecha))
   ].sort((a, b) => fechaLocal(b.fecha) - fechaLocal(a.fecha));
@@ -380,13 +396,14 @@ function renderTodo() {
 
   const totalV = ventasMes.reduce((s, v) => s + num(v.importe), 0);
   const totalG = gastosMes.reduce((s, g) => s + num(g.importe), 0);
-  const totalC = comprasMes.reduce((s, c) => s + num(c.total), 0);
+  const totalC = comprasMes.filter(sumaCompra).reduce((s, c) => s + num(c.total), 0);
+  const totalComprasTodas = comprasMes.reduce((s, c) => s + num(c.total), 0);
   const balance = totalV - (totalG + totalC);
 
   $('k-ventas').textContent = fmt(totalV);
   $('k-ventas-sub').textContent = ventasMes.length === 1 ? '1 venta' : `${ventasMes.length} ventas`;
   $('k-gastos').textContent = fmt(totalG + totalC);
-  const registros = gastosMes.length + comprasMes.length;
+  const registros = gastosMes.length + comprasMes.filter(sumaCompra).length;
   $('k-gastos-sub').textContent = registros === 1 ? '1 registro' : `${registros} registros`;
   $('k-balance').textContent = fmt(balance);
   $('k-balance').className = balance >= 0 ? 'positivo' : 'negativo';
@@ -398,11 +415,11 @@ function renderTodo() {
   renderTablaCompras(comprasMes);
   $('tbl-ventas-total').textContent = fmt(totalV);
   $('tbl-gastos-total').textContent = fmt(totalG);
-  $('tbl-compras-total').textContent = fmt(totalC);
+  $('tbl-compras-total').textContent = fmt(totalComprasTodas) + (comprasMes.some(c => c.importado) ? ' · ya incluidas en gastos' : '');
 
   renderChartMeses();
   renderChartPlat(ventasMes);
-  renderChartGastos(gastosMes, comprasMes);
+  renderChartGastos(gastosMes, comprasMes.filter(sumaCompra));
 }
 
 function renderStockUI() {
@@ -478,11 +495,11 @@ function renderChartMeses() {
   destroyChart('meses');
   const vPM = Array(12).fill(0), gPM = Array(12).fill(0);
   const delAño = f => { const d = fechaLocal(f); return !isNaN(d) && d.getFullYear() === AÑO; };
-  [...todosPedidos.filter(p => ESTADOS_VENTA.includes(p.estado) && delAño(p.fecha)).map(p => ({ fecha: p.fecha, importe: num(p.total) })),
+  [...pedidosQueCuentan().filter(p => delAño(p.fecha)).map(p => ({ fecha: p.fecha, importe: num(p.total) })),
    ...todasVentas.filter(v => delAño(v.fecha))]
     .forEach(v => { vPM[fechaLocal(v.fecha).getMonth()] += num(v.importe); });
   [...todosGastos.filter(g => delAño(g.fecha)).map(g => ({ fecha: g.fecha, importe: num(g.importe) })),
-   ...todasCompras.filter(c => delAño(c.fecha)).map(c => ({ fecha: c.fecha, importe: num(c.total) }))]
+   ...todasCompras.filter(c => sumaCompra(c) && delAño(c.fecha)).map(c => ({ fecha: c.fecha, importe: num(c.total) }))]
     .forEach(g => { gPM[fechaLocal(g.fecha).getMonth()] += num(g.importe); });
   charts.meses = new Chart($('chart-meses'), {
     type: 'bar',
@@ -659,99 +676,91 @@ async function guardarRegistro() {
   }
 }
 
-// ── Importar Excel ────────────────────────────────────────
+// ── Importar Excel (planilla de Sendera) ─────────────────
+// Ventas: hoja "Ventas 2026", con TOTAL VENTAS (ya con el descuento). Lo regalado (total 0) no cuenta.
+// Gastos: hoja "Gastos 2026" (incluye la mercadería). Compras: hoja "Compra de mercadería" (para ver costos).
+// Las fechas vienen como fecha de Excel, "25/3/2026", "Oct-26", "set-26" o "mayo".
+const MESES_CORTOS = { ene: 0, feb: 1, mar: 2, abr: 3, may: 4, jun: 5, jul: 6, ago: 7, set: 8, sep: 8, oct: 9, nov: 10, dic: 11 };
+const dosDig = n => String(n).padStart(2, '0');
+function fechaPlanilla(raw) {
+  if (typeof raw === 'number' && raw > 20000) { const d = XLSX.SSF.parse_date_code(raw); return d ? `${d.y}-${dosDig(d.m)}-${dosDig(d.d)}` : null; }
+  if (raw instanceof Date && !isNaN(raw)) return `${raw.getFullYear()}-${dosDig(raw.getMonth() + 1)}-${dosDig(raw.getDate())}`;
+  const t = String(raw ?? '').trim().toLowerCase();
+  let m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(t);
+  if (m) return `${+m[3] < 100 ? 2000 + +m[3] : m[3]}-${dosDig(m[2])}-${dosDig(m[1])}`;
+  m = /^([a-zé]{3})[a-zé]*[\s\-\/.]*(\d{2,4})?$/.exec(t);
+  if (m && m[1] in MESES_CORTOS) return `${m[2] ? (+m[2] < 100 ? 2000 + +m[2] : m[2]) : AÑO}-${dosDig(MESES_CORTOS[m[1]] + 1)}-01`;
+  return null;
+}
+const numPlanilla = v => typeof v === 'number' ? v : num(String(v ?? '').replace(/[^\d,.\-]/g, '').replace(/\./g, '').replace(',', '.'));
 function normRows(sheet) {
-  return XLSX.utils.sheet_to_json(sheet, { defval: '', cellDates: true })
+  return XLSX.utils.sheet_to_json(sheet, { defval: '', raw: true })
     .map(row => { const n = {}; for (const k of Object.keys(row)) n[k.toString().trim().toUpperCase()] = row[k]; return n; });
+}
+const texto = v => String(v ?? '').trim();
+function leerPlanilla(wb) {
+  const hoja = test => { const n = wb.SheetNames.find(test); return n ? normRows(wb.Sheets[n]) : []; };
+  const ventas = hoja(n => /VENTA/i.test(n) && !/2025/.test(n)).map(row => {
+    const fecha = fechaPlanilla(row['FECHA']);
+    const total = numPlanilla(row['TOTAL VENTAS'] !== '' && row['TOTAL VENTAS'] != null ? row['TOTAL VENTAS'] : numPlanilla(row['SUBTOTAL VENTAS']) - numPlanilla(row['DESCUENTOS']));
+    if (!fecha || !total) return null;
+    return { fecha, importe: Math.round(total * 100) / 100,
+      desc: [texto(row['ARTICULO']), texto(row['GRUPO'])].filter(Boolean).join(' — ') || 'Venta',
+      canal: texto(row['PLATAFORMA DE COMPRA'] || row['PLATAFORMA']) || 'Planilla',
+      forma_pago: texto(row['FORMA DE PAGO']), grupo: texto(row['GRUPO']), comprador: texto(row['COMPRADOR']),
+      cantidad: numPlanilla(row['CANTIDAD']) || 1, descuento: numPlanilla(row['DESCUENTOS']) || 0, tipo: 'manual', importado: true };
+  }).filter(Boolean);
+  const gastos = hoja(n => /GASTO/i.test(n)).map(row => {
+    const fecha = fechaPlanilla(row['FECHA']), importe = numPlanilla(row['TOTAL']);
+    if (!fecha || !importe) return null;
+    return { fecha, importe, categoria: texto(row['GRUPO']) || 'Varios', detalle: texto(row['DETALLE DEL GASTO'] || row['DETALLE']),
+      proveedor: texto(row['PROVEEDOR']), forma_pago: texto(row['FORMA DE PAGO']), importado: true };
+  }).filter(Boolean);
+  const compras = hoja(n => /COMPRA/i.test(n)).map(row => {
+    const fecha = fechaPlanilla(row['FECHA']), cantidad = numPlanilla(row['CANTIDAD']);
+    if (!fecha || !cantidad) return null;
+    const costo_unit = numPlanilla(row['COSTO UNIT'] || row['COSTO UNITARIO']);
+    return { fecha, proveedor: texto(row['PROVEEDOR']), forma_pago: texto(row['FORMA DE'] || row['FORMA DE PAGO']), insumo: texto(row['INSUMO']),
+      descripcion: texto(row['DESCRIPCIÓN'] || row['DESCRIPCION']), cantidad, costo_unit, total: numPlanilla(row['COSTO TOTAL']) || costo_unit * cantidad, importado: true };
+  }).filter(Boolean);
+  return { ventas, gastos, compras };
 }
 async function procesarImport(file) {
   if (!file) return;
   const prog = $('importar-progreso');
   prog.hidden = false;
-  prog.textContent = 'Leyendo el archivo…';
-  const soloCompras = document.querySelector('input[name="importar-tipo"]:checked')?.value === 'compras';
-  const reader = new FileReader();
-  reader.onload = async function (e) {
-    try {
-      const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
-      const toISO = raw => {
-        if (raw instanceof Date && !isNaN(raw)) return raw.toISOString().split('T')[0];
-        if (raw) { const d = new Date(raw); if (!isNaN(d)) return d.toISOString().split('T')[0]; }
-        return null;
-      };
-      let cv = 0, cg = 0, cc = 0;
-
-      if (!soloCompras) {
-        // Ventas
-        const shV = wb.SheetNames.find(n => n.toUpperCase().includes('VENTA') && !n.toUpperCase().includes('2025'));
-        if (shV) {
-          for (const row of normRows(wb.Sheets[shV])) {
-            const imp = parseFloat(row['SUBTOTAL VENTAS'] || row['SUBTOTAL'] || 0);
-            const fecha = toISO(row['FECHA']);
-            if (!imp || !fecha) continue;
-            await db.ref('ventas_manual').push({
-              fecha, importe: imp,
-              desc: [row['ARTICULO'], row['GRUPO']].filter(Boolean).join(' — ') || 'Importado',
-              canal: String(row['PLATAFORMA DE COMPRA'] || row['PLATAFORMA'] || 'Excel').trim(),
-              forma_pago: String(row['FORMA DE PAGO'] || '').trim(),
-              grupo: String(row['GRUPO'] || '').trim(),
-              comprador: String(row['COMPRADOR'] || '').trim(),
-              descuento: parseFloat(row['DESCUENTOS'] || 0) || 0, tipo: 'manual', importado: true
-            });
-            cv++;
-            if (cv % 10 === 0) prog.textContent = `Ventas: ${cv}…`;
-          }
-        }
-        // Gastos
-        const shG = wb.SheetNames.find(n => n.toUpperCase().includes('GASTO'));
-        if (shG) {
-          for (const row of normRows(wb.Sheets[shG])) {
-            const imp = parseFloat(row['TOTAL'] || 0);
-            const fecha = toISO(row['FECHA']);
-            if (!imp || !fecha) continue;
-            await db.ref('gastos').push({
-              fecha, importe: imp,
-              categoria: String(row['GRUPO'] || 'Varios').trim(),
-              detalle: String(row['DETALLE DEL GASTO'] || row['DETALLE'] || '').trim(),
-              proveedor: String(row['PROVEEDOR'] || '').trim(),
-              forma_pago: String(row['FORMA DE PAGO'] || '').trim(), importado: true
-            });
-            cg++;
-          }
-        }
-      }
-
-      // Compras de mercadería (siempre se pueden importar)
-      const shC = wb.SheetNames.find(n => n.toUpperCase().includes('COMPRA'));
-      if (shC) {
-        for (const row of normRows(wb.Sheets[shC])) {
-          const cant = parseFloat(row['CANTIDAD'] || 0);
-          const fecha = toISO(row['FECHA']);
-          if (!cant || !fecha) continue;
-          const costoUnit = parseFloat(row['COSTO UNIT'] || row['COSTO UNITARIO'] || 0);
-          const total = parseFloat(row['COSTO TOTAL'] || row['TOTAL'] || 0) || costoUnit * cant;
-          await db.ref('compras').push({
-            fecha,
-            proveedor: String(row['PROVEEDOR'] || '').trim(),
-            forma_pago: String(row['FORMA DE'] || row['FORMA DE PAGO'] || '').trim(),
-            insumo: String(row['INSUMO'] || '').trim(),
-            descripcion: String(row['DESCRIPCIÓN'] || row['DESCRIPCION'] || '').trim(),
-            cantidad: cant, costo_unit: costoUnit, total, importado: true
-          });
-          cc++;
-          if (cc % 10 === 0) prog.textContent = `Compras: ${cc}…`;
-        }
-      }
-
-      const cuenta = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
-      prog.textContent = soloCompras
-        ? `Listo: ${cuenta(cc, 'compra importada', 'compras importadas')}.`
-        : `Listo: se importaron ${cuenta(cv, 'venta', 'ventas')}, ${cuenta(cg, 'gasto', 'gastos')} y ${cuenta(cc, 'compra', 'compras')}.`;
-    } catch (err) {
-      prog.textContent = 'No se pudo importar: ' + err.message;
-    }
-  };
-  reader.readAsArrayBuffer(file);
+  prog.textContent = 'Leyendo la planilla…';
+  try {
+    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+    const nuevo = leerPlanilla(wb);
+    if (!nuevo.ventas.length && !nuevo.gastos.length) { prog.textContent = 'No encontré las hojas de ventas ni de gastos en esta planilla.'; return; }
+    const viejos = [...todasVentas.filter(v => v.importado).map(v => 'ventas_manual/' + v.id),
+                    ...todosGastos.filter(g => g.importado).map(g => 'gastos/' + g.id),
+                    ...todasCompras.filter(c => c.importado).map(c => 'compras/' + c.id)];
+    const suma = l => Math.round(l.reduce((t, x) => t + num(x.importe), 0));
+    $('dialogo-importar').close();
+    const ok = await panel.confirmar({
+      titulo: '¿Actualizar Finanzas con esta planilla?',
+      texto: `Trae ${nuevo.ventas.length} ventas (${fmt(suma(nuevo.ventas))}), ${nuevo.gastos.length} gastos y ${nuevo.compras.length} compras de mercadería. ` +
+             (viejos.length ? `Reemplaza los ${viejos.length} registros que se habían importado antes. ` : '') + 'Lo cargado a mano en el panel no se toca.',
+      boton: 'Actualizar'
+    });
+    if (!ok) return;
+    // Todo en una sola escritura: se borra lo importado antes y se carga lo nuevo (si algo falla, no queda a medias)
+    const cambios = {};
+    viejos.forEach(ruta => { cambios[ruta] = null; });
+    const agregar = (ruta, items) => items.forEach(x => { cambios[`${ruta}/${db.ref(ruta).push().key}`] = x; });
+    agregar('ventas_manual', nuevo.ventas);
+    agregar('gastos', nuevo.gastos);
+    agregar('compras', nuevo.compras);
+    await db.ref().update(cambios);
+    panel.aviso(`Finanzas actualizada: ${nuevo.ventas.length} ventas, ${nuevo.gastos.length} gastos y ${nuevo.compras.length} compras`);
+  } catch (err) {
+    console.error(err);
+    panel.aviso('No se pudo importar la planilla: ' + err.message, true);
+  } finally {
+    prog.hidden = true;
+  }
 }
 
 // ── Eventos ────────────────────────────────────────────────
