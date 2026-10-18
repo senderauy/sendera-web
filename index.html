@@ -53,7 +53,7 @@
   <link rel="preload" as="image" href="/api/foto?portada=compu" media="(min-width: 721px)" fetchpriority="high" />
   <link rel="preload" as="image" href="/api/foto?portada=celular" media="(max-width: 720px)" fetchpriority="high" />
   <link rel="stylesheet" href="style.css?v=78" />
-  <link rel="stylesheet" href="carrito.css?v=2" />
+  <link rel="stylesheet" href="carrito.css?v=3" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
@@ -437,7 +437,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script src="cart.js?v=7"></script>
+  <script src="cart.js?v=8"></script>
   <script>
     let ultimosProductos = [];
     let fotosColecciones = {};
@@ -1665,7 +1665,7 @@
       ];
       const leer = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
       const guardar = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
-      if (leer(VISTA) || /[?&]carrito=/.test(location.search)) return;
+      if (leer(VISTA) || /[?&](carrito|premio)=/.test(location.search)) return;
 
       const N = GAJOS.length, ANG = 360 / N, R = 150, rad = a => (a - 90) * Math.PI / 180;
       let svg = '<svg viewBox="0 0 300 300" aria-hidden="true">';
@@ -1721,8 +1721,10 @@
           : `${d.premio}% OFF<small>en toda la tienda</small>`;
         document.getElementById('premio-codigo').textContent = d.codigo;
         if (d.repetido) document.getElementById('premio-vence').textContent = 'Ya habías girado con este mail: este es tu código.';
-        guardar(PREMIO, JSON.stringify({ codigo: d.codigo, vence: d.vence }));
+        guardar(PREMIO, JSON.stringify({ codigo: d.codigo, vence: d.vence,
+          tipo: d.premio === 'envio' ? 'envio' : 'porcentaje', descuento: d.premio === 'envio' ? 0 : Number(d.premio) }));
         caja.classList.add('con-premio');
+        if (typeof pintarTotalesCarrito === 'function' && document.getElementById('cart-total')) pintarTotalesCarrito();
       }
 
       form.addEventListener('submit', async e => {

@@ -455,3 +455,8 @@ html.carrito-abierto #cart-btn { opacity: 0; pointer-events: none; }
   #cart-modal.carrito.open { transition: none; }
   .carrito .falta { animation: none; }
 }
+
+/* Premio de la ruleta: se ve restado en el carrito */
+.carrito .premio-row { color: #2f6b2a; font-weight: 600; }
+.carrito .premio-row #cart-premio-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.carrito .premio-row #cart-premio { white-space: nowrap; }

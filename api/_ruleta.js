@@ -104,7 +104,8 @@ export async function girarRuleta(req, res) {
     method: 'PUT',
     body: JSON.stringify({ email, casi: yaTuvoCasi, gajo: g.i, premio: g.premio, codigo, vence, fecha: new Date().toISOString() })
   });
-  await enviarEmailRuleta({ email, premio: g.premio, codigo, vence, enlace: SITIO })
+  // El botón del mail trae el código: la tienda lo reconoce en cualquier navegador y lo aplica solo
+  await enviarEmailRuleta({ email, premio: g.premio, codigo, vence, enlace: `${SITIO}/?premio=${codigo}` })
     .catch(e => console.error('ruleta mail:', e.message));
   return res.status(200).json({ ...respuesta(g), codigo, vence });
 }

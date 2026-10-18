@@ -211,6 +211,56 @@ function changeQty(index, delta) {
   }
 }
 
+// ── Premio de la ruleta del inicio ──────────────────────────
+// Se guarda en este navegador al ganar (o al entrar con el link del mail: ?premio=CÓDIGO).
+// El carrito lo muestra restado y la página de pago lo pone solo. El servidor lo vuelve a validar al cobrar.
+const PREMIO_CLAVE = 'sendera_premio';
+function premioGuardado() {
+  try {
+    const p = JSON.parse(localStorage.getItem(PREMIO_CLAVE) || 'null');
+    if (p && p.codigo && Date.parse(p.vence) > Date.now()) return p;
+    if (p) localStorage.removeItem(PREMIO_CLAVE);
+  } catch (e) {}
+  return null;
+}
+async function leerCodigo(codigo) {
+  const base = (typeof firebaseConfig !== 'undefined' && firebaseConfig.databaseURL) || 'https://sendera-34791-default-rtdb.firebaseio.com';
+  const r = await fetch(`${base}/codigos_descuento/${encodeURIComponent(codigo)}.json`);
+  return r.ok ? r.json() : null;
+}
+async function guardarPremio(codigo) {
+  const d = await leerCodigo(codigo).catch(() => null);
+  if (!d || !d.activo || !(Date.parse(d.vence) > Date.now())) return false;
+  try {
+    localStorage.setItem(PREMIO_CLAVE, JSON.stringify({ codigo, vence: d.vence, tipo: d.tipo, descuento: Number(d.descuento) || 0 }));
+    localStorage.setItem('sendera_ruleta', new Date().toISOString());   // ya tiene premio: la ruleta no vuelve a salir
+  } catch (e) {}
+  return true;
+}
+// Viene del mail: ?premio=SENDERA-XXXXX
+(async function () {
+  const params = new URLSearchParams(location.search);
+  const codigo = String(params.get('premio') || '').trim().toUpperCase();
+  if (!/^SENDERA-[A-Z0-9]{4,8}$/.test(codigo)) return;
+  params.delete('premio');
+  history.replaceState(null, '', location.pathname + (params.toString() ? '?' + params : '') + location.hash);
+  if (await guardarPremio(codigo) && document.getElementById('cart-total')) pintarTotalesCarrito();
+})();
+// Un premio guardado sin el tipo (de antes) se completa una vez
+(function () {
+  const p = premioGuardado();
+  if (p && !p.tipo) guardarPremio(p.codigo).then(() => { if (document.getElementById('cart-total')) pintarTotalesCarrito(); });
+})();
+
+// Descuento del premio para este carrito (mismo cálculo que el servidor: porcentaje sobre productos + envío)
+function descuentoPremio(subtotal, envio) {
+  const p = premioGuardado();
+  if (!p || !p.tipo || !subtotal) return null;
+  if (p.tipo === 'porcentaje') return { p, monto: Math.round((subtotal + envio.costo) * p.descuento / 100), texto: `${p.descuento}% OFF` };
+  if (p.tipo === 'envio') return { p, monto: envio.tipo === 'montevideo' ? envio.costo : 0, texto: 'Envío gratis', soloMvd: envio.tipo !== 'montevideo' };
+  return { p, monto: Math.min(p.descuento, subtotal + envio.costo), texto: 'Descuento' };
+}
+
 function getTotal() {
   return cart.reduce((sum, i) => sum + i.price * i.qty, 0);
 }
@@ -229,7 +279,16 @@ function pintarTotalesCarrito() {
   const subtotal = getTotal();
   const envio = getEnvio();
   document.getElementById('cart-subtotal').textContent = pesos(subtotal);
-  document.getElementById('cart-total').textContent = pesos(subtotal + envio.costo);
+  const premio = descuentoPremio(subtotal, envio);
+  const filaPremio = document.getElementById('premio-row');
+  if (filaPremio) {
+    filaPremio.style.display = premio ? 'flex' : 'none';
+    if (premio) {
+      document.getElementById('cart-premio-label').textContent = `${premio.texto} · ${premio.p.codigo}`;
+      document.getElementById('cart-premio').textContent = premio.soloMvd ? 'Con envío a Montevideo' : '−' + pesos(premio.monto);
+    }
+  }
+  document.getElementById('cart-total').textContent = pesos(Math.max(0, subtotal + envio.costo - (premio ? premio.monto : 0)));
   const envioRow = document.getElementById('envio-row');
   const textoEnvio = { montevideo: pesos(envio.costo), interior: 'A cargo del comprador', pickup: 'Gratis' }[envio.tipo];
   envioRow.style.display = textoEnvio ? 'flex' : 'none';
@@ -441,6 +500,7 @@ const ICONOS_CARRITO = {
     <div class="carrito-pie">
       <div class="cart-total-row"><span>Subtotal</span><span id="cart-subtotal">$0</span></div>
       <div class="cart-total-row envio-row" id="envio-row" style="display:none;"><span>Envío</span><span id="cart-envio-label"></span></div>
+      <div class="cart-total-row premio-row" id="premio-row" style="display:none;"><span id="cart-premio-label"></span><span id="cart-premio"></span></div>
       <div class="cart-total-row total-final"><span>Total</span><span id="cart-total">$0</span></div>
       <button type="button" class="btn-mp" onclick="pagarMP()">${ICONOS_CARRITO.candado} Ir a pagar</button>
       <p class="cart-note">En el siguiente paso elegís cómo pagar.</p>

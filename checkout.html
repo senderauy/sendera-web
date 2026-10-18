@@ -1177,6 +1177,8 @@
     // Con transferencia o efectivo el total ya trae el descuento: queda anotado qué código se usó
     // (pedido.codigo es el del link de seguimiento: el de descuento va en "cupon")
     if (codigoAplicado) pedido.cupon = codigoAplicado;
+    // El premio de la ruleta ya se usó: el carrito deja de mostrarlo
+    try { const p = JSON.parse(localStorage.getItem('sendera_premio') || 'null'); if (p && p.codigo === codigoAplicado) localStorage.removeItem('sendera_premio'); } catch (e) {}
     if (comprobanteBase64) pedido.comprobante = comprobanteBase64;
     // Para Meta: las cookies del píxel y el navegador (el servidor manda la compra cuando está paga)
     const cookie = n => (document.cookie.match(new RegExp('(?:^|; )' + n + '=([^;]*)')) || [])[1] || '';
