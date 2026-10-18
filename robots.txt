@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /checkout.html
+Disallow: /seguimiento
+Disallow: /api/
+Allow: /api/foto
+Allow: /api/catalogo
+
+Sitemap: https://www.senderauy.com/sitemap.xml

@@ -200,6 +200,19 @@ export default async function handler(req, res) {
       res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30, stale-while-revalidate=86400');
       return res.status(200).json({ productos: productos || {}, stock: stock || {} });
     }
+    // Mapa del sitio para Google (/sitemap.xml): el inicio y una página por cada color de cada producto
+    if (req.query?.formato === 'sitemap') {
+      const urls = [`${SITIO}/`, `${SITIO}/privacidad.html`];
+      for (const [id, p] of Object.entries(productos || {})) {
+        if (!p || typeof p !== 'object' || !texto(p.nombre)) continue;
+        const variantes = Array.isArray(p.variantes) ? p.variantes : Object.values(p.variantes || {});
+        (variantes.length ? variantes : [null]).forEach((v, i) => urls.push(`${SITIO}/producto.html?id=${encodeURIComponent(id)}&v=${i}`));
+      }
+      res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=3600');
+      return res.status(200).send('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + urls.map(u => `  <url><loc>${escapar(u)}</loc></url>`).join('\n') + '\n</urlset>\n');
+    }
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=900');
     return res.status(200).send(aCsv(armarFilas(productos, stock)));

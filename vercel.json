@@ -9,6 +9,10 @@
       "destination": "/api/catalogo"
     },
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/catalogo?formato=sitemap"
+    },
+    {
       "source": "/seguimiento",
       "destination": "/seguimiento.html"
     },
