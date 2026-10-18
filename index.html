@@ -866,7 +866,14 @@
           lista.push({ p, v, i, foto, stockId });
         }));
       if (!lista.length) return;
-      const colores = await Promise.all(lista.map(g => coloresDeFoto(g.foto)));
+      // El panel guarda el color de cada foto (en el iPhone no se puede leer de la imagen); si falta, se lee
+      const RGB = /^rgb\((\d{1,3}),(\d{1,3}),(\d{1,3})\)$/;
+      const colores = await Promise.all(lista.map(g => {
+        const m = RGB.exec(g.v.fondo || '');
+        if (!m) return coloresDeFoto(g.foto);
+        const [r, gr, b] = m.slice(1).map(Number);
+        return { bg: g.v.fondo, oscuro: (0.299 * r + 0.587 * gr + 0.114 * b) < 120, gorro: RGB.test(g.v.tono || '') ? g.v.tono : '#c8c0b4' };
+      }));
       lista.forEach((g, k) => Object.assign(g, colores[k]));
       // La primera vez arranca en un gorro de color (rosado), no en el gris
       if (!vidGorros.length) vidActual = Math.max(0, lista.findIndex(g => /rosa/i.test(g.v.nombre)));

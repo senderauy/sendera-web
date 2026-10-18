@@ -652,6 +652,60 @@
 
   const enlaceValido = u => /^(https:\/\/|\/)[^\s"'<>]+$/i.test(u) || /^[\w-][\w\-./]*\.(jpe?g|png|webp|gif|avif)$/i.test(u);
 
+  // ── Colores de cada foto ───────────────────────
+  // La tienda pinta el fondo con el color de los bordes de la foto. En el iPhone Safari no deja leer los colores
+  // de una imagen (protección contra rastreo), así que se calculan acá, al guardar, y quedan en cada color:
+  // fondo (bordes) y tono (centro, el gorro).
+  function coloresFoto(src) {
+    return new Promise(resolve => {
+      if (!src) return resolve(null);
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        try {
+          const L = 48;
+          c.width = L; c.height = Math.max(1, Math.round(L * img.naturalHeight / img.naturalWidth));
+          const ctx = c.getContext('2d', { willReadFrequently: true });
+          ctx.drawImage(img, 0, 0, c.width, c.height);
+          const w = c.width, h = c.height;
+          let vacio = false;
+          const promedio = pts => {
+            let r = 0, g = 0, b = 0;
+            pts.forEach(([x, y]) => {
+              const d = ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
+              if (d[3] === 0) vacio = true;
+              r += d[0]; g += d[1]; b += d[2];
+            });
+            return `rgb(${Math.round(r / pts.length)},${Math.round(g / pts.length)},${Math.round(b / pts.length)})`;
+          };
+          const fondo = promedio([[1, 1], [w - 2, 1], [1, h / 2], [w - 2, h / 2]]);
+          const tono = promedio([[w * 0.5, h * 0.42], [w * 0.42, h * 0.45], [w * 0.58, h * 0.45], [w * 0.5, h * 0.5]]);
+          resolve(vacio || fondo === 'rgb(0,0,0)' ? null : { fondo, tono });
+        } catch (e) { resolve(null); }
+        finally { c.width = c.height = 0; }
+      };
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+  }
+
+  // Los productos que se guardaron antes de esto se completan solos la primera vez que se abre el panel
+  let coloresCompletados = false;
+  async function completarColores(productos) {
+    if (coloresCompletados) return;
+    coloresCompletados = true;
+    for (const p of productos) {
+      const vars = Array.isArray(p.variantes) ? p.variantes : [];
+      for (let i = 0; i < vars.length; i++) {
+        const v = vars[i];
+        const foto = v && ((v.fotos && v.fotos[0]) || v.foto);
+        if (!foto || (v.fondo && v.tono)) continue;
+        const c = await coloresFoto(foto);
+        if (c) await db.ref(`productos/${p.id}/variantes/${i}`).update(c).catch(() => {});
+      }
+    }
+  }
+
   async function guardar() {
     const nombre = $('prod-nombre').value.trim();
     const categoria = $('prod-categoria').value.trim();
@@ -707,6 +761,9 @@
       for (const v of variantes) {
         v.fotos = await Promise.all(v.fotos.map(f => guardarImagen(f).catch(() => f)));
         v.foto = v.fotos[0] || '';
+        // Color de fondo y del gorro, para que la tienda no tenga que leerlos (en el iPhone no puede)
+        const c = await coloresFoto(v.foto);
+        if (c) Object.assign(v, c);
       }
       if (prod.fotoAvatar) prod.fotoAvatar = await guardarImagen(prod.fotoAvatar).catch(() => prod.fotoAvatar);
       const ref = borrador.id ? db.ref('productos/' + borrador.id) : db.ref('productos').push();
@@ -1433,6 +1490,7 @@
     estado.cargado = true;
     dibujarCatalogo();
     pintarOptimizar();
+    completarColores(lista);
   });
 </script>
 </body>

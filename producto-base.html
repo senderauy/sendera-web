@@ -1033,7 +1033,11 @@
       const bgColor = getBgColor(v?.nombre || '', idx);
       document.body.style.background = bgColor;
       const foto = getFotos(v)[0];
-      if (foto && foto !== 'img/logo.png') {
+      // El panel guarda el color de fondo de cada foto (en el iPhone no se puede leer de la imagen)
+      if (/^rgb\(\d{1,3},\d{1,3},\d{1,3}\)$/.test(v?.fondo || '')) {
+        document.documentElement.style.setProperty('--prod-bg', v.fondo);
+        document.body.style.background = v.fondo;
+      } else if (foto && foto !== 'img/logo.png') {
         colorDeFoto(foto).then(c => {
           if (!c || productoActual?.variantes[variantActual] !== v) return;
           document.documentElement.style.setProperty('--prod-bg', c);
