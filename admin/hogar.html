@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="Sendera Admin" />
   <meta name="theme-color" content="#182417" />
   <title>Sendera - Hogar</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet" />
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -20,298 +20,538 @@
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
   <script src="admin-ui.js?v=3"></script>
   <style>
+    /* ── Hogar tiene colores propios (no los de Sendera): cada persona y cada cosa con su color ── */
+    .hogar {
+      --h-fondo: #fff8ef; --h-carta: #ffffff; --h-tinta: #2b2340; --h-tinta-2: #6b6380; --h-linea: #f1e6d8;
+      --h-ed: #3d7bfd; --h-ed-f: #e4ecff;      /* Edgardo: azul */
+      --h-lo: #f2507f; --h-lo-f: #ffe2ea;      /* Lore: frambuesa */
+      --h-dos: #11a594; --h-dos-f: #d5f4ef;    /* Los dos: turquesa */
+      --h-sol: #f5a524; --h-sol-f: #fff0cf;    /* Gastos: mostaza */
+      --h-uva: #8457f0; --h-uva-f: #ece4ff;    /* Ahorro: uva */
+      --h-coral: #ff6b4a; --h-coral-f: #ffe5dd;
+      --h-redondo: 22px;
+      --h-titulo: 'Fredoka', 'Montserrat', system-ui, sans-serif;
+      --h-ease: cubic-bezier(0.23, 1, 0.32, 1);
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     [hidden] { display: none !important; }
     body { min-height: 100vh; font-size: 14px; line-height: 1.5; }
+    body:has(.hogar) { background: #fff8ef; }
     button, input, select { font-family: inherit; }
+    .sa-pagina.hogar { max-width: 1500px; color: var(--h-tinta); }
 
-    /* En la compu: todo a la vista, en tres columnas */
-    .sa-pagina.hogar { max-width: 1480px; }
-    .columnas { display: grid; gap: 20px; align-items: start; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr); }
+    /* Encabezado con sol */
+    .h-tope { position: relative; overflow: hidden; border-radius: 28px; padding: 26px 28px; margin-bottom: 20px; color: var(--h-tinta);
+      background: radial-gradient(circle at 92% 20%, #ffd166 0 70px, transparent 71px), radial-gradient(circle at 78% 120%, #ffb4c6 0 120px, transparent 121px),
+                  radial-gradient(circle at 105% 95%, #9fe3d6 0 90px, transparent 91px), #ffe9c7;
+      display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
+    .h-tope h1 { font: 700 2.4rem/1.05 var(--h-titulo); letter-spacing: -0.01em; text-wrap: balance; }
+    .h-tope p { color: #6d5a3f; margin-top: 6px; font-weight: 500; }
+    .h-resumen { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+    .h-resumen span { background: rgba(255,255,255,.75); padding: 6px 12px; border-radius: 999px; font-size: .8rem; font-weight: 600; }
+    .quien { display: flex; gap: 8px; position: relative; z-index: 1; }
+    .quien button { display: flex; align-items: center; gap: 8px; border: 2px solid transparent; background: rgba(255,255,255,.8); padding: 6px 14px 6px 6px; border-radius: 999px;
+      font-weight: 700; color: var(--h-tinta); cursor: pointer; transition: transform .16s var(--h-ease), border-color .2s, background .2s; }
+    .quien button i { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: #fff; font: 700 .85rem var(--h-titulo); font-style: normal; }
+    .quien button.activo { background: #fff; border-color: var(--h-tinta); }
+    .quien button:active { transform: scale(.96); }
+
+    .columnas { display: grid; gap: 20px; align-items: start; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, .9fr); }
     .columna { display: grid; gap: 20px; }
-    @media (max-width: 1250px) { .columnas { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .columna.tercera { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 860px) { .columnas, .columna.tercera { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 1280px) { .columnas { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .columna.tercera { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0,1fr)); align-items: start; } }
+    @media (max-width: 860px) { .columnas, .columna.tercera { grid-template-columns: minmax(0, 1fr); } .h-tope h1 { font-size: 1.9rem; } }
 
-    /* Colores de cada persona (pasteles de Sendera) */
-    .p-0 { background: #d1e7f8; } .p-1 { background: #f9dcda; } .p-2 { background: #ddd2f2; } .p-dos { background: #cddab4; }
+    .carta { background: var(--h-carta); border-radius: var(--h-redondo); padding: 22px; box-shadow: 0 1px 0 #f0e2cf, 0 14px 30px -22px rgba(80, 50, 20, .35); }
+    .carta h2 { font: 600 1.25rem/1.2 var(--h-titulo); display: flex; align-items: center; gap: 10px; }
+    .carta h2 .ico { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; }
+    .carta h2 .ico svg { width: 18px; height: 18px; }
+    .cabeza { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .enlace { font-size: .8rem; font-weight: 600; color: var(--h-tinta-2); text-decoration: none; background: none; border: 0; cursor: pointer; display: inline-flex; gap: 4px; align-items: center; }
+    .enlace:hover { color: var(--h-tinta); }
+    .enlace svg { width: 15px; height: 15px; }
 
-    /* Pendientes */
-    .pestanas { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-    .pestanas button { border: 0; padding: 7px 12px; border-radius: 999px; background: var(--sa-papel-2); color: var(--sa-tinta); font-weight: 600; font-size: 0.8rem; cursor: pointer; }
-    .pestanas button.activo { background: var(--sa-noche); color: var(--sa-noche-texto); }
-    .pestanas button span { opacity: 0.6; margin-left: 5px; }
-    .tareas { list-style: none; display: grid; gap: 6px; }
-    .tarea { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--sa-papel-2); }
-    .tarea input[type=checkbox] { width: 19px; height: 19px; accent-color: var(--sa-noche); flex: none; cursor: pointer; }
-    .tarea .txt { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-    .tarea .txt small { display: block; font-size: 0.74rem; color: var(--sa-tinta-3); }
-    .tarea.hecha .txt { text-decoration: line-through; color: var(--sa-tinta-3); }
-    .chip { font-size: 0.7rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; color: var(--sa-tinta); }
-    .chip.hoy { background: var(--sa-ambar-fondo); color: var(--sa-ambar-oscuro); }
-    .tarea .sa-icono-btn { width: 28px; height: 28px; opacity: 0; }
-    .tarea:hover .sa-icono-btn, .tarea .sa-icono-btn:focus-visible { opacity: 1; }
-    .nueva { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 8px; margin-top: 12px; }
-    .nueva label { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--sa-tinta-2); white-space: nowrap; }
-    .pie-tareas { display: flex; justify-content: flex-end; margin-top: 8px; }
+    /* Personas */
+    .c-Edgardo { --c: var(--h-ed); --cf: var(--h-ed-f); }
+    .c-Lore { --c: var(--h-lo); --cf: var(--h-lo-f); }
+    .c-dos { --c: var(--h-dos); --cf: var(--h-dos-f); }
+    .chip { font-size: .72rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; background: var(--cf); color: var(--c); }
 
-    /* Sendera */
+    /* Progreso del día */
+    .progreso { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding: 12px 14px; border-radius: 16px; background: var(--h-dos-f); }
+    .progreso .barra { flex: 1; height: 10px; border-radius: 99px; background: rgba(17,165,148,.18); overflow: hidden; }
+    .progreso .barra i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--h-dos), #4fd1c0); transition: width .6s var(--h-ease); }
+    .progreso b { font: 600 .95rem var(--h-titulo); color: #0b6f64; white-space: nowrap; }
+
+    .pestanas { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .pestanas button { border: 0; padding: 7px 13px; border-radius: 999px; background: #f6efe5; color: var(--h-tinta); font-weight: 700; font-size: .8rem; cursor: pointer; transition: background .2s, color .2s, transform .16s var(--h-ease); }
+    .pestanas button.activo { background: var(--c, var(--h-tinta)); color: #fff; }
+    .pestanas button:active { transform: scale(.96); }
+    .pestanas button span { opacity: .65; margin-left: 5px; }
+
+    .tareas { list-style: none; display: grid; gap: 7px; }
+    .tarea { position: relative; display: flex; align-items: center; gap: 12px; padding: 11px 12px 11px 14px; border-radius: 16px; background: #fbf6ee; border-left: 5px solid var(--c);
+      transition: transform .25s var(--h-ease), opacity .25s, background .25s; }
+    .tarea.entra { animation: entrar .35s var(--h-ease) both; }
+    @keyframes entrar { from { opacity: 0; transform: translateY(-6px) scale(.98); } }
+    .tarea .check { width: 24px; height: 24px; border-radius: 50%; border: 2.5px solid var(--c); background: #fff; flex: none; cursor: pointer; display: grid; place-items: center; transition: background .2s, transform .16s var(--h-ease); }
+    .tarea .check svg { width: 14px; height: 14px; color: #fff; opacity: 0; transform: scale(.5); transition: opacity .2s, transform .25s var(--h-ease); }
+    .tarea .check:active { transform: scale(.9); }
+    .tarea.hecha .check { background: var(--c); }
+    .tarea.hecha .check svg { opacity: 1; transform: scale(1); }
+    .tarea .txt { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 500; }
+    .tarea .txt small { display: block; font-size: .74rem; color: var(--h-tinta-2); font-weight: 500; }
+    .tarea.hecha { background: #f8f5f0; }
+    .tarea.hecha .txt { text-decoration: line-through; color: #a59fb3; }
+    .chip.hoy { --c: #c2410c; --cf: var(--h-coral-f); }
+    .tarea .borrar { width: 28px; height: 28px; border: 0; border-radius: 9px; background: none; color: #b8b0c6; cursor: pointer; display: grid; place-items: center; opacity: 0; transition: opacity .15s; }
+    .tarea:hover .borrar, .tarea .borrar:focus-visible { opacity: 1; }
+    .tarea .borrar:hover { background: var(--h-coral-f); color: var(--h-coral); }
+    .tarea .borrar svg { width: 15px; height: 15px; }
+    .vacio { text-align: center; padding: 22px; color: var(--h-tinta-2); font-weight: 500; }
+
+    .nueva { margin-top: 14px; padding: 12px; border-radius: 18px; background: #fbf6ee; display: grid; gap: 10px; }
+    .nueva input[type=text] { width: 100%; border: 2px solid transparent; background: #fff; border-radius: 12px; padding: 11px 14px; font-size: .95rem; color: var(--h-tinta); outline: none; transition: border-color .2s; }
+    .nueva input[type=text]:focus { border-color: var(--h-tinta); }
+    .opciones { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .opciones .para { border: 2px solid var(--cf); background: #fff; color: var(--c); padding: 6px 12px; border-radius: 999px; font-weight: 700; font-size: .8rem; cursor: pointer; transition: background .2s, color .2s, transform .16s var(--h-ease); }
+    .opciones .para[aria-pressed="true"] { background: var(--c); border-color: var(--c); color: #fff; }
+    .opciones .para:active, .btn:active, .cat:active { transform: scale(.96); }
+    .opciones .hoy-btn { --c: #c2410c; --cf: var(--h-coral-f); }
+    .opciones .sep { flex: 1; }
+    .btn { border: 0; border-radius: 12px; padding: 10px 16px; font-weight: 700; font-size: .85rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: transform .16s var(--h-ease), filter .2s; }
+    .btn:hover { filter: brightness(1.05); }
+    .btn svg { width: 16px; height: 16px; }
+    .btn.oscuro { background: var(--h-tinta); color: #fff; }
+    .btn.sol { background: var(--h-sol); color: #3b2500; }
+    .btn.uva { background: var(--h-uva); color: #fff; }
+    .btn.suave { background: #f6efe5; color: var(--h-tinta); }
+
+    /* Sendera (solo mirar) */
     .numeros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-    .num { border-radius: 14px; padding: 12px; min-width: 0; }
-    .num b { display: block; font: 600 1.6rem/1.1 var(--sa-serif); font-variant-numeric: lining-nums tabular-nums; overflow-wrap: anywhere; }
-    .num span { font-size: 0.74rem; color: var(--sa-tinta-2); }
+    .num { border-radius: 16px; padding: 13px; min-width: 0; }
+    .num b { display: block; font: 600 1.55rem/1.1 var(--h-titulo); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .num span { font-size: .74rem; font-weight: 600; opacity: .8; }
     .filas { list-style: none; margin-top: 12px; }
-    .filas li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--sa-linea-2); font-size: 0.86rem; }
+    .filas li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px dashed var(--h-linea); font-size: .86rem; }
     .filas li:first-child { border-top: 0; }
-    .filas small { display: block; color: var(--sa-tinta-3); font-size: 0.74rem; }
+    .filas small { display: block; color: var(--h-tinta-2); font-size: .74rem; }
     .stock { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-    .stock span { font-size: 0.76rem; background: var(--sa-papel-2); padding: 5px 10px; border-radius: 999px; }
-    .stock b { color: var(--sa-rojo); }
+    .stock span { font-size: .76rem; background: var(--h-coral-f); color: #9a3412; padding: 5px 10px; border-radius: 999px; font-weight: 600; }
 
     /* Plata */
-    .cuenta { border-radius: 14px; padding: 14px; }
-    .cuenta .t { font-size: 0.78rem; font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
-    .cuenta b { display: block; font: 600 1.9rem/1.1 var(--sa-serif); margin: 4px 0 10px; font-variant-numeric: lining-nums tabular-nums; }
-    .barra { height: 8px; background: rgba(24, 36, 23, 0.12); border-radius: 99px; overflow: hidden; }
-    .barra i { display: block; height: 100%; background: var(--sa-noche); border-radius: 99px; }
-    .barra.pasado i { background: var(--sa-rojo); }
-    .cuenta small { display: block; font-size: 0.74rem; margin-top: 6px; color: var(--sa-tinta-2); }
-    .ahorro { margin-top: 10px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; }
-    .anillo { width: 66px; height: 66px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 0.85rem; position: relative;
-      background: conic-gradient(var(--sa-noche) calc(var(--p) * 1%), rgba(24, 36, 23, 0.12) 0); }
-    .anillo::after { content: ''; position: absolute; inset: 7px; border-radius: 50%; background: #cddab4; }
-    .anillo span { position: relative; z-index: 1; }
-    .botones { display: flex; gap: 8px; margin-top: 12px; }
-    .botones > * { flex: 1; }
-    .gastos li .monto { font-variant-numeric: tabular-nums; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
-    .gastos .sa-icono-btn { width: 26px; height: 26px; opacity: 0; }
-    .gastos li:hover .sa-icono-btn, .gastos .sa-icono-btn:focus-visible { opacity: 1; }
-    .categorias { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-    .categorias span { font-size: 0.74rem; background: var(--sa-papel-2); padding: 4px 9px; border-radius: 999px; }
+    .gasto-mes { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 16px; align-items: center; }
+    .dona { width: 132px; height: 132px; border-radius: 50%; position: relative; display: grid; place-items: center; background: #f6efe5; transition: transform .3s var(--h-ease); }
+    .dona::after { content: ''; position: absolute; inset: 18px; border-radius: 50%; background: #fff; }
+    .dona div { position: relative; z-index: 1; text-align: center; line-height: 1.1; }
+    .dona b { display: block; font: 600 1.15rem var(--h-titulo); }
+    .dona small { font-size: .68rem; color: var(--h-tinta-2); font-weight: 600; }
+    .leyenda { list-style: none; display: grid; gap: 4px; font-size: .8rem; }
+    .leyenda li { display: flex; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 8px; cursor: default; transition: background .15s; }
+    .leyenda li:hover { background: #f6efe5; }
+    .leyenda i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+    .leyenda b { margin-left: auto; font-variant-numeric: tabular-nums; }
+    .presu { margin-top: 14px; }
+    .presu .barra { height: 12px; border-radius: 99px; background: var(--h-sol-f); overflow: hidden; }
+    .presu .barra i { display: block; height: 100%; width: 0; border-radius: 99px; background: var(--h-sol); transition: width .7s var(--h-ease), background .3s; }
+    .presu.pasado .barra i { background: var(--h-coral); }
+    .presu small { display: block; margin-top: 6px; font-size: .78rem; color: var(--h-tinta-2); font-weight: 500; }
+
+    .cats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 16px; }
+    .cat { border: 0; border-radius: 14px; padding: 10px 4px 8px; background: var(--cf); color: var(--c); cursor: pointer; display: grid; justify-items: center; gap: 4px; font-weight: 700; font-size: .7rem;
+      transition: transform .16s var(--h-ease), box-shadow .2s; }
+    .cat:hover { box-shadow: inset 0 0 0 2px var(--c); }
+    .cat svg { width: 20px; height: 20px; }
+
+    .ahorro { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; padding: 16px; border-radius: 18px; background: var(--h-uva-f); }
+    .anillo { --p: 0; width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; position: relative;
+      background: conic-gradient(var(--h-uva) calc(var(--p) * 1%), rgba(132,87,240,.15) 0); transition: --p 1s var(--h-ease); }
+    @property --p { syntax: '<number>'; inherits: false; initial-value: 0; }
+    .anillo::after { content: ''; position: absolute; inset: 9px; border-radius: 50%; background: var(--h-uva-f); }
+    .anillo span { position: relative; z-index: 1; font: 700 1rem var(--h-titulo); color: #5b34c9; }
+    .ahorro strong { font: 600 1.05rem var(--h-titulo); display: block; }
+    .ahorro .det { font-size: .8rem; color: #5a4a86; font-weight: 500; }
+    .rapidos { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .rapidos button { border: 0; background: #fff; color: #5b34c9; font-weight: 700; font-size: .75rem; padding: 5px 10px; border-radius: 999px; cursor: pointer; transition: transform .16s var(--h-ease); }
+    .rapidos button:active { transform: scale(.94); }
+    .movs .monto { font-variant-numeric: tabular-nums; white-space: nowrap; display: flex; align-items: center; gap: 4px; font-weight: 700; }
+    .movs .borrar { width: 26px; height: 26px; border: 0; border-radius: 8px; background: none; color: #b8b0c6; cursor: pointer; display: grid; place-items: center; opacity: 0; }
+    .movs li:hover .borrar, .movs .borrar:focus-visible { opacity: 1; }
+    .movs .borrar svg { width: 14px; height: 14px; }
+    .movs .punto { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; flex: none; background: var(--cf); color: var(--c); }
+    .movs .punto svg { width: 15px; height: 15px; }
+    .movs li > div:first-child { display: flex; gap: 10px; align-items: center; min-width: 0; }
+
+    /* Hoja para cargar gasto / ahorro */
+    dialog.hoja { border: 0; border-radius: 26px; padding: 24px; width: min(440px, calc(100vw - 32px)); color: var(--h-tinta); margin: auto; }
+    dialog.hoja::backdrop { background: rgba(43, 35, 64, .35); }
+    dialog.hoja[open] { animation: hoja .28s var(--h-ease); }
+    @keyframes hoja { from { opacity: 0; transform: translateY(14px) scale(.97); } }
+    dialog.hoja h3 { font: 600 1.4rem var(--h-titulo); margin-bottom: 14px; }
+    .monto-grande { display: flex; align-items: center; gap: 6px; border-radius: 18px; padding: 10px 16px; background: var(--h-sol-f); }
+    .monto-grande span { font: 600 2rem var(--h-titulo); color: #8a5a00; }
+    .monto-grande input { border: 0; background: none; outline: none; font: 600 2.2rem var(--h-titulo); width: 100%; color: var(--h-tinta); }
+    dialog.ahorro-modo .monto-grande { background: var(--h-uva-f); }
+    dialog.ahorro-modo .monto-grande span { color: #5b34c9; }
+    .hoja .cats { margin-top: 12px; }
+    .hoja .cat[aria-pressed="true"] { background: var(--c); color: #fff; }
+    .hoja .campo { width: 100%; border: 2px solid #f1e6d8; border-radius: 12px; padding: 10px 12px; font-size: .9rem; margin-top: 10px; outline: none; color: var(--h-tinta); }
+    .hoja .campo:focus { border-color: var(--h-tinta); }
+    .hoja .acciones { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+    .hoja label { display: block; font-size: .78rem; font-weight: 600; color: var(--h-tinta-2); margin-top: 10px; }
+    .hoja label .campo { margin-top: 4px; }
+
+    /* Papelitos de festejo */
+    .papelito { position: fixed; width: 8px; height: 12px; border-radius: 2px; pointer-events: none; z-index: 9999; will-change: transform, opacity; }
 
     .privado { max-width: 460px; margin: 60px auto; text-align: center; }
-    .privado .lucide { width: 34px; height: 34px; color: var(--sa-tinta-3); margin-bottom: 10px; }
-    dialog.sa-dialogo form { display: grid; gap: 10px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tarea.entra, dialog.hoja[open] { animation: none; }
+      .progreso .barra i, .presu .barra i, .anillo { transition: none; }
+      .papelito { display: none; }
+    }
   </style>
 </head>
 <body>
 
 <main class="sa-pagina hogar">
-  <header class="sa-encabezado">
+  <header class="h-tope">
     <div>
       <h1 id="saludo">Hogar</h1>
       <p id="fecha-hoy"></p>
+      <div class="h-resumen" id="resumen"></div>
     </div>
+    <div class="quien" id="quien" role="group" aria-label="Quién está mirando" hidden></div>
   </header>
 
-  <!-- Si el mail no está en la lista del hogar, solo se ve esto -->
-  <section class="sa-panel privado" id="privado" hidden>
-    <i data-lucide="lock"></i>
-    <h2>Esta sección es privada</h2>
-    <p style="color:var(--sa-tinta-2);margin-top:6px">Solo la ven las personas de la casa.</p>
+  <!-- Si la cuenta no está en la lista del hogar, solo se ve esto -->
+  <section class="carta privado" id="privado" hidden>
+    <h2 style="justify-content:center">Esta sección es privada</h2>
+    <p style="color:var(--h-tinta-2);margin-top:6px">Solo la ven las personas de la casa.</p>
   </section>
 
   <div class="columnas" id="contenido" hidden>
     <!-- Pendientes -->
     <div class="columna">
-      <section class="sa-panel">
-        <div class="sa-panel-titulo"><h2>Pendientes</h2><small id="cuantos" style="color:var(--sa-tinta-3)"></small></div>
+      <section class="carta">
+        <div class="cabeza">
+          <h2><span class="ico" style="background:var(--h-dos-f);color:var(--h-dos)"><i data-lucide="list-checks"></i></span>Pendientes</h2>
+          <button type="button" class="enlace" id="borrar-hechas" hidden><i data-lucide="sparkles"></i>Limpiar los hechos</button>
+        </div>
+        <div class="progreso"><b id="prog-txt">Hoy: 0 de 0</b><div class="barra"><i id="prog-barra"></i></div></div>
         <div class="pestanas" id="pestanas"></div>
         <ul class="tareas" id="tareas"></ul>
-        <p class="sa-vacio" id="sin-tareas" hidden><i data-lucide="circle-check"></i>No hay pendientes.</p>
+        <p class="vacio" id="sin-tareas" hidden>Nada pendiente acá. ¡A disfrutar!</p>
         <form class="nueva" id="nueva">
-          <input class="sa-campo" id="nueva-txt" placeholder="Nuevo pendiente…" maxlength="200" aria-label="Nuevo pendiente" />
-          <select class="sa-campo" id="nueva-para" aria-label="Para quién"></select>
-          <label><input type="checkbox" id="nueva-hoy" /> Hoy</label>
-          <button class="sa-boton" type="submit">Agregar</button>
+          <input type="text" id="nueva-txt" placeholder="¿Qué hay que hacer?" maxlength="200" aria-label="Nuevo pendiente" autocomplete="off" />
+          <div class="opciones" id="nueva-opciones">
+            <span id="nueva-para"></span>
+            <button type="button" class="para hoy-btn" id="nueva-hoy" aria-pressed="false">Para hoy</button>
+            <span class="sep"></span>
+            <button class="btn oscuro" type="submit"><i data-lucide="plus"></i>Agregar</button>
+          </div>
         </form>
-        <div class="pie-tareas"><button type="button" class="sa-enlace" id="borrar-hechas" hidden><i data-lucide="trash-2"></i>Borrar los hechos</button></div>
-      </section>
-    </div>
-
-    <!-- Sendera -->
-    <div class="columna">
-      <section class="sa-panel">
-        <div class="sa-panel-titulo"><h2>Sendera hoy</h2><a class="sa-enlace" href="pedidos.html">Ver pedidos<i data-lucide="arrow-right"></i></a></div>
-        <div class="numeros">
-          <div class="num p-dos"><b id="s-hoy">$0</b><span id="s-hoy-n">Vendido hoy</span></div>
-          <div class="num p-2"><b id="s-mes">$0</b><span id="s-mes-n">Este mes</span></div>
-          <div class="num" style="background:var(--sa-ambar-fondo)"><b id="s-preparar">0</b><span>Para preparar</span></div>
-        </div>
-        <ul class="filas" id="s-pedidos"></ul>
-        <div class="stock" id="s-stock"></div>
       </section>
     </div>
 
     <!-- Plata de la casa -->
+    <div class="columna">
+      <section class="carta">
+        <div class="cabeza">
+          <h2><span class="ico" style="background:var(--h-sol-f);color:#b97800"><i data-lucide="wallet"></i></span><span id="plata-titulo">La plata del mes</span></h2>
+          <button type="button" class="enlace" id="editar-ajustes"><i data-lucide="settings-2"></i>Ajustar</button>
+        </div>
+        <div class="gasto-mes">
+          <div class="dona" id="dona"><div><b id="g-total">$0</b><small>gastado</small></div></div>
+          <ul class="leyenda" id="leyenda"></ul>
+        </div>
+        <div class="presu" id="presu"><div class="barra"><i id="presu-barra"></i></div><small id="presu-txt"></small></div>
+        <p style="font-size:.78rem;font-weight:600;color:var(--h-tinta-2);margin-top:16px">Tocá una categoría para cargar un gasto</p>
+        <div class="cats" id="cats" style="margin-top:8px"></div>
+      </section>
+
+      <section class="carta">
+        <div class="ahorro">
+          <div class="anillo" id="anillo"><span id="a-porc">—</span></div>
+          <div>
+            <strong id="a-nombre">Ahorro</strong>
+            <div class="det" id="a-detalle"></div>
+            <div class="rapidos" id="rapidos">
+              <button type="button" data-ahorro="1000">+ $1.000</button>
+              <button type="button" data-ahorro="5000">+ $5.000</button>
+              <button type="button" data-ahorro="otro">Otro monto</button>
+            </div>
+          </div>
+        </div>
+        <ul class="filas movs" id="movs"></ul>
+      </section>
+    </div>
+
+    <!-- Sendera -->
     <div class="columna tercera">
-      <section class="sa-panel">
-        <div class="sa-panel-titulo"><h2 id="plata-titulo">La plata de la casa</h2><button type="button" class="sa-enlace" id="editar-ajustes"><i data-lucide="settings-2"></i>Ajustar</button></div>
-        <div class="cuenta p-0">
-          <div class="t"><span>Gastos del mes</span><span id="g-cuantos"></span></div>
-          <b id="g-total">$0</b>
-          <div class="barra" id="g-barra"><i style="width:0%"></i></div>
-          <small id="g-presupuesto"></small>
+      <section class="carta">
+        <div class="cabeza">
+          <h2><span class="ico" style="background:#e3ebda;color:#507a3a"><i data-lucide="mountain"></i></span>Sendera hoy</h2>
+          <a class="enlace" href="pedidos.html">Pedidos<i data-lucide="arrow-right"></i></a>
         </div>
-        <div class="cuenta p-dos ahorro">
-          <div class="anillo" id="a-anillo" style="--p:0"><span id="a-porc">0 %</span></div>
-          <div><strong id="a-nombre">Ahorro</strong><div style="font-size:0.8rem" id="a-detalle"></div></div>
+        <div class="numeros">
+          <div class="num" style="background:#d5f4ef;color:#0b6f64"><b id="s-hoy">$0</b><span id="s-hoy-n">Hoy</span></div>
+          <div class="num" style="background:#e4ecff;color:#1e4fc2"><b id="s-mes">$0</b><span id="s-mes-n">Este mes</span></div>
+          <div class="num" style="background:#fff0cf;color:#8a5a00"><b id="s-preparar">0</b><span>Para preparar</span></div>
         </div>
-        <div class="botones">
-          <button type="button" class="sa-boton" id="mas-gasto"><i data-lucide="minus"></i>Gasto</button>
-          <button type="button" class="sa-boton-sec" id="mas-ahorro"><i data-lucide="plus"></i>Ahorro</button>
-        </div>
-        <div class="categorias" id="g-categorias"></div>
-        <ul class="filas gastos" id="g-lista"></ul>
+        <ul class="filas" id="s-pedidos"></ul>
+        <div class="stock" id="s-stock"></div>
       </section>
     </div>
   </div>
 </main>
 
 <!-- Cargar gasto o ahorro -->
-<dialog class="sa-dialogo" id="d-movimiento">
-  <form id="f-movimiento">
+<dialog class="hoja" id="d-mov">
+  <form id="f-mov">
     <h3 id="m-titulo">Nuevo gasto</h3>
-    <input class="sa-campo" id="m-monto" type="number" inputmode="numeric" min="1" step="1" placeholder="Monto en pesos" required />
-    <select class="sa-campo" id="m-categoria"></select>
-    <input class="sa-campo" id="m-detalle" maxlength="80" placeholder="Detalle (opcional)" />
-    <input class="sa-campo" id="m-fecha" type="date" required />
-    <div class="sa-acciones"><button type="button" class="sa-boton-sec" data-cerrar>Cancelar</button><button type="submit" class="sa-boton">Guardar</button></div>
+    <div class="monto-grande"><span>$</span><input id="m-monto" type="number" inputmode="numeric" min="1" step="1" placeholder="0" required aria-label="Monto" /></div>
+    <div class="cats" id="m-cats"></div>
+    <input class="campo" id="m-detalle" maxlength="80" placeholder="Detalle (opcional): ej. Tienda Inglesa" />
+    <input class="campo" id="m-fecha" type="date" required aria-label="Fecha" />
+    <div class="acciones"><button type="button" class="btn suave" data-cerrar>Cancelar</button><button type="submit" class="btn oscuro" id="m-guardar">Guardar</button></div>
   </form>
 </dialog>
 
 <!-- Presupuesto y meta de ahorro -->
-<dialog class="sa-dialogo" id="d-ajustes">
+<dialog class="hoja" id="d-ajustes">
   <form id="f-ajustes">
     <h3>Ajustes de la casa</h3>
-    <label style="font-size:0.8rem">Presupuesto de gastos por mes<input class="sa-campo" id="aj-presupuesto" type="number" min="0" step="100" /></label>
-    <label style="font-size:0.8rem">Para qué ahorran<input class="sa-campo" id="aj-ahorro-nombre" maxlength="60" placeholder="Ej.: vacaciones de verano" /></label>
-    <label style="font-size:0.8rem">Meta de ahorro<input class="sa-campo" id="aj-ahorro-meta" type="number" min="0" step="100" /></label>
-    <div class="sa-acciones"><button type="button" class="sa-boton-sec" data-cerrar>Cancelar</button><button type="submit" class="sa-boton">Guardar</button></div>
+    <label>Presupuesto de gastos por mes<input class="campo" id="aj-presupuesto" type="number" min="0" step="100" /></label>
+    <label>Para qué ahorran<input class="campo" id="aj-ahorro-nombre" maxlength="60" placeholder="Ej.: vacaciones de verano" /></label>
+    <label>Meta de ahorro<input class="campo" id="aj-ahorro-meta" type="number" min="0" step="100" /></label>
+    <div class="acciones"><button type="button" class="btn suave" data-cerrar>Cancelar</button><button type="submit" class="btn oscuro">Guardar</button></div>
   </form>
 </dialog>
 
 <script>
   // ── Hogar: pendientes y plata de la casa, más un resumen de Sendera ──
-  // Todo lo de la casa vive en hogar/ y solo lo pueden leer los mails de hogar_miembros (ver database.rules.json),
-  // aunque haya otros admins de Sendera. hogar_miembros/<mail con comas> = "Nombre" se carga a mano en Firebase.
+  // Todo lo de la casa vive en hogar/ y solo lo pueden leer las cuentas de hogar_miembros (ver database.rules.json),
+  // aunque haya otros admins de Sendera. hogar_miembros/<mail con comas> = "Casa" se carga a mano en Firebase.
+  // Edgardo y Lore entran con la misma cuenta: arriba se elige quién mira (se recuerda en esta compu).
   const $ = id => document.getElementById(id);
   const pesos = n => '$' + Math.round(num(n)).toLocaleString('es-UY');
-  const CATEGORIAS = ['Súper', 'Casa y servicios', 'Transporte', 'Salud', 'Salidas', 'Ropa', 'Otros'];
+  const PERSONAS = ['Edgardo', 'Lore'];
+  const COLOR_PERSONA = { Edgardo: '#3d7bfd', Lore: '#f2507f', dos: '#11a594' };
+  const CATEGORIAS = [
+    { n: 'Súper', i: 'shopping-cart', c: '#f5a524', f: '#fff0cf' },
+    { n: 'Casa y servicios', i: 'house', c: '#3d7bfd', f: '#e4ecff' },
+    { n: 'Transporte', i: 'car', c: '#11a594', f: '#d5f4ef' },
+    { n: 'Salud', i: 'heart-pulse', c: '#f2507f', f: '#ffe2ea' },
+    { n: 'Salidas', i: 'utensils', c: '#ff6b4a', f: '#ffe5dd' },
+    { n: 'Ropa', i: 'shirt', c: '#8457f0', f: '#ece4ff' },
+    { n: 'Regalos', i: 'gift', c: '#d946ef', f: '#fae3fd' },
+    { n: 'Otros', i: 'circle-ellipsis', c: '#64748b', f: '#e9edf2' }
+  ];
+  const cat = n => CATEGORIAS.find(c => c.n === n) || CATEGORIAS[CATEGORIAS.length - 1];
   const hoyISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
-  const delMes = f => { const d = new Date(f + (f.length === 10 ? 'T12:00' : '')), a = new Date(); return d.getMonth() === a.getMonth() && d.getFullYear() === a.getFullYear(); };
+  const delMes = f => { const d = new Date(String(f).length === 10 ? f + 'T12:00' : f), a = new Date(); return d.getMonth() === a.getMonth() && d.getFullYear() === a.getFullYear(); };
   const lista = snap => { const r = []; snap.forEach(c => { const v = c.val(); if (v && typeof v === 'object') r.push({ ...v, id: c.key }); }); return r; };
+  const nombre = k => k === 'dos' ? 'Los dos' : (k || 'Alguien');
+  const sinMovimiento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const iconos = () => panel.iconos();
 
-  const estado = { yo: '', miembros: {}, tareas: [], gastos: [], ahorros: [], ajustes: {}, filtro: 'todos', pedidos: [], productos: [], stock: {} };
+  const estado = { yo: PERSONAS[0], tareas: [], gastos: [], ahorros: [], ajustes: {}, filtro: 'todos', para: null, hoy: false, pedidos: [], productos: [], stock: {} };
   const fecha = new Date().toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'long' }).replace(',', '');
   $('fecha-hoy').textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
-  const mesNombre = new Date().toLocaleDateString('es-UY', { month: 'long' });
-  $('plata-titulo').textContent = `La plata de ${mesNombre}`;
+  $('plata-titulo').textContent = 'La plata de ' + new Date().toLocaleDateString('es-UY', { month: 'long' });
 
-  const nombre = k => k === 'dos' ? 'Los dos' : (estado.miembros[k] || 'Alguien');
-  const claseDe = k => k === 'dos' ? 'p-dos' : 'p-' + Math.max(0, Object.keys(estado.miembros).indexOf(k));
+  // ── Papelitos de colores cuando se termina algo ──
+  function festejo(x, y, cuantos = 14) {
+    if (sinMovimiento) return;
+    const colores = ['#3d7bfd', '#f2507f', '#11a594', '#f5a524', '#8457f0', '#ff6b4a'];
+    for (let i = 0; i < cuantos; i++) {
+      const p = document.createElement('i');
+      p.className = 'papelito';
+      p.style.background = colores[i % colores.length];
+      p.style.left = x + 'px'; p.style.top = y + 'px';
+      document.body.appendChild(p);
+      const ang = Math.random() * Math.PI * 2, dist = 40 + Math.random() * (cuantos > 20 ? 220 : 70);
+      p.animate([
+        { transform: 'translate(-50%,-50%) rotate(0deg)', opacity: 1 },
+        { transform: `translate(${Math.cos(ang) * dist}px, ${Math.sin(ang) * dist + 60}px) rotate(${Math.random() * 540}deg)`, opacity: 0 }
+      ], { duration: 700 + Math.random() * 500, easing: 'cubic-bezier(.23,1,.32,1)' }).onfinish = () => p.remove();
+    }
+  }
+
+  // ── Quién mira ─────────────────────────────────
+  const recordar = { leer() { try { return localStorage.getItem('hogar_yo'); } catch (e) { return null; } },
+                     guardar(v) { try { localStorage.setItem('hogar_yo', v); } catch (e) {} } };
+  function dibujarQuien() {
+    const h = new Date().getHours();
+    $('saludo').textContent = `${h < 12 ? 'Buen día' : h < 20 ? 'Buenas tardes' : 'Buenas noches'}, ${estado.yo}`;
+    $('quien').innerHTML = PERSONAS.map(p => `<button type="button" data-yo="${esc(p)}" aria-pressed="${p === estado.yo}"${p === estado.yo ? ' class="activo"' : ''}>
+      <i style="background:${COLOR_PERSONA[p]}">${esc(p[0])}</i>${esc(p)}</button>`).join('');
+  }
+  $('quien').addEventListener('click', e => {
+    const b = e.target.closest('[data-yo]'); if (!b) return;
+    estado.yo = b.dataset.yo; estado.para = null; recordar.guardar(estado.yo); dibujarQuien(); dibujarTareas();
+  });
 
   // ── Pendientes ─────────────────────────────────
+  let vistas = null;   // ids ya dibujados: solo se anima lo que recién aparece
   function dibujarTareas() {
-    const quienes = [...Object.keys(estado.miembros), 'dos'];
-    const abiertas = t => !t.hecha;
-    const cuenta = f => estado.tareas.filter(t => abiertas(t) && (f === 'todos' || t.para === f)).length;
+    const quienes = [...PERSONAS, 'dos'];
+    const cuenta = f => estado.tareas.filter(t => !t.hecha && (f === 'todos' || t.para === f)).length;
     $('pestanas').innerHTML = ['todos', ...quienes].map(f =>
-      `<button type="button" data-f="${esc(f)}"${f === estado.filtro ? ' class="activo"' : ''}>${f === 'todos' ? 'Todos' : esc(nombre(f))}<span>${cuenta(f)}</span></button>`).join('');
-    $('nueva-para').innerHTML = quienes.map(k => `<option value="${esc(k)}"${k === estado.yo ? ' selected' : ''}>${esc(nombre(k))}</option>`).join('');
+      `<button type="button" data-f="${esc(f)}" class="${f === 'todos' ? '' : 'c-' + esc(f)}${f === estado.filtro ? ' activo' : ''}">${f === 'todos' ? 'Todos' : esc(nombre(f))}<span>${cuenta(f)}</span></button>`).join('');
+
+    const para = estado.para || estado.yo;
+    $('nueva-para').innerHTML = quienes.map(k => `<button type="button" class="para c-${esc(k)}" data-para="${esc(k)}" aria-pressed="${k === para}">${esc(nombre(k))}</button> `).join('');
+    $('nueva-hoy').setAttribute('aria-pressed', estado.hoy);
 
     const visibles = estado.tareas
       .filter(t => estado.filtro === 'todos' || t.para === estado.filtro)
       .sort((a, b) => (a.hecha === b.hecha ? 0 : a.hecha ? 1 : -1) || (b.hoy ? 1 : 0) - (a.hoy ? 1 : 0) || String(a.creada).localeCompare(String(b.creada)));
     $('tareas').innerHTML = visibles.map(t => `
-      <li class="tarea${t.hecha ? ' hecha' : ''}">
-        <input type="checkbox" data-hecha="${esc(t.id)}"${t.hecha ? ' checked' : ''} aria-label="Hecho" />
-        <div class="txt">${esc(t.texto)}${t.hecha && t.hechaPor ? `<small>Lo hizo ${esc(nombre(t.hechaPor))}</small>` : ''}</div>
+      <li class="tarea c-${esc(PERSONAS.includes(t.para) ? t.para : 'dos')}${t.hecha ? ' hecha' : ''}${vistas && !vistas.has(t.id) ? ' entra' : ''}" data-id="${esc(t.id)}">
+        <button type="button" class="check" data-hecha="${esc(t.id)}" aria-pressed="${!!t.hecha}" aria-label="${t.hecha ? 'Marcar como pendiente' : 'Marcar como hecho'}"><i data-lucide="check"></i></button>
+        <div class="txt">${esc(t.texto)}${t.hecha && t.hechaPor ? `<small>Lo hizo ${esc(t.hechaPor)}</small>` : ''}</div>
         ${t.hoy && !t.hecha ? '<span class="chip hoy">Hoy</span>' : ''}
-        <span class="chip ${claseDe(t.para)}">${esc(nombre(t.para))}</span>
-        <button type="button" class="sa-icono-btn" data-borrar-tarea="${esc(t.id)}" aria-label="Borrar"><i data-lucide="x"></i></button>
+        <span class="chip c-${esc(PERSONAS.includes(t.para) ? t.para : 'dos')}">${esc(nombre(t.para))}</span>
+        <button type="button" class="borrar" data-borrar-tarea="${esc(t.id)}" aria-label="Borrar"><i data-lucide="x"></i></button>
       </li>`).join('');
+    vistas = new Set(estado.tareas.map(t => t.id));
     $('sin-tareas').hidden = visibles.length > 0;
-    $('cuantos').textContent = `${cuenta('todos')} sin hacer`;
     $('borrar-hechas').hidden = !estado.tareas.some(t => t.hecha);
-    panel.iconos();
+
+    // Progreso de hoy: los marcados "Hoy" más los que se hicieron hoy
+    const deHoy = estado.tareas.filter(t => t.hoy || (t.hecha && String(t.hechaEl || '').slice(0, 10) === hoyISO()));
+    const hechasHoy = deHoy.filter(t => t.hecha).length;
+    $('prog-txt').textContent = deHoy.length ? `Hoy: ${hechasHoy} de ${deHoy.length}` : 'Hoy: sin urgencias';
+    $('prog-barra').style.width = deHoy.length ? Math.round(hechasHoy / deHoy.length * 100) + '%' : '0%';
+    dibujarResumen();
+    iconos();
   }
   $('pestanas').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { estado.filtro = b.dataset.f; dibujarTareas(); } });
-  $('tareas').addEventListener('change', e => {
-    const id = e.target.dataset.hecha; if (!id) return;
-    db.ref('hogar/tareas/' + id).update(e.target.checked ? { hecha: true, hechaPor: estado.yo, hechaEl: new Date().toISOString() } : { hecha: false, hechaPor: null, hechaEl: null });
+  $('nueva-opciones').addEventListener('click', e => {
+    const p = e.target.closest('[data-para]');
+    if (p) { estado.para = p.dataset.para; dibujarTareas(); return; }
+    if (e.target.closest('#nueva-hoy')) { estado.hoy = !estado.hoy; $('nueva-hoy').setAttribute('aria-pressed', estado.hoy); }
   });
-  $('tareas').addEventListener('click', e => { const b = e.target.closest('[data-borrar-tarea]'); if (b) db.ref('hogar/tareas/' + b.dataset.borrarTarea).remove(); });
+  $('tareas').addEventListener('click', e => {
+    const c = e.target.closest('[data-hecha]');
+    if (c) {
+      const t = estado.tareas.find(x => x.id === c.dataset.hecha); if (!t) return;
+      const hecha = !t.hecha;
+      if (hecha) { const r = c.getBoundingClientRect(); festejo(r.left + r.width / 2, r.top + r.height / 2); }
+      db.ref('hogar/tareas/' + t.id).update(hecha ? { hecha: true, hechaPor: estado.yo, hechaEl: new Date().toISOString() } : { hecha: false, hechaPor: null, hechaEl: null })
+        .then(() => {
+          const quedanHoy = estado.tareas.filter(x => x.hoy && !x.hecha).length;
+          if (hecha && t.hoy && quedanHoy === 0) { festejo(innerWidth / 2, innerHeight / 3, 60); panel.aviso('¡Terminaron todo lo de hoy!'); }
+        });
+      return;
+    }
+    const b = e.target.closest('[data-borrar-tarea]');
+    if (b) {
+      const li = b.closest('.tarea'); li.style.opacity = '0'; li.style.transform = 'translateX(16px)';
+      setTimeout(() => db.ref('hogar/tareas/' + b.dataset.borrarTarea).remove(), sinMovimiento ? 0 : 200);
+    }
+  });
   $('nueva').addEventListener('submit', e => {
     e.preventDefault();
-    const texto = $('nueva-txt').value.trim(); if (!texto) return;
-    db.ref('hogar/tareas').push({ texto, para: $('nueva-para').value, hoy: $('nueva-hoy').checked, hecha: false, creada: new Date().toISOString(), por: estado.yo })
-      .then(() => { $('nueva-txt').value = ''; $('nueva-hoy').checked = false; $('nueva-txt').focus(); })
+    const texto = $('nueva-txt').value.trim(); if (!texto) { $('nueva-txt').focus(); return; }
+    db.ref('hogar/tareas').push({ texto, para: estado.para || estado.yo, hoy: estado.hoy, hecha: false, creada: new Date().toISOString(), por: estado.yo })
+      .then(() => { $('nueva-txt').value = ''; $('nueva-txt').focus(); })
       .catch(() => panel.aviso('No se pudo guardar el pendiente.', true));
   });
   $('borrar-hechas').addEventListener('click', async () => {
     const hechas = estado.tareas.filter(t => t.hecha);
-    if (!await panel.confirmar({ titulo: `¿Borrar ${hechas.length === 1 ? 'el pendiente hecho' : `los ${hechas.length} pendientes hechos`}?`, boton: 'Borrar', peligro: true })) return;
+    if (!await panel.confirmar({ titulo: `¿Sacar ${hechas.length === 1 ? 'el pendiente hecho' : `los ${hechas.length} pendientes hechos`}?`, boton: 'Sacar', peligro: true })) return;
     db.ref('hogar/tareas').update(Object.fromEntries(hechas.map(t => [t.id, null])));
   });
 
   // ── Plata de la casa ───────────────────────────
+  $('cats').innerHTML = CATEGORIAS.map(c => `<button type="button" class="cat" data-cat="${esc(c.n)}" style="--c:${c.c};--cf:${c.f}"><i data-lucide="${c.i}"></i>${esc(c.n)}</button>`).join('');
   function dibujarPlata() {
     const aj = estado.ajustes || {};
     const delMesActual = estado.gastos.filter(g => delMes(g.fecha));
     const total = delMesActual.reduce((s, g) => s + num(g.monto), 0);
-    const presupuesto = num(aj.presupuesto);
     $('g-total').textContent = pesos(total);
-    $('g-cuantos').textContent = delMesActual.length ? `${delMesActual.length} ${delMesActual.length === 1 ? 'gasto' : 'gastos'}` : '';
+
+    // Dona por categoría
+    const porCat = {};
+    delMesActual.forEach(g => { porCat[g.categoria] = (porCat[g.categoria] || 0) + num(g.monto); });
+    const orden = Object.entries(porCat).sort((a, b) => b[1] - a[1]);
+    let acum = 0;
+    const tramos = orden.map(([n, m]) => { const desde = acum; acum += m / total * 100; return `${cat(n).c} ${desde}% ${acum}%`; });
+    $('dona').style.background = total ? `conic-gradient(${tramos.join(',')})` : '#f6efe5';
+    $('leyenda').innerHTML = orden.map(([n, m]) => `<li><i style="background:${cat(n).c}"></i>${esc(n)}<b>${pesos(m)}</b></li>`).join('')
+      || '<li style="color:var(--h-tinta-2)">Todavía no hay gastos este mes.</li>';
+
+    const presupuesto = num(aj.presupuesto);
     const porc = presupuesto ? Math.round(total / presupuesto * 100) : 0;
-    $('g-barra').querySelector('i').style.width = Math.min(100, porc) + '%';
-    $('g-barra').classList.toggle('pasado', porc > 100);
-    $('g-presupuesto').textContent = presupuesto
-      ? (total <= presupuesto ? `${porc} % de ${pesos(presupuesto)} · quedan ${pesos(presupuesto - total)}` : `Te pasaste ${pesos(total - presupuesto)} del presupuesto de ${pesos(presupuesto)}`)
+    $('presu-barra').style.width = Math.min(100, porc) + '%';
+    $('presu').classList.toggle('pasado', porc > 100);
+    $('presu-txt').textContent = presupuesto
+      ? (total <= presupuesto ? `${porc} % del presupuesto de ${pesos(presupuesto)} · quedan ${pesos(presupuesto - total)}` : `Se pasaron ${pesos(total - presupuesto)} del presupuesto de ${pesos(presupuesto)}`)
       : 'Poné un presupuesto en "Ajustar" para ver cuánto queda.';
 
-    const porCategoria = {};
-    delMesActual.forEach(g => { porCategoria[g.categoria] = (porCategoria[g.categoria] || 0) + num(g.monto); });
-    $('g-categorias').innerHTML = Object.entries(porCategoria).sort((a, b) => b[1] - a[1])
-      .map(([c, m]) => `<span>${esc(c)} <b>${pesos(m)}</b></span>`).join('');
-
+    // Ahorro
     const ahorrado = estado.ahorros.reduce((s, a) => s + num(a.monto), 0);
     const meta = num(aj.ahorroMeta);
     const pA = meta ? Math.min(100, Math.round(ahorrado / meta * 100)) : 0;
-    $('a-anillo').style.setProperty('--p', pA);
+    $('anillo').style.setProperty('--p', pA);
     $('a-porc').textContent = meta ? pA + ' %' : '—';
     $('a-nombre').textContent = aj.ahorroNombre ? `Ahorro: ${aj.ahorroNombre}` : 'Ahorro';
     $('a-detalle').textContent = meta ? `${pesos(ahorrado)} de ${pesos(meta)}${ahorrado < meta ? ` · faltan ${pesos(meta - ahorrado)}` : ' · ¡meta cumplida!'}` : `${pesos(ahorrado)} ahorrados`;
 
-    const ultimos = [...estado.gastos.map(g => ({ ...g, tipo: 'gasto' })), ...estado.ahorros.map(a => ({ ...a, tipo: 'ahorro', categoria: 'Ahorro' }))]
-      .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)) || String(b.creado).localeCompare(String(a.creado))).slice(0, 8);
-    $('g-lista').innerHTML = ultimos.map(g => `
-      <li><div>${esc(g.detalle || g.categoria)}<small>${esc(g.categoria)} · ${esc(new Date(g.fecha + 'T12:00').toLocaleDateString('es-UY', { day: 'numeric', month: 'short' }))}${g.por ? ' · ' + esc(nombre(g.por)) : ''}</small></div>
-        <span class="monto"${g.tipo === 'ahorro' ? ' style="color:var(--sa-verde)"' : ''}>${g.tipo === 'ahorro' ? '+' : ''}${pesos(g.monto)}
-        <button type="button" class="sa-icono-btn" data-borrar-mov="${g.tipo === 'ahorro' ? 'ahorros' : 'gastos'}/${esc(g.id)}" aria-label="Borrar"><i data-lucide="x"></i></button></span></li>`).join('')
-      || '<li style="color:var(--sa-tinta-3)">Todavía no cargaron gastos.</li>';
-    panel.iconos();
+    // Últimos movimientos
+    const ultimos = [...estado.gastos.map(g => ({ ...g, tipo: 'gastos' })), ...estado.ahorros.map(a => ({ ...a, tipo: 'ahorros' }))]
+      .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)) || String(b.creado || '').localeCompare(String(a.creado || ''))).slice(0, 6);
+    $('movs').innerHTML = ultimos.map(g => {
+      const c = g.tipo === 'ahorros' ? { i: 'piggy-bank', c: '#8457f0', f: '#ece4ff', n: 'Ahorro' } : cat(g.categoria);
+      return `<li><div><span class="punto" style="--c:${c.c};--cf:${c.f}"><i data-lucide="${c.i}"></i></span>
+          <div>${esc(g.detalle || (g.tipo === 'ahorros' ? 'Ahorro' : g.categoria))}<small>${esc(new Date(String(g.fecha) + 'T12:00').toLocaleDateString('es-UY', { day: 'numeric', month: 'short' }))}${g.por ? ' · ' + esc(g.por) : ''}</small></div></div>
+        <span class="monto" style="color:${g.tipo === 'ahorros' ? '#5b34c9' : 'var(--h-tinta)'}">${g.tipo === 'ahorros' ? '+' : '−'}${pesos(g.monto)}
+        <button type="button" class="borrar" data-borrar-mov="${g.tipo}/${esc(g.id)}" aria-label="Borrar"><i data-lucide="x"></i></button></span></li>`;
+    }).join('') || '<li style="color:var(--h-tinta-2)">Acá van a aparecer los últimos gastos y ahorros.</li>';
+    dibujarResumen();
+    iconos();
   }
-  let tipoMov = 'gastos';
-  function abrirMovimiento(tipo) {
-    tipoMov = tipo;
+
+  // Hoja para cargar
+  let tipoMov = 'gastos', catElegida = CATEGORIAS[0].n;
+  function pintarCatsHoja() {
+    $('m-cats').innerHTML = CATEGORIAS.map(c => `<button type="button" class="cat" data-cat="${esc(c.n)}" aria-pressed="${c.n === catElegida}" style="--c:${c.c};--cf:${c.f}"><i data-lucide="${c.i}"></i>${esc(c.n)}</button>`).join('');
+    iconos();
+  }
+  function abrirMov(tipo, categoria, monto) {
+    tipoMov = tipo; catElegida = categoria || CATEGORIAS[0].n;
+    const d = $('d-mov');
+    d.classList.toggle('ahorro-modo', tipo === 'ahorros');
     $('m-titulo').textContent = tipo === 'gastos' ? 'Nuevo gasto' : 'Guardar ahorro';
-    $('m-categoria').hidden = tipo !== 'gastos';
-    $('m-categoria').innerHTML = CATEGORIAS.map(c => `<option>${c}</option>`).join('');
-    $('m-monto').value = ''; $('m-detalle').value = ''; $('m-fecha').value = hoyISO();
-    $('d-movimiento').showModal(); $('m-monto').focus();
+    $('m-cats').hidden = tipo !== 'gastos';
+    $('m-guardar').className = 'btn ' + (tipo === 'gastos' ? 'sol' : 'uva');
+    pintarCatsHoja();
+    $('m-monto').value = monto || ''; $('m-detalle').value = ''; $('m-fecha').value = hoyISO();
+    d.showModal(); $('m-monto').focus();
   }
-  $('mas-gasto').addEventListener('click', () => abrirMovimiento('gastos'));
-  $('mas-ahorro').addEventListener('click', () => abrirMovimiento('ahorros'));
-  $('f-movimiento').addEventListener('submit', e => {
+  $('cats').addEventListener('click', e => { const b = e.target.closest('[data-cat]'); if (b) abrirMov('gastos', b.dataset.cat); });
+  $('m-cats').addEventListener('click', e => { const b = e.target.closest('[data-cat]'); if (b) { catElegida = b.dataset.cat; pintarCatsHoja(); } });
+  $('rapidos').addEventListener('click', e => {
+    const b = e.target.closest('[data-ahorro]'); if (!b) return;
+    if (b.dataset.ahorro === 'otro') return abrirMov('ahorros');
+    const r = b.getBoundingClientRect();
+    db.ref('hogar/ahorros').push({ monto: Number(b.dataset.ahorro), fecha: hoyISO(), detalle: '', por: estado.yo, creado: new Date().toISOString() })
+      .then(() => { festejo(r.left + r.width / 2, r.top, 18); panel.aviso(`Ahorraron ${pesos(b.dataset.ahorro)} más`); });
+  });
+  $('f-mov').addEventListener('submit', e => {
     e.preventDefault();
     const monto = Math.round(num($('m-monto').value)); if (monto <= 0) return;
     const dato = { monto, fecha: $('m-fecha').value || hoyISO(), detalle: $('m-detalle').value.trim(), por: estado.yo, creado: new Date().toISOString() };
-    if (tipoMov === 'gastos') dato.categoria = $('m-categoria').value;
+    if (tipoMov === 'gastos') dato.categoria = catElegida;
+    const r = $('m-guardar').getBoundingClientRect();
     db.ref('hogar/' + tipoMov).push(dato)
-      .then(() => { $('d-movimiento').close(); panel.aviso(tipoMov === 'gastos' ? 'Gasto guardado' : 'Ahorro guardado'); })
+      .then(() => { $('d-mov').close(); if (tipoMov === 'ahorros') festejo(r.left, r.top, 24); panel.aviso(tipoMov === 'gastos' ? 'Gasto guardado' : 'Ahorro guardado'); })
       .catch(() => panel.aviso('No se pudo guardar.', true));
   });
-  $('g-lista').addEventListener('click', async e => {
+  $('movs').addEventListener('click', async e => {
     const b = e.target.closest('[data-borrar-mov]'); if (!b) return;
     if (await panel.confirmar({ titulo: '¿Borrar este movimiento?', boton: 'Borrar', peligro: true })) db.ref('hogar/' + b.dataset.borrarMov).remove();
   });
@@ -326,6 +566,26 @@
       .then(() => { $('d-ajustes').close(); panel.aviso('Ajustes guardados'); });
   });
   document.querySelectorAll('[data-cerrar]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
+  document.querySelectorAll('dialog.hoja').forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
+
+  // Atajo: la tecla N lleva a "nuevo pendiente"
+  document.addEventListener('keydown', e => {
+    if (e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.metaKey && !/input|textarea|select/i.test(document.activeElement.tagName) && !document.querySelector('dialog[open]')) {
+      e.preventDefault(); $('nueva-txt').focus();
+    }
+  });
+
+  // ── Resumen de arriba ──────────────────────────
+  function dibujarResumen() {
+    const mios = estado.tareas.filter(t => !t.hecha && (t.para === estado.yo || t.para === 'dos')).length;
+    const gastado = estado.gastos.filter(g => delMes(g.fecha)).reduce((s, g) => s + num(g.monto), 0);
+    const preparar = estado.pedidos.filter(p => p.estado === 'aprobado' || p.estado === 'confirmado').length;
+    $('resumen').innerHTML = [
+      `${mios} ${mios === 1 ? 'pendiente tuyo' : 'pendientes tuyos'}`,
+      `${pesos(gastado)} gastados este mes`,
+      preparar ? `${preparar} ${preparar === 1 ? 'pedido' : 'pedidos'} de Sendera para preparar` : 'Sendera al día'
+    ].map(t => `<span>${esc(t)}</span>`).join('');
+  }
 
   // ── Sendera hoy (solo lectura) ─────────────────
   function dibujarSendera() {
@@ -336,35 +596,34 @@
       if (f.toDateString() === ahora.toDateString()) { hoy += num(p.total); nHoy++; }
       if (f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear()) { mes += num(p.total); nMes++; }
     });
-    $('s-hoy').textContent = pesos(hoy); $('s-hoy-n').textContent = `Vendido hoy · ${nHoy} ${nHoy === 1 ? 'pedido' : 'pedidos'}`;
-    $('s-mes').textContent = pesos(mes); $('s-mes-n').textContent = `Este mes · ${nMes} ${nMes === 1 ? 'pedido' : 'pedidos'}`;
-    const preparar = estado.pedidos.filter(p => p.estado === 'aprobado' || p.estado === 'confirmado')
-      .sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
+    $('s-hoy').textContent = pesos(hoy); $('s-hoy-n').textContent = `Hoy · ${nHoy} ${nHoy === 1 ? 'pedido' : 'pedidos'}`;
+    $('s-mes').textContent = pesos(mes); $('s-mes-n').textContent = `Este mes · ${nMes}`;
+    const preparar = estado.pedidos.filter(p => p.estado === 'aprobado' || p.estado === 'confirmado').sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
     $('s-preparar').textContent = preparar.length;
     $('s-pedidos').innerHTML = preparar.slice(0, 5).map(p => {
       const prods = (Array.isArray(p.productos) ? p.productos : []).map(x => `${x.nombre || ''}${x.variante ? ' ' + x.variante : ''}${num(x.qty) > 1 ? ' ×' + num(x.qty) : ''}`).join(', ');
       const cliente = String(p.cliente || p.nombre || 'Cliente').trim().split(/\s+/)[0];
-      return `<li><div>${esc(cliente)} · ${esc(prods)}<small>${esc(String(p.envio && (p.envio.label || p.envio) || '').slice(0, 70))}</small></div><span class="sa-pastilla sa-e-pendiente">Preparar</span></li>`;
-    }).join('') || '<li style="color:var(--sa-tinta-3)">No hay pedidos para preparar.</li>';
+      return `<li><div>${esc(cliente)} · ${esc(prods)}<small>${esc(String(p.envio && (p.envio.label || p.envio) || '').slice(0, 70))}</small></div><span class="chip" style="--c:#8a5a00;--cf:#fff0cf">Preparar</span></li>`;
+    }).join('') || '<li style="color:var(--h-tinta-2)">No hay pedidos para preparar.</li>';
     const bajos = [];
     estado.productos.forEach(p => (p.variantes || []).forEach((v, i) => {
       if (!v) return; const c = num(estado.stock[v.stockId || `${p.id}-${i}`]);
       if (c <= 2) bajos.push({ t: `${p.nombre} ${v.nombre || ''}`.trim(), c });
     }));
-    $('s-stock').innerHTML = bajos.sort((a, b) => a.c - b.c).slice(0, 8).map(b => `<span>${esc(b.t)} <b>${b.c}</b></span>`).join('');
+    $('s-stock').innerHTML = bajos.sort((a, b) => a.c - b.c).slice(0, 8).map(b => `<span>${esc(b.t)}: ${b.c === 0 ? 'sin stock' : 'quedan ' + b.c}</span>`).join('');
+    dibujarResumen();
   }
 
-  // ── Arranque: solo si el mail está en la lista del hogar ──
+  // ── Arranque: solo si la cuenta está en la lista del hogar ──
   firebase.auth().onAuthStateChanged(async user => {
     if (!user) return;
     const clave = user.email.toLowerCase().replace(/\./g, ',');
     const yo = await db.ref('hogar_miembros/' + clave).once('value').catch(() => null);
-    if (!yo || typeof yo.val() !== 'string') { $('privado').hidden = false; panel.iconos(); return; }
-    estado.yo = clave;
-    estado.miembros = { [clave]: yo.val() };
-    $('saludo').textContent = `${new Date().getHours() < 12 ? 'Buen día' : new Date().getHours() < 20 ? 'Buenas tardes' : 'Buenas noches'}, ${yo.val()}`;
+    if (!yo || typeof yo.val() !== 'string') { $('privado').hidden = false; return; }
+    estado.yo = PERSONAS.includes(recordar.leer()) ? recordar.leer() : PERSONAS[0];
+    dibujarQuien();
+    $('quien').hidden = false;
     $('contenido').hidden = false;
-    db.ref('hogar_miembros').on('value', s => { const m = s.val() || {}; estado.miembros = Object.fromEntries(Object.entries(m).filter(([, v]) => typeof v === 'string')); dibujarTareas(); dibujarPlata(); });
     db.ref('hogar/tareas').on('value', s => { estado.tareas = lista(s); dibujarTareas(); });
     db.ref('hogar/gastos').on('value', s => { estado.gastos = lista(s); dibujarPlata(); });
     db.ref('hogar/ahorros').on('value', s => { estado.ahorros = lista(s); dibujarPlata(); });
