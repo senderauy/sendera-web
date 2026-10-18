@@ -57,14 +57,14 @@
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "OnlineStore", "name": "Sendera", "url": "https://www.senderauy.com/", "logo": "https://www.senderauy.com/img/logo.png", "description": "Tienda online uruguaya de gorros y accesorios para running, trail y trekking. Envíos a todo el país.", "areaServed": "UY", "currenciesAccepted": "UYU", "sameAs": ["https://www.instagram.com/sendera.uy"], "contactPoint": {"@type": "ContactPoint", "contactType": "customer service", "telephone": "+598 95 290 959", "availableLanguage": "es"}}</script>
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Sendera" />
-  <meta name="theme-color" content="#1a1510" />
+  <meta name="theme-color" content="#1d3524" />
   <!-- Los productos se piden de entrada a la copia de Vercel (más rápida que esperar a que conecte Firebase) -->
   <script>window.__productosRapidos = fetch('/api/catalogo?formato=json').then(r => r.ok ? r.json() : null).catch(() => null);</script>
   <!-- La foto de portada se pide de entrada, antes de leer los estilos: así no se ve el fondo negro mientras carga -->
   <link rel="preload" as="image" href="/api/foto?portada=compu" media="(min-width: 721px)" fetchpriority="high" />
   <link rel="preload" as="image" href="/api/foto?portada=celular" media="(max-width: 720px)" fetchpriority="high" />
-  <link rel="stylesheet" href="style.css?v=78" />
-  <link rel="stylesheet" href="carrito.css?v=3" />
+  <link rel="stylesheet" href="style.css?v=79" />
+  <link rel="stylesheet" href="carrito.css?v=4" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
 </head>
 <body>
@@ -1655,7 +1655,7 @@
       <h2 id="ruleta-titulo">Girá y ganá <em>tu descuento.</em></h2>
       <p class="bajada">Una vuelta por persona.<br />El premio te llega al mail.</p>
       <div class="rueda-caja">
-        <svg class="rueda-flecha" viewBox="0 0 30 34" aria-hidden="true"><path d="M15 34 L1 6 Q0 0 6 0 L24 0 Q30 0 29 6 Z" fill="#c8ef4f" stroke="#182417" stroke-width="2.5"/></svg>
+        <svg class="rueda-flecha" viewBox="0 0 30 34" aria-hidden="true"><path d="M15 34 L1 6 Q0 0 6 0 L24 0 Q30 0 29 6 Z" fill="#c8ef4f" stroke="#1d3524" stroke-width="2.5"/></svg>
         <div class="rueda" id="rueda"></div>
         <div class="rueda-centro"><img src="img/logo-modal.png" alt="" /></div>
       </div>
@@ -1682,14 +1682,14 @@
       const VISTA = 'sendera_ruleta';           // ya se le mostró
       const PREMIO = 'sendera_premio';          // { codigo, vence }: el checkout lo pone solo
       const GAJOS = [
-        { t: '5% OFF', f: '#182417', c: '#fff' },
-        { t: 'Casi…', f: '#f6d5cc', c: '#182417' },
-        { t: '10% OFF', f: '#c8ef4f', c: '#182417' },
-        { t: '5% OFF', f: '#e2daf3', c: '#182417' },
-        { t: 'Envío gratis', f: '#182417', c: '#fff', sub: 'Montevideo' },
-        { t: 'Casi…', f: '#d3e5f0', c: '#182417' },
-        { t: '10% OFF', f: '#d7e6cf', c: '#182417' },
-        { t: '5% OFF', f: '#fafaf8', c: '#182417' }
+        { t: '5% OFF', f: '#1d3524', c: '#fff' },
+        { t: 'Casi…', f: '#f6d5cc', c: '#1d3524' },
+        { t: '10% OFF', f: '#c8ef4f', c: '#1d3524' },
+        { t: '5% OFF', f: '#e2daf3', c: '#1d3524' },
+        { t: 'Envío gratis', f: '#1d3524', c: '#fff', sub: 'Montevideo' },
+        { t: 'Casi…', f: '#d3e5f0', c: '#1d3524' },
+        { t: '10% OFF', f: '#d7e6cf', c: '#1d3524' },
+        { t: '5% OFF', f: '#fafaf8', c: '#1d3524' }
       ];
       const leer = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
       const guardar = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
@@ -1699,7 +1699,7 @@
       let svg = '<svg viewBox="0 0 300 300" aria-hidden="true">';
       GAJOS.forEach((g, i) => {
         const a0 = i * ANG, a1 = (i + 1) * ANG, am = a0 + ANG / 2;
-        svg += `<path d="M150 150 L${150 + R * Math.cos(rad(a0))} ${150 + R * Math.sin(rad(a0))} A${R} ${R} 0 0 1 ${150 + R * Math.cos(rad(a1))} ${150 + R * Math.sin(rad(a1))} Z" fill="${g.f}" stroke="#182417" stroke-width="1.5"/>`;
+        svg += `<path d="M150 150 L${150 + R * Math.cos(rad(a0))} ${150 + R * Math.sin(rad(a0))} A${R} ${R} 0 0 1 ${150 + R * Math.cos(rad(a1))} ${150 + R * Math.sin(rad(a1))} Z" fill="${g.f}" stroke="#1d3524" stroke-width="1.5"/>`;
         svg += `<g transform="rotate(${am} 150 150)"><text x="150" y="${g.sub ? 52 : 58}" text-anchor="middle" fill="${g.c}" font-family="Montserrat, sans-serif" font-weight="800" font-size="${g.t.length > 8 ? 13 : 16}">${g.t}</text>${g.sub ? `<text x="150" y="68" text-anchor="middle" fill="${g.c}" font-family="Montserrat, sans-serif" font-weight="600" font-size="10">${g.sub}</text>` : ''}</g>`;
       });
       const rueda = document.getElementById('rueda');
