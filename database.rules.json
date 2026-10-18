@@ -113,6 +113,31 @@
         "actualizado": { ".validate": "newData.isString() && newData.val().length <= 40" },
         "$otro": { ".validate": false }
       }
+    },
+    "hogar_miembros": {
+      ".read": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true && root.child('hogar_miembros').child(auth.token.email.toLowerCase().replace('.', ',')).isString()",
+      "$mail": {
+        ".read": "auth != null && auth.token.email_verified === true && auth.token.email.toLowerCase().replace('.', ',') === $mail"
+      }
+    },
+    "hogar": {
+      ".read": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true && root.child('hogar_miembros').child(auth.token.email.toLowerCase().replace('.', ',')).isString()",
+      ".write": "auth != null && auth.token.email_verified === true && root.child('admins').child(auth.token.email.toLowerCase().replace('.', ',')).val() === true && root.child('hogar_miembros').child(auth.token.email.toLowerCase().replace('.', ',')).isString()",
+      "tareas": {
+        "$id": {
+          ".validate": "newData.hasChildren(['texto', 'para']) && newData.child('texto').isString() && newData.child('texto').val().length <= 200 && newData.child('para').isString() && newData.child('para').val().length <= 120"
+        }
+      },
+      "gastos": {
+        "$id": {
+          ".validate": "newData.hasChildren(['monto', 'categoria', 'fecha']) && newData.child('monto').isNumber() && newData.child('monto').val() > 0 && newData.child('categoria').isString() && newData.child('categoria').val().length <= 40"
+        }
+      },
+      "ahorros": {
+        "$id": {
+          ".validate": "newData.hasChildren(['monto', 'fecha']) && newData.child('monto').isNumber()"
+        }
+      }
     }
   }
 }

@@ -10,12 +10,15 @@
     ['portada.html', 'Portada', 'images'],
     ['colecciones.html', 'Colecciones', 'layers'],
     ['lookbook.html', 'Lookbook', 'image'],
-    ['finanzas.html', 'Finanzas', 'wallet']
+    ['finanzas.html', 'Finanzas', 'wallet'],
+    // Solo aparece para los mails de hogar_miembros (ver más abajo)
+    ['hogar.html', 'Hogar', 'heart', 'hogar']
   ];
   const ANALYTICS = 'https://analytics.google.com';
   const actual = location.pathname.split('/').pop() || 'dashboard.html';
   const contador = href => href === 'pedidos.html' ? '<span class="sa-contador" data-sa-pendientes hidden></span>' : '';
   const activo = href => href === actual ? ' class="activo" aria-current="page"' : '';
+  const oculto = p => p[3] === 'hogar' ? ' data-sa-hogar style="display:none"' : '';
 
   function armar() {
     document.body.classList.add('sa');
@@ -27,7 +30,7 @@
       <a class="sa-marca" href="dashboard.html"><img src="/img/logo-crema.png" alt="Sendera" /></a>
       <nav class="sa-nav">
         ${PAGINAS.map(p => p
-          ? `<a href="${p[0]}"${activo(p[0])}><i data-lucide="${p[2]}"></i>${p[1]}${contador(p[0])}</a>`
+          ? `<a href="${p[0]}"${activo(p[0])}${oculto(p)}><i data-lucide="${p[2]}"></i>${p[1]}${contador(p[0])}</a>`
           : '<div class="sa-separador"></div>').join('')}
         <a href="${ANALYTICS}" target="_blank" rel="noopener"><i data-lucide="chart-line"></i>Analytics<i data-lucide="external-link" class="sa-externo"></i></a>
       </nav>
@@ -41,7 +44,7 @@
     tope.className = 'sa-tope';
     tope.innerHTML = '<a href="dashboard.html"><img src="/img/logo-crema.png" alt="Sendera" /></a><span class="sa-avatar" data-sa-inicial>S</span>';
 
-    const enMas = ['portada.html', 'colecciones.html', 'lookbook.html', 'finanzas.html'].includes(actual);
+    const enMas = ['portada.html', 'colecciones.html', 'lookbook.html', 'finanzas.html', 'hogar.html'].includes(actual);
     const barra = document.createElement('nav');
     barra.className = 'sa-barra';
     barra.setAttribute('aria-label', 'Menú');
@@ -56,7 +59,7 @@
     hoja.setAttribute('role', 'dialog');
     hoja.setAttribute('aria-label', 'Más secciones');
     hoja.innerHTML = '<div class="sa-agarre"></div>' +
-      PAGINAS.slice(5).map(p => `<a href="${p[0]}"><i data-lucide="${p[2]}"></i>${p[1]}</a>`).join('') +
+      PAGINAS.slice(5).map(p => `<a href="${p[0]}"${oculto(p)}><i data-lucide="${p[2]}"></i>${p[1]}</a>`).join('') +
       `<a href="${ANALYTICS}" target="_blank" rel="noopener"><i data-lucide="chart-line"></i>Analytics</a>
        <button type="button" class="salir" onclick="logout()"><i data-lucide="log-out"></i>Salir</button>`;
 
@@ -85,6 +88,10 @@
         if (!u || !u.email) return;
         document.querySelectorAll('[data-sa-mail]').forEach(e => { e.textContent = u.email; });
         document.querySelectorAll('[data-sa-inicial]').forEach(e => { e.textContent = u.email[0].toUpperCase(); });
+        // "Hogar" es privado de la casa: el link solo se muestra si este mail está en hogar_miembros
+        if (typeof db !== 'undefined') db.ref('hogar_miembros/' + u.email.toLowerCase().replace(/\./g, ',')).once('value')
+          .then(s => { if (typeof s.val() === 'string') document.querySelectorAll('[data-sa-hogar]').forEach(e => { e.style.display = ''; }); })
+          .catch(() => {});
       });
     }
   }

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <link rel="apple-touch-icon" href="../img/logo.png" />
+  <link rel="icon" type="image/png" href="../img/logo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Sendera Admin" />
+  <meta name="theme-color" content="#182417" />
+  <title>Sendera - Hogar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="../firebase-config.js"></script>
+  <script src="admin-auth.js?v=4"></script>
+  <link rel="stylesheet" href="admin.css?v=1" />
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="admin-ui.js?v=3"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { min-height: 100vh; font-size: 14px; line-height: 1.5; }
+    button, input, select { font-family: inherit; }
+
+    /* En la compu: todo a la vista, en tres columnas */
+    .sa-pagina.hogar { max-width: 1480px; }
+    .columnas { display: grid; gap: 20px; align-items: start; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr); }
+    .columna { display: grid; gap: 20px; }
+    @media (max-width: 1250px) { .columnas { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .columna.tercera { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 860px) { .columnas, .columna.tercera { grid-template-columns: minmax(0, 1fr); } }
+
+    /* Colores de cada persona (pasteles de Sendera) */
+    .p-0 { background: #d1e7f8; } .p-1 { background: #f9dcda; } .p-2 { background: #ddd2f2; } .p-dos { background: #cddab4; }
+
+    /* Pendientes */
+    .pestanas { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .pestanas button { border: 0; padding: 7px 12px; border-radius: 999px; background: var(--sa-papel-2); color: var(--sa-tinta); font-weight: 600; font-size: 0.8rem; cursor: pointer; }
+    .pestanas button.activo { background: var(--sa-noche); color: var(--sa-noche-texto); }
+    .pestanas button span { opacity: 0.6; margin-left: 5px; }
+    .tareas { list-style: none; display: grid; gap: 6px; }
+    .tarea { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--sa-papel-2); }
+    .tarea input[type=checkbox] { width: 19px; height: 19px; accent-color: var(--sa-noche); flex: none; cursor: pointer; }
+    .tarea .txt { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    .tarea .txt small { display: block; font-size: 0.74rem; color: var(--sa-tinta-3); }
+    .tarea.hecha .txt { text-decoration: line-through; color: var(--sa-tinta-3); }
+    .chip { font-size: 0.7rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; color: var(--sa-tinta); }
+    .chip.hoy { background: var(--sa-ambar-fondo); color: var(--sa-ambar-oscuro); }
+    .tarea .sa-icono-btn { width: 28px; height: 28px; opacity: 0; }
+    .tarea:hover .sa-icono-btn, .tarea .sa-icono-btn:focus-visible { opacity: 1; }
+    .nueva { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 8px; margin-top: 12px; }
+    .nueva label { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--sa-tinta-2); white-space: nowrap; }
+    .pie-tareas { display: flex; justify-content: flex-end; margin-top: 8px; }
+
+    /* Sendera */
+    .numeros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .num { border-radius: 14px; padding: 12px; min-width: 0; }
+    .num b { display: block; font: 600 1.6rem/1.1 var(--sa-serif); font-variant-numeric: lining-nums tabular-nums; overflow-wrap: anywhere; }
+    .num span { font-size: 0.74rem; color: var(--sa-tinta-2); }
+    .filas { list-style: none; margin-top: 12px; }
+    .filas li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--sa-linea-2); font-size: 0.86rem; }
+    .filas li:first-child { border-top: 0; }
+    .filas small { display: block; color: var(--sa-tinta-3); font-size: 0.74rem; }
+    .stock { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .stock span { font-size: 0.76rem; background: var(--sa-papel-2); padding: 5px 10px; border-radius: 999px; }
+    .stock b { color: var(--sa-rojo); }
+
+    /* Plata */
+    .cuenta { border-radius: 14px; padding: 14px; }
+    .cuenta .t { font-size: 0.78rem; font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
+    .cuenta b { display: block; font: 600 1.9rem/1.1 var(--sa-serif); margin: 4px 0 10px; font-variant-numeric: lining-nums tabular-nums; }
+    .barra { height: 8px; background: rgba(24, 36, 23, 0.12); border-radius: 99px; overflow: hidden; }
+    .barra i { display: block; height: 100%; background: var(--sa-noche); border-radius: 99px; }
+    .barra.pasado i { background: var(--sa-rojo); }
+    .cuenta small { display: block; font-size: 0.74rem; margin-top: 6px; color: var(--sa-tinta-2); }
+    .ahorro { margin-top: 10px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; }
+    .anillo { width: 66px; height: 66px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 0.85rem; position: relative;
+      background: conic-gradient(var(--sa-noche) calc(var(--p) * 1%), rgba(24, 36, 23, 0.12) 0); }
+    .anillo::after { content: ''; position: absolute; inset: 7px; border-radius: 50%; background: #cddab4; }
+    .anillo span { position: relative; z-index: 1; }
+    .botones { display: flex; gap: 8px; margin-top: 12px; }
+    .botones > * { flex: 1; }
+    .gastos li .monto { font-variant-numeric: tabular-nums; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+    .gastos .sa-icono-btn { width: 26px; height: 26px; opacity: 0; }
+    .gastos li:hover .sa-icono-btn, .gastos .sa-icono-btn:focus-visible { opacity: 1; }
+    .categorias { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .categorias span { font-size: 0.74rem; background: var(--sa-papel-2); padding: 4px 9px; border-radius: 999px; }
+
+    .privado { max-width: 460px; margin: 60px auto; text-align: center; }
+    .privado .lucide { width: 34px; height: 34px; color: var(--sa-tinta-3); margin-bottom: 10px; }
+    dialog.sa-dialogo form { display: grid; gap: 10px; }
+  </style>
+</head>
+<body>
+
+<main class="sa-pagina hogar">
+  <header class="sa-encabezado">
+    <div>
+      <h1 id="saludo">Hogar</h1>
+      <p id="fecha-hoy"></p>
+    </div>
+  </header>
+
+  <!-- Si el mail no está en la lista del hogar, solo se ve esto -->
+  <section class="sa-panel privado" id="privado" hidden>
+    <i data-lucide="lock"></i>
+    <h2>Esta sección es privada</h2>
+    <p style="color:var(--sa-tinta-2);margin-top:6px">Solo la ven las personas de la casa.</p>
+  </section>
+
+  <div class="columnas" id="contenido" hidden>
+    <!-- Pendientes -->
+    <div class="columna">
+      <section class="sa-panel">
+        <div class="sa-panel-titulo"><h2>Pendientes</h2><small id="cuantos" style="color:var(--sa-tinta-3)"></small></div>
+        <div class="pestanas" id="pestanas"></div>
+        <ul class="tareas" id="tareas"></ul>
+        <p class="sa-vacio" id="sin-tareas" hidden><i data-lucide="circle-check"></i>No hay pendientes.</p>
+        <form class="nueva" id="nueva">
+          <input class="sa-campo" id="nueva-txt" placeholder="Nuevo pendiente…" maxlength="200" aria-label="Nuevo pendiente" />
+          <select class="sa-campo" id="nueva-para" aria-label="Para quién"></select>
+          <label><input type="checkbox" id="nueva-hoy" /> Hoy</label>
+          <button class="sa-boton" type="submit">Agregar</button>
+        </form>
+        <div class="pie-tareas"><button type="button" class="sa-enlace" id="borrar-hechas" hidden><i data-lucide="trash-2"></i>Borrar los hechos</button></div>
+      </section>
+    </div>
+
+    <!-- Sendera -->
+    <div class="columna">
+      <section class="sa-panel">
+        <div class="sa-panel-titulo"><h2>Sendera hoy</h2><a class="sa-enlace" href="pedidos.html">Ver pedidos<i data-lucide="arrow-right"></i></a></div>
+        <div class="numeros">
+          <div class="num p-dos"><b id="s-hoy">$0</b><span id="s-hoy-n">Vendido hoy</span></div>
+          <div class="num p-2"><b id="s-mes">$0</b><span id="s-mes-n">Este mes</span></div>
+          <div class="num" style="background:var(--sa-ambar-fondo)"><b id="s-preparar">0</b><span>Para preparar</span></div>
+        </div>
+        <ul class="filas" id="s-pedidos"></ul>
+        <div class="stock" id="s-stock"></div>
+      </section>
+    </div>
+
+    <!-- Plata de la casa -->
+    <div class="columna tercera">
+      <section class="sa-panel">
+        <div class="sa-panel-titulo"><h2 id="plata-titulo">La plata de la casa</h2><button type="button" class="sa-enlace" id="editar-ajustes"><i data-lucide="settings-2"></i>Ajustar</button></div>
+        <div class="cuenta p-0">
+          <div class="t"><span>Gastos del mes</span><span id="g-cuantos"></span></div>
+          <b id="g-total">$0</b>
+          <div class="barra" id="g-barra"><i style="width:0%"></i></div>
+          <small id="g-presupuesto"></small>
+        </div>
+        <div class="cuenta p-dos ahorro">
+          <div class="anillo" id="a-anillo" style="--p:0"><span id="a-porc">0 %</span></div>
+          <div><strong id="a-nombre">Ahorro</strong><div style="font-size:0.8rem" id="a-detalle"></div></div>
+        </div>
+        <div class="botones">
+          <button type="button" class="sa-boton" id="mas-gasto"><i data-lucide="minus"></i>Gasto</button>
+          <button type="button" class="sa-boton-sec" id="mas-ahorro"><i data-lucide="plus"></i>Ahorro</button>
+        </div>
+        <div class="categorias" id="g-categorias"></div>
+        <ul class="filas gastos" id="g-lista"></ul>
+      </section>
+    </div>
+  </div>
+</main>
+
+<!-- Cargar gasto o ahorro -->
+<dialog class="sa-dialogo" id="d-movimiento">
+  <form id="f-movimiento">
+    <h3 id="m-titulo">Nuevo gasto</h3>
+    <input class="sa-campo" id="m-monto" type="number" inputmode="numeric" min="1" step="1" placeholder="Monto en pesos" required />
+    <select class="sa-campo" id="m-categoria"></select>
+    <input class="sa-campo" id="m-detalle" maxlength="80" placeholder="Detalle (opcional)" />
+    <input class="sa-campo" id="m-fecha" type="date" required />
+    <div class="sa-acciones"><button type="button" class="sa-boton-sec" data-cerrar>Cancelar</button><button type="submit" class="sa-boton">Guardar</button></div>
+  </form>
+</dialog>
+
+<!-- Presupuesto y meta de ahorro -->
+<dialog class="sa-dialogo" id="d-ajustes">
+  <form id="f-ajustes">
+    <h3>Ajustes de la casa</h3>
+    <label style="font-size:0.8rem">Presupuesto de gastos por mes<input class="sa-campo" id="aj-presupuesto" type="number" min="0" step="100" /></label>
+    <label style="font-size:0.8rem">Para qué ahorran<input class="sa-campo" id="aj-ahorro-nombre" maxlength="60" placeholder="Ej.: vacaciones de verano" /></label>
+    <label style="font-size:0.8rem">Meta de ahorro<input class="sa-campo" id="aj-ahorro-meta" type="number" min="0" step="100" /></label>
+    <div class="sa-acciones"><button type="button" class="sa-boton-sec" data-cerrar>Cancelar</button><button type="submit" class="sa-boton">Guardar</button></div>
+  </form>
+</dialog>
+
+<script>
+  // ── Hogar: pendientes y plata de la casa, más un resumen de Sendera ──
+  // Todo lo de la casa vive en hogar/ y solo lo pueden leer los mails de hogar_miembros (ver database.rules.json),
+  // aunque haya otros admins de Sendera. hogar_miembros/<mail con comas> = "Nombre" se carga a mano en Firebase.
+  const $ = id => document.getElementById(id);
+  const pesos = n => '$' + Math.round(num(n)).toLocaleString('es-UY');
+  const CATEGORIAS = ['Súper', 'Casa y servicios', 'Transporte', 'Salud', 'Salidas', 'Ropa', 'Otros'];
+  const hoyISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+  const delMes = f => { const d = new Date(f + (f.length === 10 ? 'T12:00' : '')), a = new Date(); return d.getMonth() === a.getMonth() && d.getFullYear() === a.getFullYear(); };
+  const lista = snap => { const r = []; snap.forEach(c => { const v = c.val(); if (v && typeof v === 'object') r.push({ ...v, id: c.key }); }); return r; };
+
+  const estado = { yo: '', miembros: {}, tareas: [], gastos: [], ahorros: [], ajustes: {}, filtro: 'todos', pedidos: [], productos: [], stock: {} };
+  const fecha = new Date().toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'long' }).replace(',', '');
+  $('fecha-hoy').textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
+  const mesNombre = new Date().toLocaleDateString('es-UY', { month: 'long' });
+  $('plata-titulo').textContent = `La plata de ${mesNombre}`;
+
+  const nombre = k => k === 'dos' ? 'Los dos' : (estado.miembros[k] || 'Alguien');
+  const claseDe = k => k === 'dos' ? 'p-dos' : 'p-' + Math.max(0, Object.keys(estado.miembros).indexOf(k));
+
+  // ── Pendientes ─────────────────────────────────
+  function dibujarTareas() {
+    const quienes = [...Object.keys(estado.miembros), 'dos'];
+    const abiertas = t => !t.hecha;
+    const cuenta = f => estado.tareas.filter(t => abiertas(t) && (f === 'todos' || t.para === f)).length;
+    $('pestanas').innerHTML = ['todos', ...quienes].map(f =>
+      `<button type="button" data-f="${esc(f)}"${f === estado.filtro ? ' class="activo"' : ''}>${f === 'todos' ? 'Todos' : esc(nombre(f))}<span>${cuenta(f)}</span></button>`).join('');
+    $('nueva-para').innerHTML = quienes.map(k => `<option value="${esc(k)}"${k === estado.yo ? ' selected' : ''}>${esc(nombre(k))}</option>`).join('');
+
+    const visibles = estado.tareas
+      .filter(t => estado.filtro === 'todos' || t.para === estado.filtro)
+      .sort((a, b) => (a.hecha === b.hecha ? 0 : a.hecha ? 1 : -1) || (b.hoy ? 1 : 0) - (a.hoy ? 1 : 0) || String(a.creada).localeCompare(String(b.creada)));
+    $('tareas').innerHTML = visibles.map(t => `
+      <li class="tarea${t.hecha ? ' hecha' : ''}">
+        <input type="checkbox" data-hecha="${esc(t.id)}"${t.hecha ? ' checked' : ''} aria-label="Hecho" />
+        <div class="txt">${esc(t.texto)}${t.hecha && t.hechaPor ? `<small>Lo hizo ${esc(nombre(t.hechaPor))}</small>` : ''}</div>
+        ${t.hoy && !t.hecha ? '<span class="chip hoy">Hoy</span>' : ''}
+        <span class="chip ${claseDe(t.para)}">${esc(nombre(t.para))}</span>
+        <button type="button" class="sa-icono-btn" data-borrar-tarea="${esc(t.id)}" aria-label="Borrar"><i data-lucide="x"></i></button>
+      </li>`).join('');
+    $('sin-tareas').hidden = visibles.length > 0;
+    $('cuantos').textContent = `${cuenta('todos')} sin hacer`;
+    $('borrar-hechas').hidden = !estado.tareas.some(t => t.hecha);
+    panel.iconos();
+  }
+  $('pestanas').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { estado.filtro = b.dataset.f; dibujarTareas(); } });
+  $('tareas').addEventListener('change', e => {
+    const id = e.target.dataset.hecha; if (!id) return;
+    db.ref('hogar/tareas/' + id).update(e.target.checked ? { hecha: true, hechaPor: estado.yo, hechaEl: new Date().toISOString() } : { hecha: false, hechaPor: null, hechaEl: null });
+  });
+  $('tareas').addEventListener('click', e => { const b = e.target.closest('[data-borrar-tarea]'); if (b) db.ref('hogar/tareas/' + b.dataset.borrarTarea).remove(); });
+  $('nueva').addEventListener('submit', e => {
+    e.preventDefault();
+    const texto = $('nueva-txt').value.trim(); if (!texto) return;
+    db.ref('hogar/tareas').push({ texto, para: $('nueva-para').value, hoy: $('nueva-hoy').checked, hecha: false, creada: new Date().toISOString(), por: estado.yo })
+      .then(() => { $('nueva-txt').value = ''; $('nueva-hoy').checked = false; $('nueva-txt').focus(); })
+      .catch(() => panel.aviso('No se pudo guardar el pendiente.', true));
+  });
+  $('borrar-hechas').addEventListener('click', async () => {
+    const hechas = estado.tareas.filter(t => t.hecha);
+    if (!await panel.confirmar({ titulo: `¿Borrar ${hechas.length === 1 ? 'el pendiente hecho' : `los ${hechas.length} pendientes hechos`}?`, boton: 'Borrar', peligro: true })) return;
+    db.ref('hogar/tareas').update(Object.fromEntries(hechas.map(t => [t.id, null])));
+  });
+
+  // ── Plata de la casa ───────────────────────────
+  function dibujarPlata() {
+    const aj = estado.ajustes || {};
+    const delMesActual = estado.gastos.filter(g => delMes(g.fecha));
+    const total = delMesActual.reduce((s, g) => s + num(g.monto), 0);
+    const presupuesto = num(aj.presupuesto);
+    $('g-total').textContent = pesos(total);
+    $('g-cuantos').textContent = delMesActual.length ? `${delMesActual.length} ${delMesActual.length === 1 ? 'gasto' : 'gastos'}` : '';
+    const porc = presupuesto ? Math.round(total / presupuesto * 100) : 0;
+    $('g-barra').querySelector('i').style.width = Math.min(100, porc) + '%';
+    $('g-barra').classList.toggle('pasado', porc > 100);
+    $('g-presupuesto').textContent = presupuesto
+      ? (total <= presupuesto ? `${porc} % de ${pesos(presupuesto)} · quedan ${pesos(presupuesto - total)}` : `Te pasaste ${pesos(total - presupuesto)} del presupuesto de ${pesos(presupuesto)}`)
+      : 'Poné un presupuesto en "Ajustar" para ver cuánto queda.';
+
+    const porCategoria = {};
+    delMesActual.forEach(g => { porCategoria[g.categoria] = (porCategoria[g.categoria] || 0) + num(g.monto); });
+    $('g-categorias').innerHTML = Object.entries(porCategoria).sort((a, b) => b[1] - a[1])
+      .map(([c, m]) => `<span>${esc(c)} <b>${pesos(m)}</b></span>`).join('');
+
+    const ahorrado = estado.ahorros.reduce((s, a) => s + num(a.monto), 0);
+    const meta = num(aj.ahorroMeta);
+    const pA = meta ? Math.min(100, Math.round(ahorrado / meta * 100)) : 0;
+    $('a-anillo').style.setProperty('--p', pA);
+    $('a-porc').textContent = meta ? pA + ' %' : '—';
+    $('a-nombre').textContent = aj.ahorroNombre ? `Ahorro: ${aj.ahorroNombre}` : 'Ahorro';
+    $('a-detalle').textContent = meta ? `${pesos(ahorrado)} de ${pesos(meta)}${ahorrado < meta ? ` · faltan ${pesos(meta - ahorrado)}` : ' · ¡meta cumplida!'}` : `${pesos(ahorrado)} ahorrados`;
+
+    const ultimos = [...estado.gastos.map(g => ({ ...g, tipo: 'gasto' })), ...estado.ahorros.map(a => ({ ...a, tipo: 'ahorro', categoria: 'Ahorro' }))]
+      .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)) || String(b.creado).localeCompare(String(a.creado))).slice(0, 8);
+    $('g-lista').innerHTML = ultimos.map(g => `
+      <li><div>${esc(g.detalle || g.categoria)}<small>${esc(g.categoria)} · ${esc(new Date(g.fecha + 'T12:00').toLocaleDateString('es-UY', { day: 'numeric', month: 'short' }))}${g.por ? ' · ' + esc(nombre(g.por)) : ''}</small></div>
+        <span class="monto"${g.tipo === 'ahorro' ? ' style="color:var(--sa-verde)"' : ''}>${g.tipo === 'ahorro' ? '+' : ''}${pesos(g.monto)}
+        <button type="button" class="sa-icono-btn" data-borrar-mov="${g.tipo === 'ahorro' ? 'ahorros' : 'gastos'}/${esc(g.id)}" aria-label="Borrar"><i data-lucide="x"></i></button></span></li>`).join('')
+      || '<li style="color:var(--sa-tinta-3)">Todavía no cargaron gastos.</li>';
+    panel.iconos();
+  }
+  let tipoMov = 'gastos';
+  function abrirMovimiento(tipo) {
+    tipoMov = tipo;
+    $('m-titulo').textContent = tipo === 'gastos' ? 'Nuevo gasto' : 'Guardar ahorro';
+    $('m-categoria').hidden = tipo !== 'gastos';
+    $('m-categoria').innerHTML = CATEGORIAS.map(c => `<option>${c}</option>`).join('');
+    $('m-monto').value = ''; $('m-detalle').value = ''; $('m-fecha').value = hoyISO();
+    $('d-movimiento').showModal(); $('m-monto').focus();
+  }
+  $('mas-gasto').addEventListener('click', () => abrirMovimiento('gastos'));
+  $('mas-ahorro').addEventListener('click', () => abrirMovimiento('ahorros'));
+  $('f-movimiento').addEventListener('submit', e => {
+    e.preventDefault();
+    const monto = Math.round(num($('m-monto').value)); if (monto <= 0) return;
+    const dato = { monto, fecha: $('m-fecha').value || hoyISO(), detalle: $('m-detalle').value.trim(), por: estado.yo, creado: new Date().toISOString() };
+    if (tipoMov === 'gastos') dato.categoria = $('m-categoria').value;
+    db.ref('hogar/' + tipoMov).push(dato)
+      .then(() => { $('d-movimiento').close(); panel.aviso(tipoMov === 'gastos' ? 'Gasto guardado' : 'Ahorro guardado'); })
+      .catch(() => panel.aviso('No se pudo guardar.', true));
+  });
+  $('g-lista').addEventListener('click', async e => {
+    const b = e.target.closest('[data-borrar-mov]'); if (!b) return;
+    if (await panel.confirmar({ titulo: '¿Borrar este movimiento?', boton: 'Borrar', peligro: true })) db.ref('hogar/' + b.dataset.borrarMov).remove();
+  });
+  $('editar-ajustes').addEventListener('click', () => {
+    const aj = estado.ajustes || {};
+    $('aj-presupuesto').value = aj.presupuesto || ''; $('aj-ahorro-nombre').value = aj.ahorroNombre || ''; $('aj-ahorro-meta').value = aj.ahorroMeta || '';
+    $('d-ajustes').showModal();
+  });
+  $('f-ajustes').addEventListener('submit', e => {
+    e.preventDefault();
+    db.ref('hogar/ajustes').set({ presupuesto: Math.round(num($('aj-presupuesto').value)), ahorroNombre: $('aj-ahorro-nombre').value.trim(), ahorroMeta: Math.round(num($('aj-ahorro-meta').value)) })
+      .then(() => { $('d-ajustes').close(); panel.aviso('Ajustes guardados'); });
+  });
+  document.querySelectorAll('[data-cerrar]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
+
+  // ── Sendera hoy (solo lectura) ─────────────────
+  function dibujarSendera() {
+    const ahora = new Date();
+    let hoy = 0, nHoy = 0, mes = 0, nMes = 0;
+    estado.pedidos.forEach(p => {
+      const f = new Date(p.fecha); if (isNaN(f) || p.prueba) return;
+      if (f.toDateString() === ahora.toDateString()) { hoy += num(p.total); nHoy++; }
+      if (f.getMonth() === ahora.getMonth() && f.getFullYear() === ahora.getFullYear()) { mes += num(p.total); nMes++; }
+    });
+    $('s-hoy').textContent = pesos(hoy); $('s-hoy-n').textContent = `Vendido hoy · ${nHoy} ${nHoy === 1 ? 'pedido' : 'pedidos'}`;
+    $('s-mes').textContent = pesos(mes); $('s-mes-n').textContent = `Este mes · ${nMes} ${nMes === 1 ? 'pedido' : 'pedidos'}`;
+    const preparar = estado.pedidos.filter(p => p.estado === 'aprobado' || p.estado === 'confirmado')
+      .sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)));
+    $('s-preparar').textContent = preparar.length;
+    $('s-pedidos').innerHTML = preparar.slice(0, 5).map(p => {
+      const prods = (Array.isArray(p.productos) ? p.productos : []).map(x => `${x.nombre || ''}${x.variante ? ' ' + x.variante : ''}${num(x.qty) > 1 ? ' ×' + num(x.qty) : ''}`).join(', ');
+      const cliente = String(p.cliente || p.nombre || 'Cliente').trim().split(/\s+/)[0];
+      return `<li><div>${esc(cliente)} · ${esc(prods)}<small>${esc(String(p.envio && (p.envio.label || p.envio) || '').slice(0, 70))}</small></div><span class="sa-pastilla sa-e-pendiente">Preparar</span></li>`;
+    }).join('') || '<li style="color:var(--sa-tinta-3)">No hay pedidos para preparar.</li>';
+    const bajos = [];
+    estado.productos.forEach(p => (p.variantes || []).forEach((v, i) => {
+      if (!v) return; const c = num(estado.stock[v.stockId || `${p.id}-${i}`]);
+      if (c <= 2) bajos.push({ t: `${p.nombre} ${v.nombre || ''}`.trim(), c });
+    }));
+    $('s-stock').innerHTML = bajos.sort((a, b) => a.c - b.c).slice(0, 8).map(b => `<span>${esc(b.t)} <b>${b.c}</b></span>`).join('');
+  }
+
+  // ── Arranque: solo si el mail está en la lista del hogar ──
+  firebase.auth().onAuthStateChanged(async user => {
+    if (!user) return;
+    const clave = user.email.toLowerCase().replace(/\./g, ',');
+    const yo = await db.ref('hogar_miembros/' + clave).once('value').catch(() => null);
+    if (!yo || typeof yo.val() !== 'string') { $('privado').hidden = false; panel.iconos(); return; }
+    estado.yo = clave;
+    estado.miembros = { [clave]: yo.val() };
+    $('saludo').textContent = `${new Date().getHours() < 12 ? 'Buen día' : new Date().getHours() < 20 ? 'Buenas tardes' : 'Buenas noches'}, ${yo.val()}`;
+    $('contenido').hidden = false;
+    db.ref('hogar_miembros').on('value', s => { const m = s.val() || {}; estado.miembros = Object.fromEntries(Object.entries(m).filter(([, v]) => typeof v === 'string')); dibujarTareas(); dibujarPlata(); });
+    db.ref('hogar/tareas').on('value', s => { estado.tareas = lista(s); dibujarTareas(); });
+    db.ref('hogar/gastos').on('value', s => { estado.gastos = lista(s); dibujarPlata(); });
+    db.ref('hogar/ahorros').on('value', s => { estado.ahorros = lista(s); dibujarPlata(); });
+    db.ref('hogar/ajustes').on('value', s => { estado.ajustes = s.val() || {}; dibujarPlata(); });
+    db.ref('pedidos').on('value', s => { estado.pedidos = lista(s); dibujarSendera(); });
+    db.ref('productos').on('value', s => { estado.productos = lista(s); dibujarSendera(); });
+    db.ref('stock').on('value', s => { estado.stock = s.val() || {}; dibujarSendera(); });
+  });
+</script>
+</body>
+</html>
