@@ -694,6 +694,10 @@
   async function completarColores(productos) {
     if (coloresCompletados) return;
     coloresCompletados = true;
+    // Los productos se leen sin sesión y llegan antes que el login: para guardar hay que esperar a la sesión de admin
+    await new Promise(listo => {
+      const dejar = firebase.auth().onAuthStateChanged(u => { if (u) { dejar(); listo(); } });
+    });
     for (const p of productos) {
       const vars = Array.isArray(p.variantes) ? p.variantes : [];
       for (let i = 0; i < vars.length; i++) {
@@ -701,7 +705,8 @@
         const foto = v && ((v.fotos && v.fotos[0]) || v.foto);
         if (!foto || (v.fondo && v.tono)) continue;
         const c = await coloresFoto(foto);
-        if (c) await db.ref(`productos/${p.id}/variantes/${i}`).update(c).catch(() => {});
+        if (c) await db.ref(`productos/${p.id}/variantes/${i}`).update(c)
+          .catch(e => console.warn('No se pudo guardar el color de', p.nombre, e && e.message));
       }
     }
   }
