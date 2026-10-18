@@ -1167,12 +1167,7 @@
       window.open(`https://wa.me/59895290959?text=${msg}`, '_blank');
     }
 
-    function pagarMP() {
-      if (cart.length === 0) { alert('Agregá productos al carrito primero.'); return; }
-      const data = { items: cart.map(i => ({ nombre: i.name, variante: i.variant, precio: i.price, qty: i.qty })), envio: getEnvio() };
-      sessionStorage.setItem('sendera_pedido', JSON.stringify(data));
-      window.location.href = 'checkout.html';
-    }
+    // "Ir a pagar" es el de cart.js (controla el envío y guarda la compra donde la lee checkout.html)
 
     // ── SWIPE TÁCTIL EN MOBILE ──────────────────────────────────────
     (function() {
