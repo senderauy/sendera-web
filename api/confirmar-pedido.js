@@ -11,6 +11,7 @@ import {
 } from './_notificaciones.js';
 import { asegurarCodigo, enlaceSeguimiento, anotarAvisos, idValido } from './_seguimiento.js';
 import { cerrarCarritos } from './_carritos.js';
+import { enviarCompraMeta } from './_meta.js';
 
 const VENTANA_MINUTOS = 15;             // solo pedidos recién creados
 const MAX_WHATSAPP_POR_HORA = 3;        // por número de celular, para que no se use para mandar spam
@@ -60,6 +61,13 @@ export default async function handler(req, res) {
     if (!Number.isFinite(creado) || Date.now() - creado > VENTANA_MINUTOS * 60 * 1000 || creado - Date.now() > 60 * 1000) {
       return res.status(400).json({ error: 'Pedido fuera de tiempo' });
     }
+    // Para Meta: la conexión del comprador (la IP solo la ve el servidor) y, si ya está pago, la compra
+    const meta = { ...(pedido.meta && typeof pedido.meta === 'object' ? pedido.meta : {}),
+      ip: String(req.headers['x-forwarded-for'] || '').split(',')[0].trim().slice(0, 60),
+      ua: String((pedido.meta && pedido.meta.ua) || req.headers['user-agent'] || '').slice(0, 400) };
+    await fb(`pedidos/${id}/meta`, token, { method: 'PATCH', body: JSON.stringify({ ip: meta.ip, ua: meta.ua }) }).catch(() => {});
+    await enviarCompraMeta({ id, pedido: { ...pedido, meta }, token }).catch(e => console.error('confirmar-pedido Meta:', e.message));
+
     if (pedido.metodo_pago === 'mercadopago') return res.status(200).json({ ok: true, omitido: 'mercadopago' });
 
     if (!(await marcarNotificado(id, token))) return res.status(200).json({ ok: true, yaNotificado: true });

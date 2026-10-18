@@ -14,7 +14,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="../firebase-config.js"></script>
-  <script src="admin-auth.js?v=3"></script>
+  <script src="admin-auth.js?v=4"></script>
   <link rel="stylesheet" href="admin.css?v=1" />
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
   <script src="admin-ui.js?v=2"></script>
@@ -795,8 +795,8 @@
   }
 
   // Si el cliente dejó su mail, el servidor le manda el estado nuevo (una sola vez por paso)
+  // (se llama aunque no tenga mail: el servidor también le avisa a Meta cuando el pedido pasa a ser venta)
   async function avisarCliente(p) {
-    if (!p.email) return;
     try {
       const token = await firebase.auth().currentUser.getIdToken();
       const r = await fetch('/api/avisar-estado', {
@@ -806,9 +806,9 @@
       });
       const d = await r.json().catch(() => ({}));
       if (d.enviado) panel.aviso(`Le avisamos por mail a ${primerNombre(p.cliente)}`);
-      else if (!r.ok) panel.aviso(`No le pudimos mandar el mail a ${primerNombre(p.cliente)}. El estado sí quedó cambiado.`, true);
+      else if (!r.ok && p.email) panel.aviso(`No le pudimos mandar el mail a ${primerNombre(p.cliente)}. El estado sí quedó cambiado.`, true);
     } catch (e) {
-      panel.aviso(`No le pudimos mandar el mail a ${primerNombre(p.cliente)}. El estado sí quedó cambiado.`, true);
+      if (p.email) panel.aviso(`No le pudimos mandar el mail a ${primerNombre(p.cliente)}. El estado sí quedó cambiado.`, true);
     }
   }
 

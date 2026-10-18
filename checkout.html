@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Finalizar compra | Sendera</title>
-  <script src="pixel.js?v=1"></script>
+  <script src="pixel.js?v=2"></script>
   <link rel="icon" type="image/png" href="img/logo.png" />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
@@ -1166,7 +1166,7 @@
     const pedido = {
       fecha: new Date().toISOString(),
       cliente: nombre, celular,
-      productos: pedidoData.items.map(i => ({ nombre: i.name, variante: i.variant, qty: i.qty, precio: i.precio })),
+      productos: pedidoData.items.map(i => ({ nombre: i.name, variante: i.variant, qty: i.qty, precio: i.precio, ...(i.id ? { id: String(i.id).slice(0, 64) } : {}) })),
       envio: pedidoData.envio?.label || '—',
       total: calcularTotal(),
       estado,
@@ -1178,8 +1178,16 @@
     // (pedido.codigo es el del link de seguimiento: el de descuento va en "cupon")
     if (codigoAplicado) pedido.cupon = codigoAplicado;
     if (comprobanteBase64) pedido.comprobante = comprobanteBase64;
+    // Para Meta: las cookies del píxel y el navegador (el servidor manda la compra cuando está paga)
+    const cookie = n => (document.cookie.match(new RegExp('(?:^|; )' + n + '=([^;]*)')) || [])[1] || '';
+    pedido.meta = { fbp: cookie('_fbp').slice(0, 120), fbc: cookie('_fbc').slice(0, 200), ua: navigator.userAgent.slice(0, 400) };
+    let esPrueba = false;
+    try { esPrueba = localStorage.getItem('sendera_admin') === '1'; } catch (e) {}
+    if (esPrueba) pedido.prueba = true;   // compra de prueba de un admin: no se le cuenta a Meta
     const refPedido = db.ref('pedidos').push(pedido);
-    try { if (window.fbq) fbq('track', 'Purchase', datosMeta(pedido.total)); } catch (e) {}
+    // Solo es compra si ya está paga (tarjeta aprobada): transferencia y efectivo se cuentan cuando el panel los confirma.
+    // eventID = id del pedido, el mismo que usa el servidor, así Meta no la cuenta dos veces
+    try { if (window.fbq && !esPrueba && (estado === 'aprobado' || estado === 'confirmado')) fbq('track', 'Purchase', datosMeta(pedido.total), { eventID: refPedido.key }); } catch (e) {}
     // Cuando el pedido quedó guardado, el servidor lo lee y manda (una sola vez) la notificación a los admins
     // y al cliente el WhatsApp automático y el email. El navegador ya no manda mensajes directamente.
     // También le pasa el carrito: el servidor cancela el recordatorio que tuviera programado antes de que se borre

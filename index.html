@@ -14,6 +14,8 @@
   </script>
   <!-- Meta Pixel Code -->
   <script>
+  // En el navegador de un admin (entró al panel) no se mide nada
+  try { if (localStorage.getItem('sendera_admin') === '1') { window.fbq = function () {}; window.fbq.loaded = true; window._fbq = window.fbq; } } catch (e) {}
   !function(f,b,e,v,n,t,s)
   {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
   n.callMethod.apply(n,arguments):n.queue.push(arguments)};

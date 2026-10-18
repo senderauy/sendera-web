@@ -14,6 +14,8 @@ firebase.auth().onAuthStateChanged(async user => {
     return location.replace('login.html');
   }
   document.documentElement.style.visibility = '';
+  // En este navegador las visitas y compras de prueba no se le cuentan a Meta (ver pixel.js e index.html)
+  try { localStorage.setItem('sendera_admin', '1'); } catch (e) {}
 });
 
 // ── Mostrar datos que escriben los clientes sin que se ejecute código ──

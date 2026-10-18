@@ -1,6 +1,8 @@
 // Píxel de Meta para las páginas que no lo traen en el HTML (producto y pago).
 // Mide productos vistos, carritos y compras para los anuncios de catálogo.
 // Los content_ids son los mismos códigos de color del catálogo (api/catalogo.js).
+// En el navegador de un admin (entró al panel) no se mide nada: así sus pruebas no ensucian la campaña
+try { if (localStorage.getItem('sendera_admin') === '1') { window.fbq = function () {}; window.fbq.loaded = true; window._fbq = window.fbq; } } catch (e) {}
 if (!window.fbq) {
   !function(f,b,e,v,n,t,s)
   {if(f.fbq)return;n=f.fbq=function(){n.callMethod?

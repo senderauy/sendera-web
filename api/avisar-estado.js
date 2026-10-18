@@ -4,6 +4,7 @@
 // Con tipo "comprobante" le manda la foto del comprobante del envío por agencia (una vez por foto).
 import { DB_URL, getFirebaseToken } from './_pedido.js';
 import { emailDeSesion, esAdmin, tokenDeSesion } from './_admin.js';
+import { enviarCompraMeta } from './_meta.js';
 import { enviarEmailEstado, enviarEmailComprobanteEnvio, lineasProductos } from './_notificaciones.js';
 import {
   idValido, emailValido, pasoAvisable, asegurarCodigo, enlaceSeguimiento, marcarAviso, desmarcarAviso,
@@ -50,6 +51,9 @@ export default async function handler(req, res) {
     if (!pedido || typeof pedido !== 'object') return res.status(404).json({ error: 'Pedido no encontrado' });
 
     if (req.body?.tipo === 'comprobante') return await avisarComprobante(res, id, pedido, token);
+
+    // Si el pedido ya es una venta (pagado o confirmado), se le avisa a Meta (una sola vez por pedido)
+    await enviarCompraMeta({ id, pedido, token }).catch(e => console.error('avisar-estado Meta:', e.message));
 
     const paso = pasoAvisable(pedido.estado);
     if (!paso) return res.status(200).json({ ok: true, enviado: false, motivo: 'estado' });
