@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="admin.css?v=1" />
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
   <script src="admin-ui.js?v=3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     /* ── Hogar tiene colores propios (no los de Sendera): cada persona y cada cosa con su color ── */
     .hogar {
@@ -200,6 +201,42 @@
     .hoja label { display: block; font-size: .78rem; font-weight: 600; color: var(--h-tinta-2); margin-top: 10px; }
     .hoja label .campo { margin-top: 4px; }
 
+    /* Proyectos: gastos grandes por proyecto (vacaciones, mudanza, terreno…), cada cosa en su moneda */
+    .proyectos { margin-top: 20px; }
+    .proy-grilla { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); align-items: start; }
+    .proy { border-radius: 20px; background: #fbf6ee; overflow: hidden; border: 2px solid transparent; transition: border-color .2s; }
+    .proy:hover { border-color: var(--pc); }
+    .proy-cab { background: var(--pf); padding: 14px 16px 12px; }
+    .proy-cab h3 { font: 600 1.1rem/1.2 var(--h-titulo); color: var(--h-tinta); display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+    .proy-cab h3 button { border: 0; background: rgba(255,255,255,.7); border-radius: 9px; width: 28px; height: 28px; display: grid; place-items: center; cursor: pointer; color: var(--h-tinta-2); flex: none; }
+    .proy-cab h3 button svg { width: 15px; height: 15px; }
+    .proy-cab .tot { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .proy-cab .tot span { background: rgba(255,255,255,.8); border-radius: 999px; padding: 3px 9px; font-size: .74rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .proy-cab .barra { height: 8px; border-radius: 99px; background: rgba(255,255,255,.7); overflow: hidden; margin-top: 10px; }
+    .proy-cab .barra i { display: block; height: 100%; background: var(--pc); border-radius: 99px; transition: width .6s var(--h-ease); }
+    .proy-cab small { display: block; font-size: .74rem; margin-top: 5px; font-weight: 600; color: var(--h-tinta-2); }
+    .items { list-style: none; padding: 6px 10px 10px; }
+    .item { display: flex; align-items: center; gap: 8px; padding: 7px 6px; border-radius: 10px; cursor: pointer; transition: background .15s; }
+    .item:hover { background: #fff; }
+    .item .n { flex: 1; min-width: 0; font-size: .85rem; font-weight: 500; overflow-wrap: anywhere; }
+    .item .n small { display: block; font-size: .7rem; color: var(--h-tinta-2); }
+    .item .m { font-size: .82rem; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .estado-pill { border: 0; border-radius: 999px; padding: 3px 9px; font-size: .68rem; font-weight: 800; cursor: pointer; white-space: nowrap; transition: transform .16s var(--h-ease); }
+    .estado-pill:active { transform: scale(.94); }
+    .e-pagado { background: #d5f4ef; color: #0b6f64; }
+    .e-parcial { background: #fff0cf; color: #8a5a00; }
+    .e-pendiente { background: #ffe5dd; color: #c2410c; }
+    .e-averiguar { background: #e9edf2; color: #475569; }
+    .item.pagado .n { color: var(--h-tinta-2); }
+    .agregar-item { margin: 0 10px 12px; width: calc(100% - 20px); border: 2px dashed #e7d9c4; background: none; border-radius: 12px; padding: 8px; color: var(--h-tinta-2); font-weight: 700; font-size: .8rem; cursor: pointer; }
+    .agregar-item:hover { border-color: var(--pc); color: var(--h-tinta); }
+    .sin-proy { text-align: center; padding: 26px; color: var(--h-tinta-2); font-weight: 500; }
+    .imp-lista { list-style: none; display: grid; gap: 8px; margin-top: 6px; max-height: 50vh; overflow: auto; }
+    .imp-lista li { background: #fbf6ee; border-radius: 14px; padding: 10px 12px; }
+    .imp-lista label { display: flex !important; gap: 8px; align-items: center; margin: 0 !important; color: var(--h-tinta) !important; font-size: .9rem !important; }
+    .imp-lista small { display: block; color: var(--h-tinta-2); font-size: .74rem; margin-top: 4px; }
+    .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
     /* Papelitos de festejo */
     .papelito { position: fixed; width: 8px; height: 12px; border-radius: 2px; pointer-events: none; z-index: 9999; will-change: transform, opacity; }
 
@@ -304,6 +341,18 @@
       </section>
     </div>
   </div>
+
+  <!-- Proyectos -->
+  <section class="carta proyectos" id="proyectos" hidden>
+    <div class="cabeza">
+      <h2><span class="ico" style="background:var(--h-coral-f);color:var(--h-coral)"><i data-lucide="flag"></i></span>Proyectos</h2>
+      <div style="display:flex;gap:8px">
+        <label class="btn suave" style="cursor:pointer"><i data-lucide="file-spreadsheet"></i>Importar Excel<input type="file" id="imp-archivo" accept=".xlsx,.xls,.csv" hidden /></label>
+        <button type="button" class="btn oscuro" id="nuevo-proy"><i data-lucide="plus"></i>Proyecto</button>
+      </div>
+    </div>
+    <div class="proy-grilla" id="proy-grilla"></div>
+  </section>
 </main>
 
 <!-- Cargar gasto o ahorro -->
@@ -318,6 +367,45 @@
   </form>
 </dialog>
 
+<!-- Proyecto -->
+<dialog class="hoja" id="d-proy">
+  <form id="f-proy">
+    <h3 id="p-titulo">Nuevo proyecto</h3>
+    <label>Nombre<input class="campo" id="p-nombre" maxlength="80" required placeholder="Ej.: Vacaciones 2026" /></label>
+    <div class="acciones"><button type="button" class="btn suave" id="p-borrar" hidden style="margin-right:auto;color:var(--h-coral)">Borrar proyecto</button><button type="button" class="btn suave" data-cerrar>Cancelar</button><button type="submit" class="btn oscuro">Guardar</button></div>
+  </form>
+</dialog>
+
+<!-- Cosa de un proyecto -->
+<dialog class="hoja" id="d-item">
+  <form id="f-item">
+    <h3 id="i-titulo">Agregar</h3>
+    <label>Qué es<input class="campo" id="i-nombre" maxlength="100" required placeholder="Ej.: Pasaje avión ida" /></label>
+    <div class="fila-2">
+      <label>Monto<input class="campo" id="i-monto" type="number" min="0" step="any" placeholder="Si no sabés, dejalo vacío" /></label>
+      <label>Moneda<select class="campo" id="i-moneda"><option value="UYU">$ pesos</option><option value="USD">US$ dólares</option><option value="BRL">R$ reales</option><option value="ARS">$AR pesos arg.</option></select></label>
+    </div>
+    <div class="fila-2">
+      <label>Estado<select class="campo" id="i-estado"><option value="pendiente">Falta pagar</option><option value="parcial">Pagamos una parte</option><option value="pagado">Pagado</option><option value="averiguar">A averiguar</option></select></label>
+      <label id="i-pagado-l">Cuánto pagaron<input class="campo" id="i-pagado" type="number" min="0" step="any" /></label>
+    </div>
+    <label>Nota<input class="campo" id="i-nota" maxlength="120" placeholder="Opcional" /></label>
+    <div class="acciones"><button type="button" class="btn suave" id="i-borrar" hidden style="margin-right:auto;color:var(--h-coral)">Borrar</button><button type="button" class="btn suave" data-cerrar>Cancelar</button><button type="submit" class="btn oscuro">Guardar</button></div>
+  </form>
+</dialog>
+
+<!-- Importar Excel -->
+<dialog class="hoja" id="d-imp" style="width:min(520px, calc(100vw - 32px))">
+  <form id="f-imp">
+    <h3>Importar del Excel</h3>
+    <p style="font-size:.85rem;color:var(--h-tinta-2)">Cada hoja de la planilla pasa a ser un proyecto. Revisá antes de importar:</p>
+    <ul class="imp-lista" id="imp-lista"></ul>
+    <label>Lo que en la planilla no dice si está pagado, cargarlo como
+      <select class="campo" id="imp-defecto"><option value="pendiente">Falta pagar</option><option value="pagado">Pagado</option></select></label>
+    <div class="acciones"><button type="button" class="btn suave" data-cerrar>Cancelar</button><button type="submit" class="btn oscuro">Importar</button></div>
+  </form>
+</dialog>
+
 <!-- Presupuesto y meta de ahorro -->
 <dialog class="hoja" id="d-ajustes">
   <form id="f-ajustes">
@@ -325,6 +413,12 @@
     <label>Presupuesto de gastos por mes<input class="campo" id="aj-presupuesto" type="number" min="0" step="100" /></label>
     <label>Para qué ahorran<input class="campo" id="aj-ahorro-nombre" maxlength="60" placeholder="Ej.: vacaciones de verano" /></label>
     <label>Meta de ahorro<input class="campo" id="aj-ahorro-meta" type="number" min="0" step="100" /></label>
+    <p style="font-size:.78rem;font-weight:700;margin-top:14px">Cotizaciones, para pasar los proyectos a pesos</p>
+    <div class="fila-2" style="grid-template-columns:repeat(3,1fr)">
+      <label>1 US$ = $<input class="campo" id="aj-usd" type="number" min="0" step="any" /></label>
+      <label>1 R$ = $<input class="campo" id="aj-brl" type="number" min="0" step="any" /></label>
+      <label>1 $AR = $<input class="campo" id="aj-ars" type="number" min="0" step="any" /></label>
+    </div>
     <div class="acciones"><button type="button" class="btn suave" data-cerrar>Cancelar</button><button type="submit" class="btn oscuro">Guardar</button></div>
   </form>
 </dialog>
@@ -558,11 +652,13 @@
   $('editar-ajustes').addEventListener('click', () => {
     const aj = estado.ajustes || {};
     $('aj-presupuesto').value = aj.presupuesto || ''; $('aj-ahorro-nombre').value = aj.ahorroNombre || ''; $('aj-ahorro-meta').value = aj.ahorroMeta || '';
+    const c = aj.cambio || {}; $('aj-usd').value = c.USD || ''; $('aj-brl').value = c.BRL || ''; $('aj-ars').value = c.ARS || '';
     $('d-ajustes').showModal();
   });
   $('f-ajustes').addEventListener('submit', e => {
     e.preventDefault();
-    db.ref('hogar/ajustes').set({ presupuesto: Math.round(num($('aj-presupuesto').value)), ahorroNombre: $('aj-ahorro-nombre').value.trim(), ahorroMeta: Math.round(num($('aj-ahorro-meta').value)) })
+    db.ref('hogar/ajustes').set({ presupuesto: Math.round(num($('aj-presupuesto').value)), ahorroNombre: $('aj-ahorro-nombre').value.trim(), ahorroMeta: Math.round(num($('aj-ahorro-meta').value)),
+      cambio: { USD: num($('aj-usd').value), BRL: num($('aj-brl').value), ARS: num($('aj-ars').value) } })
       .then(() => { $('d-ajustes').close(); panel.aviso('Ajustes guardados'); });
   });
   document.querySelectorAll('[data-cerrar]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
@@ -614,6 +710,188 @@
     dibujarResumen();
   }
 
+  // ── Proyectos ──────────────────────────────────
+  // hogar/proyectos/<id> = { nombre, creado, items: { <id>: { nombre, monto, moneda, estado, pagado, nota, orden } } }
+  // estado: pagado | parcial (pagaron una parte: "pagado") | pendiente | averiguar (todavía sin precio)
+  estado.proyectos = [];
+  const MONEDAS = { UYU: '$', USD: 'US$', BRL: 'R$', ARS: '$AR' };
+  const COLORES_PROY = [['#ff6b4a', '#ffe5dd'], ['#3d7bfd', '#e4ecff'], ['#11a594', '#d5f4ef'], ['#8457f0', '#ece4ff'], ['#f5a524', '#fff0cf'], ['#f2507f', '#ffe2ea']];
+  const ESTADO_TXT = { pagado: 'Pagado', parcial: 'Una parte', pendiente: 'Falta pagar', averiguar: 'A averiguar' };
+  const montoTxt = (m, mon) => `${MONEDAS[mon] || '$'} ${Number(m).toLocaleString('es-UY', { maximumFractionDigits: 2 })}`;
+  const cambio = () => (estado.ajustes && estado.ajustes.cambio) || {};
+  const hayCambio = mon => mon === 'UYU' || num(cambio()[mon]) > 0;
+  const aPesos = (m, mon) => mon === 'UYU' ? m : num(cambio()[mon]) * m;
+
+  function dibujarProyectos() {
+    const g = $('proy-grilla');
+    if (!estado.proyectos.length) { g.innerHTML = '<p class="sin-proy">Todavía no hay proyectos. Importá la planilla de gastos extras o creá uno nuevo.</p>'; return; }
+    g.innerHTML = estado.proyectos.slice().sort((a, b) => String(a.creado).localeCompare(String(b.creado))).map((p, k) => {
+      const [pc, pf] = COLORES_PROY[k % COLORES_PROY.length];
+      const items = Object.entries(p.items || {}).map(([id, it]) => ({ ...it, id })).sort((a, b) => num(a.orden) - num(b.orden));
+      const porMoneda = {};
+      let totalPesos = 0, pagadoPesos = 0, convertible = true;
+      items.forEach(it => {
+        const m = num(it.monto); if (!m) return;
+        porMoneda[it.moneda] = (porMoneda[it.moneda] || 0) + m;
+        const pag = it.estado === 'pagado' ? m : it.estado === 'parcial' ? Math.min(m, num(it.pagado)) : 0;
+        if (!hayCambio(it.moneda)) { convertible = false; return; }
+        totalPesos += aPesos(m, it.moneda); pagadoPesos += aPesos(pag, it.moneda);
+      });
+      const hechas = items.filter(it => it.estado === 'pagado').length;
+      const porc = convertible && totalPesos ? Math.round(pagadoPesos / totalPesos * 100) : (items.length ? Math.round(hechas / items.length * 100) : 0);
+      const resumen = convertible && totalPesos
+        ? `Pagado ${pesos(pagadoPesos)} de ${pesos(totalPesos)} · faltan ${pesos(totalPesos - pagadoPesos)}`
+        : `${hechas} de ${items.length} pagados${Object.keys(porMoneda).some(m => !hayCambio(m)) ? ' · poné las cotizaciones en "Ajustar" para ver el total en pesos' : ''}`;
+      return `<article class="proy" style="--pc:${pc};--pf:${pf}">
+        <div class="proy-cab">
+          <h3>${esc(p.nombre)}<button type="button" data-editar-proy="${esc(p.id)}" aria-label="Editar proyecto"><i data-lucide="pencil"></i></button></h3>
+          <div class="tot">${Object.entries(porMoneda).map(([m, v]) => `<span>${esc(montoTxt(v, m))}</span>`).join('')}</div>
+          <div class="barra"><i style="width:${porc}%"></i></div>
+          <small>${esc(resumen)}</small>
+        </div>
+        <ul class="items">${items.map(it => `
+          <li class="item${it.estado === 'pagado' ? ' pagado' : ''}" data-item="${esc(p.id)}/${esc(it.id)}">
+            <div class="n">${esc(it.nombre)}${it.nota || it.estado === 'parcial' ? `<small>${it.estado === 'parcial' && num(it.pagado) ? esc(`Pagaron ${montoTxt(num(it.pagado), it.moneda)}`) + (it.nota ? ' · ' : '') : ''}${esc(it.nota || '')}</small>` : ''}</div>
+            <span class="m">${num(it.monto) ? esc(montoTxt(num(it.monto), it.moneda)) : '—'}</span>
+            <button type="button" class="estado-pill e-${esc(ESTADO_TXT[it.estado] ? it.estado : 'pendiente')}" data-estado="${esc(p.id)}/${esc(it.id)}" title="Tocá para marcar pagado">${ESTADO_TXT[it.estado] || 'Falta pagar'}</button>
+          </li>`).join('')}</ul>
+        <button type="button" class="agregar-item" data-agregar="${esc(p.id)}">+ Agregar</button>
+      </article>`;
+    }).join('');
+    iconos();
+  }
+
+  // Crear / renombrar / borrar proyecto
+  let proyEditando = null;
+  $('nuevo-proy').addEventListener('click', () => { proyEditando = null; $('p-titulo').textContent = 'Nuevo proyecto'; $('p-nombre').value = ''; $('p-borrar').hidden = true; $('d-proy').showModal(); $('p-nombre').focus(); });
+  $('f-proy').addEventListener('submit', e => {
+    e.preventDefault();
+    const nombreP = $('p-nombre').value.trim(); if (!nombreP) return;
+    (proyEditando ? db.ref(`hogar/proyectos/${proyEditando}/nombre`).set(nombreP) : db.ref('hogar/proyectos').push({ nombre: nombreP, creado: new Date().toISOString() }))
+      .then(() => $('d-proy').close());
+  });
+  $('p-borrar').addEventListener('click', async () => {
+    $('d-proy').close();
+    if (await panel.confirmar({ titulo: '¿Borrar este proyecto con todo lo que tiene?', boton: 'Borrar', peligro: true })) db.ref('hogar/proyectos/' + proyEditando).remove();
+  });
+
+  // Cosas de un proyecto
+  let itemEditando = null;
+  function abrirItem(proyId, itemId) {
+    itemEditando = { proyId, itemId };
+    const p = estado.proyectos.find(x => x.id === proyId) || {};
+    const it = itemId ? (p.items || {})[itemId] || {} : {};
+    $('i-titulo').textContent = itemId ? 'Editar' : `Agregar a ${p.nombre || 'proyecto'}`;
+    $('i-nombre').value = it.nombre || ''; $('i-monto').value = it.monto || ''; $('i-moneda').value = it.moneda || 'UYU';
+    $('i-estado').value = it.estado || 'pendiente'; $('i-pagado').value = it.pagado || ''; $('i-nota').value = it.nota || '';
+    $('i-pagado-l').hidden = $('i-estado').value !== 'parcial';
+    $('i-borrar').hidden = !itemId;
+    $('d-item').showModal(); $('i-nombre').focus();
+  }
+  $('i-estado').addEventListener('change', () => { $('i-pagado-l').hidden = $('i-estado').value !== 'parcial'; });
+  $('f-item').addEventListener('submit', e => {
+    e.preventDefault();
+    const { proyId, itemId } = itemEditando;
+    const dato = { nombre: $('i-nombre').value.trim(), monto: num($('i-monto').value) || null, moneda: $('i-moneda').value, estado: $('i-estado').value,
+      pagado: $('i-estado').value === 'parcial' ? num($('i-pagado').value) : null, nota: $('i-nota').value.trim() || null };
+    if (!dato.nombre) return;
+    const base = `hogar/proyectos/${proyId}/items`;
+    (itemId ? db.ref(`${base}/${itemId}`).update(dato) : db.ref(base).push({ ...dato, orden: Date.now() })).then(() => $('d-item').close());
+  });
+  $('i-borrar').addEventListener('click', async () => {
+    $('d-item').close();
+    if (await panel.confirmar({ titulo: '¿Borrar esto del proyecto?', boton: 'Borrar', peligro: true }))
+      db.ref(`hogar/proyectos/${itemEditando.proyId}/items/${itemEditando.itemId}`).remove();
+  });
+  $('proy-grilla').addEventListener('click', e => {
+    const ed = e.target.closest('[data-editar-proy]');
+    if (ed) { proyEditando = ed.dataset.editarProy; const p = estado.proyectos.find(x => x.id === proyEditando); $('p-titulo').textContent = 'Editar proyecto'; $('p-nombre').value = p ? p.nombre : ''; $('p-borrar').hidden = false; $('d-proy').showModal(); return; }
+    const ag = e.target.closest('[data-agregar]'); if (ag) return abrirItem(ag.dataset.agregar, null);
+    const pill = e.target.closest('[data-estado]');
+    if (pill) {
+      // Tocar el estado lo pasa a "Pagado" (y de vuelta a "Falta pagar")
+      const [proyId, itemId] = pill.dataset.estado.split('/');
+      const it = ((estado.proyectos.find(x => x.id === proyId) || {}).items || {})[itemId] || {};
+      const nuevo = it.estado === 'pagado' ? 'pendiente' : 'pagado';
+      if (nuevo === 'pagado') { const r = pill.getBoundingClientRect(); festejo(r.left + r.width / 2, r.top + r.height / 2, 12); }
+      db.ref(`hogar/proyectos/${proyId}/items/${itemId}`).update({ estado: nuevo, pagado: null });
+      return;
+    }
+    const li = e.target.closest('[data-item]'); if (li) { const [proyId, itemId] = li.dataset.item.split('/'); abrirItem(proyId, itemId); }
+  });
+
+  // ── Importar la planilla de Excel: cada hoja es un proyecto ──
+  // Reconoce las columnas de moneda por el encabezado ($, USD, Reales, $AR) y una columna de texto con "pago"/"debemos".
+  const MONEDA_DE = t => {
+    const x = String(t == null ? '' : t).trim().toLowerCase();
+    if (x === '$' || x === 'pesos' || x === '$u') return 'UYU';
+    if (/^(usd|u\$s|us\$|dólares|dolares)$/.test(x)) return 'USD';
+    if (/^(reales|r\$|brl)$/.test(x)) return 'BRL';
+    if (/^(\$ar|ars|pesos arg)/.test(x)) return 'ARS';
+    return null;
+  };
+  const numeroDe = t => num(String(t).replace(/\./g, '').replace(',', '.'));
+  function leerHoja(nombreHoja, filas) {
+    filas = filas.map(f => Array.isArray(f) ? f : []);
+    const iCab = filas.findIndex(f => f.some(c => MONEDA_DE(c)));
+    const cols = {};
+    if (iCab >= 0) filas[iCab].forEach((c, j) => { const m = MONEDA_DE(c); if (m) cols[j] = m; });
+    let titulo = nombreHoja;
+    if (iCab > 0) { const t = filas.slice(0, iCab).flat().find(c => typeof c === 'string' && c.trim().length > 3); if (t) titulo = t.trim(); }
+    const items = [];
+    filas.slice(iCab >= 0 ? iCab + 1 : 0).forEach(f => {
+      const nombreI = typeof f[0] === 'string' ? f[0].trim() : '';
+      if (!nombreI || /^total/i.test(nombreI)) return;
+      let monto = null, moneda = 'UYU';
+      if (iCab >= 0) { for (const j of Object.keys(cols)) if (typeof f[j] === 'number') { monto = f[j]; moneda = cols[j]; break; } }
+      else { const j = f.findIndex((c, k) => k > 0 && typeof c === 'number'); if (j > 0) monto = f[j]; }
+      // Texto de estado en cualquier columna: "Pago", "Pago 90, debemos 500"
+      const txt = f.slice(1).find(c => typeof c === 'string' && /pag|debe/i.test(c)) || '';
+      let est = null, pagado = null;
+      if (/debe/i.test(txt)) { est = 'parcial'; const m = /pag\w*\s*\$?\s*([\d.,]+)/i.exec(txt); pagado = m ? numeroDe(m[1]) : null; }
+      else if (/pag/i.test(txt)) est = 'pagado';
+      if (monto === null && !est) est = 'averiguar';
+      items.push({ nombre: nombreI.slice(0, 100), monto, moneda, estado: est, pagado, nota: /debe/i.test(txt) && pagado === null ? txt.trim().slice(0, 120) : null });
+    });
+    return { titulo: titulo.slice(0, 80), items };
+  }
+  let importables = [];
+  $('imp-archivo').addEventListener('change', async e => {
+    const archivo = e.target.files[0]; e.target.value = ''; if (!archivo) return;
+    try {
+      const libro = XLSX.read(await archivo.arrayBuffer(), { type: 'array' });
+      importables = libro.SheetNames.map(n => leerHoja(n, XLSX.utils.sheet_to_json(libro.Sheets[n], { header: 1, raw: true, defval: null }))).filter(p => p.items.length);
+    } catch (err) { panel.aviso('No se pudo leer la planilla.', true); return; }
+    if (!importables.length) { panel.aviso('No encontré nada para importar en la planilla.', true); return; }
+    $('imp-lista').innerHTML = importables.map((p, k) => {
+      const sinEstado = p.items.filter(it => !it.estado).length;
+      const muestra = p.items.slice(0, 3).map(it => it.nombre).join(', ');
+      return `<li><label><input type="checkbox" data-imp="${k}" checked /> <b>${esc(p.titulo)}</b></label>
+        <small>${p.items.length} cosas: ${esc(muestra)}${p.items.length > 3 ? '…' : ''}${sinEstado ? ` · ${sinEstado} sin decir si están pagadas` : ''}</small></li>`;
+    }).join('');
+    $('d-imp').showModal();
+  });
+  $('f-imp').addEventListener('submit', async e => {
+    e.preventDefault();
+    const defecto = $('imp-defecto').value;
+    const elegidos = [...document.querySelectorAll('[data-imp]:checked')].map(c => importables[c.dataset.imp]);
+    const ahora = Date.now();
+    try {
+      for (const [k, p] of elegidos.entries()) {
+        const items = {};
+        p.items.forEach((it, j) => {
+          const dato = { ...it, estado: it.estado || defecto, orden: j };
+          Object.keys(dato).forEach(c => { if (dato[c] === null) delete dato[c]; });
+          items['i' + (ahora + j)] = dato;
+        });
+        await db.ref('hogar/proyectos').push({ nombre: p.titulo, creado: new Date(ahora + k).toISOString(), items });
+      }
+    } catch (err) { panel.aviso('No se pudo importar.', true); return; }
+    $('d-imp').close();
+    festejo(innerWidth / 2, innerHeight / 2, 40);
+    panel.aviso(`${elegidos.length} ${elegidos.length === 1 ? 'proyecto importado' : 'proyectos importados'}`);
+  });
+
   // ── Arranque: solo si la cuenta está en la lista del hogar ──
   firebase.auth().onAuthStateChanged(async user => {
     if (!user) return;
@@ -624,10 +902,12 @@
     dibujarQuien();
     $('quien').hidden = false;
     $('contenido').hidden = false;
+    $('proyectos').hidden = false;
     db.ref('hogar/tareas').on('value', s => { estado.tareas = lista(s); dibujarTareas(); });
     db.ref('hogar/gastos').on('value', s => { estado.gastos = lista(s); dibujarPlata(); });
     db.ref('hogar/ahorros').on('value', s => { estado.ahorros = lista(s); dibujarPlata(); });
-    db.ref('hogar/ajustes').on('value', s => { estado.ajustes = s.val() || {}; dibujarPlata(); });
+    db.ref('hogar/ajustes').on('value', s => { estado.ajustes = s.val() || {}; dibujarPlata(); dibujarProyectos(); });
+    db.ref('hogar/proyectos').on('value', s => { estado.proyectos = lista(s); dibujarProyectos(); });
     db.ref('pedidos').on('value', s => { estado.pedidos = lista(s); dibujarSendera(); });
     db.ref('productos').on('value', s => { estado.productos = lista(s); dibujarSendera(); });
     db.ref('stock').on('value', s => { estado.stock = s.val() || {}; dibujarSendera(); });
