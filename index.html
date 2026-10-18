@@ -823,21 +823,31 @@
         const fallo = { bg: '#fafaf8', oscuro: false, gorro: '#c8c0b4' };
         const img = new Image();
         img.onload = () => {
+          // Se lee sobre la foto achicada (48 px): con las fotos enteras el iPhone se queda sin memoria para los
+          // lienzos, los devuelve vacíos y los fondos salían negros
+          const c = document.createElement('canvas');
           try {
-            const c = document.createElement('canvas');
-            c.width = img.naturalWidth; c.height = img.naturalHeight;
-            const ctx = c.getContext('2d');
-            ctx.drawImage(img, 0, 0);
+            const L = 48;
+            c.width = L; c.height = Math.max(1, Math.round(L * img.naturalHeight / img.naturalWidth));
+            const ctx = c.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(img, 0, 0, c.width, c.height);
             const w = c.width, h = c.height;
+            let vacio = false;
             const promedio = pts => {
               let r = 0, g = 0, b = 0;
-              pts.forEach(([x, y]) => { const d = ctx.getImageData(x, y, 1, 1).data; r += d[0]; g += d[1]; b += d[2]; });
+              pts.forEach(([x, y]) => {
+                const d = ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
+                if (d[3] === 0) vacio = true;
+                r += d[0]; g += d[1]; b += d[2];
+              });
               return [r, g, b].map(n => Math.round(n / pts.length));
             };
-            const [r, g, b] = promedio([[6, 6], [w - 7, 6], [6, h / 2], [w - 7, h / 2]]);
+            const [r, g, b] = promedio([[1, 1], [w - 2, 1], [1, h / 2], [w - 2, h / 2]]);
             const [gr, gg, gb] = promedio([[w * 0.5, h * 0.42], [w * 0.42, h * 0.45], [w * 0.58, h * 0.45], [w * 0.5, h * 0.5]]);
+            if (vacio || r + g + b === 0) return resolve(fallo);   // el lienzo no se pudo dibujar
             resolve({ bg: `rgb(${r},${g},${b})`, oscuro: (0.299 * r + 0.587 * g + 0.114 * b) < 120, gorro: `rgb(${gr},${gg},${gb})` });
           } catch (e) { resolve(fallo); }
+          finally { c.width = c.height = 0; }   // libera la memoria del lienzo enseguida
         };
         img.onerror = () => resolve(fallo);
         img.src = src;

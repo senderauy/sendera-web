@@ -772,19 +772,26 @@
       return new Promise(resolve => {
         const img = new Image();
         img.onload = () => {
+          // Se lee sobre la foto achicada (48 px): con la foto entera el iPhone se queda sin memoria para el lienzo,
+          // lo devuelve vacío y el fondo salía negro
+          const c = document.createElement('canvas');
           try {
-            const c = document.createElement('canvas');
-            c.width = img.naturalWidth; c.height = img.naturalHeight;
-            const ctx = c.getContext('2d');
-            ctx.drawImage(img, 0, 0);
+            const L = 48;
+            c.width = L; c.height = Math.max(1, Math.round(L * img.naturalHeight / img.naturalWidth));
+            const ctx = c.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(img, 0, 0, c.width, c.height);
             const w = c.width, h = c.height;
-            let r = 0, g = 0, b = 0;
-            [[6, 6], [w - 7, 6], [6, h / 2], [w - 7, h / 2]].forEach(([x, y]) => {
-              const d = ctx.getImageData(x, y, 1, 1).data; r += d[0]; g += d[1]; b += d[2];
+            let r = 0, g = 0, b = 0, vacio = false;
+            [[1, 1], [w - 2, 1], [1, Math.floor(h / 2)], [w - 2, Math.floor(h / 2)]].forEach(([x, y]) => {
+              const d = ctx.getImageData(x, y, 1, 1).data;
+              if (d[3] === 0) vacio = true;   // el lienzo no se pudo dibujar
+              r += d[0]; g += d[1]; b += d[2];
             });
+            if (vacio || r + g + b === 0) { resolve(null); return; }
             colorFotoCache[src] = `rgb(${Math.round(r / 4)},${Math.round(g / 4)},${Math.round(b / 4)})`;
             resolve(colorFotoCache[src]);
           } catch (e) { resolve(null); }
+          finally { c.width = c.height = 0; }   // libera la memoria del lienzo enseguida
         };
         img.onerror = () => resolve(null);
         img.src = src;
