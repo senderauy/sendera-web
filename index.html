@@ -63,7 +63,7 @@
   <!-- La foto de portada se pide de entrada, antes de leer los estilos: así no se ve el fondo negro mientras carga -->
   <link rel="preload" as="image" href="/api/foto?portada=compu" media="(min-width: 721px)" fetchpriority="high" />
   <link rel="preload" as="image" href="/api/foto?portada=celular" media="(max-width: 720px)" fetchpriority="high" />
-  <link rel="stylesheet" href="style.css?v=80" />
+  <link rel="stylesheet" href="style.css?v=81" />
   <link rel="stylesheet" href="carrito.css?v=4" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
 </head>
@@ -458,16 +458,19 @@
     let catsExtraColecciones = [];
 
     let posicionesColecciones = {};
+    let zoomColecciones = {};
     let orientacionesColecciones = {};
 
     db.ref('colecciones').on('value', snap => {
       fotosColecciones = {};
       posicionesColecciones = {};
+      zoomColecciones = {};
       orientacionesColecciones = {};
       const val = snap.val() || {};
       Object.entries(val).forEach(([cat, data]) => {
         if (data && data.foto) fotosColecciones[cat] = data.foto;
         if (data && data.posicion) posicionesColecciones[cat] = data.posicion;
+        if (data && Number(data.zoom) > 1) zoomColecciones[cat] = Math.min(3, Number(data.zoom));
         if (data && data.orientacion) orientacionesColecciones[cat] = data.orientacion;
       });
       catsExtraColecciones = Object.keys(val);
@@ -575,7 +578,7 @@
           <a class="coleccion-card" href="#productos"
              onclick="event.preventDefault();irAColeccion('${catSlug}');"
              style="${foto ? '' : 'background:' + solidBg + ';'}">
-            ${foto ? `<img class="coleccion-bg" src="${foto}" alt="${cat}" style="object-position:${pos}" loading="lazy" decoding="async" />` : ''}
+            ${foto ? `<img class="coleccion-bg" src="${foto}" alt="${cat}" style="object-position:${pos};transform-origin:${pos};--zoom:${zoomColecciones[cat] || 1}" loading="lazy" decoding="async" />` : ''}
             <div class="coleccion-overlay"></div>
             <div class="coleccion-card-content">
               <span class="coleccion-nombre">${cat}</span>

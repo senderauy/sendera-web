@@ -544,10 +544,11 @@ nav a:hover::after {
   height: 100%;
   object-fit: cover;
   display: block;
+  transform: scale(var(--zoom, 1)); /* el zoom elegido en el panel (Colecciones → encuadrar) */
   transition: transform 0.5s ease;
 }
 
-.coleccion-card:hover img.coleccion-bg { transform: scale(1.04); }
+.coleccion-card:hover img.coleccion-bg { transform: scale(calc(var(--zoom, 1) * 1.04)); }
 
 .coleccion-overlay {
   position: absolute;
