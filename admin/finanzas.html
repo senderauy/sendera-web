@@ -129,11 +129,63 @@
     @media (prefers-reduced-motion: reduce) {
       .registro, .registro.abierto, .velo-registro { transition: none; }
     }
+    /* Pestañas: Resumen y la planilla (Ventas, Gastos…) */
+    .fz-tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--sa-linea); margin: 4px 0 20px; }
+    .fz-tabs button { border: 0; background: none; padding: 10px 16px; font: 600 0.88rem var(--sa-sans); color: var(--sa-tinta-3); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; display: flex; align-items: center; gap: 7px; }
+    .fz-tabs button.activa { color: var(--sa-tinta); border-bottom-color: var(--sa-noche); }
+    .fz-tabs button:disabled { cursor: default; opacity: 0.5; }
+    .fz-tabs small { font-size: 0.66rem; font-weight: 600; background: var(--sa-papel-2); border: 1px solid var(--sa-linea); padding: 1px 6px; border-radius: 999px; }
+    .fz-tabs .lucide { width: 16px; height: 16px; }
+    .sa-pagina.con-grilla { max-width: 1480px; }
+    .fz-cifras { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-bottom: 18px; }
+    .fz-cifras > div { padding: 2px 20px; border-left: 1px solid var(--sa-linea-2); min-width: 0; }
+    .fz-cifras > div:first-child { padding-left: 0; border-left: 0; }
+    .fz-cifras small { display: block; color: var(--sa-tinta-2); font-size: 0.78rem; font-weight: 500; }
+    .fz-cifras b { display: block; margin-top: 3px; font: 600 1.9rem/1.05 var(--sa-serif); font-variant-numeric: lining-nums tabular-nums; overflow-wrap: anywhere; }
+    .fz-cifras span { display: block; margin-top: 3px; color: var(--sa-tinta-3); font-size: 0.74rem; }
+    .fz-barra { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+    .fz-barra .buscar { position: relative; flex: 1; min-width: 200px; max-width: 340px; }
+    .fz-barra .buscar .lucide { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--sa-tinta-3); }
+    .fz-barra .buscar input { padding-left: 34px; }
+    .fz-barra select { width: auto; }
+    .fz-barra .sep { flex: 1; }
+    .fz-barra .ayuda { font-size: 0.76rem; color: var(--sa-tinta-3); }
+    .fz-grilla { overflow: auto; max-height: 64vh; border: 1px solid var(--sa-linea); border-radius: 14px; background: var(--sa-papel); }
+    .fz-grilla table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 0.82rem; }
+    .fz-grilla thead th { position: sticky; top: 0; z-index: 2; background: var(--sa-noche); color: var(--sa-noche-texto); font-weight: 600; font-size: 0.7rem; text-align: left; padding: 9px 10px; white-space: nowrap; border: 0; }
+    .fz-grilla thead th.n { text-align: right; }
+    .fz-grilla thead th.calc { background: var(--sa-noche-2); }
+    .fz-grilla tbody td { padding: 7px 10px; border-bottom: 1px solid var(--sa-linea-2); white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+    .fz-grilla tbody td.n { text-align: right; font-variant-numeric: tabular-nums; }
+    .fz-grilla tbody td.calc { background: var(--sa-papel-2); font-weight: 600; }
+    .fz-grilla tbody td.vacia { text-align: center; padding: 30px; color: var(--sa-tinta-3); max-width: none; }
+    .fz-grilla tr.fila { cursor: pointer; }
+    .fz-grilla tr.fila:hover td { background: #f6efe2; }
+    .fz-grilla tr.web { cursor: default; }
+    .fz-grilla tr.web td:first-child { box-shadow: inset 3px 0 0 var(--sa-agua); }
+    .fz-grilla .etq { display: inline-block; font-size: 0.64rem; font-weight: 700; padding: 1px 6px; border-radius: 999px; margin-left: 6px; }
+    .fz-grilla .etq.web { background: var(--sa-agua-fondo); color: var(--sa-agua); }
+    .fz-grilla tfoot td { position: sticky; bottom: 0; background: var(--sa-crema); font-weight: 700; padding: 9px 10px; border-top: 2px solid var(--sa-linea); white-space: nowrap; }
+    .fz-grilla tfoot td.n { text-align: right; font-variant-numeric: tabular-nums; }
+    .fz-grilla tr.editando td { padding: 3px; background: #fff8e8 !important; overflow: visible; }
+    .fz-grilla tr.editando input { width: 100%; min-width: 70px; border: 1px solid var(--sa-linea); border-radius: 7px; padding: 6px 7px; font: 400 0.8rem var(--sa-sans); background: #fff; outline: none; }
+    .fz-grilla tr.editando input:focus { border-color: var(--sa-noche); box-shadow: 0 0 0 2px rgba(24, 36, 23, 0.12); }
+    .fz-grilla tr.editando input.n { text-align: right; min-width: 64px; }
+    .fz-grilla .acc { white-space: nowrap; }
+    .fz-grilla .acc button { border: 0; border-radius: 7px; padding: 6px 9px; cursor: pointer; font: 600 0.75rem var(--sa-sans); display: inline-flex; align-items: center; gap: 4px; }
+    .fz-grilla .acc .ok { background: var(--sa-noche); color: #fff; }
+    .fz-grilla .acc .no { background: var(--sa-papel-2); color: var(--sa-tinta-2); }
+    .fz-grilla .acc .del { background: none; color: var(--sa-rojo); }
+    .fz-grilla .acc .lucide { width: 14px; height: 14px; }
+    @keyframes fz-aparecer { from { background: #fde9b8; } }
+    .fz-grilla tr.recien td { animation: fz-aparecer 1.6s ease-out; }
+    .fz-nota { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: var(--sa-agua-fondo); color: #0b4f49; font-size: 0.82rem; display: flex; gap: 10px; align-items: flex-start; }
+    .fz-nota .lucide { width: 18px; height: 18px; flex: none; margin-top: 1px; }
   </style>
 </head>
 <body>
 
-<main class="sa-pagina">
+<main class="sa-pagina" id="pagina-finanzas">
   <header class="sa-encabezado">
     <div>
       <h1>Finanzas</h1>
@@ -148,6 +200,34 @@
   </header>
 
   <div class="sa-filtros" id="meses" aria-label="Período"></div>
+
+  <!-- Como las pestañas de la planilla: Resumen y lo que se carga (Ventas, Gastos); el resto llega en las próximas etapas -->
+  <nav class="fz-tabs" id="fz-tabs" role="tablist" aria-label="Secciones de Finanzas">
+    <button type="button" role="tab" class="activa" aria-selected="true" data-vista="resumen"><i data-lucide="layout-dashboard"></i>Resumen</button>
+    <button type="button" role="tab" aria-selected="false" data-vista="ventas"><i data-lucide="receipt"></i>Ventas</button>
+    <button type="button" role="tab" aria-selected="false" data-vista="gastos"><i data-lucide="wallet"></i>Gastos</button>
+    <button type="button" disabled><i data-lucide="package"></i>Compras <small>pronto</small></button>
+    <button type="button" disabled><i data-lucide="boxes"></i>Stock y márgenes <small>pronto</small></button>
+    <button type="button" disabled><i data-lucide="scale"></i>Balance <small>pronto</small></button>
+    <button type="button" disabled><i data-lucide="handshake"></i>Distribuidores <small>pronto</small></button>
+    <button type="button" disabled><i data-lucide="calculator"></i>Presupuestos <small>pronto</small></button>
+  </nav>
+
+  <div id="vista-grilla" hidden>
+    <div class="fz-cifras" id="fz-cifras"></div>
+    <div class="fz-barra">
+      <label class="buscar"><i data-lucide="search"></i><input class="sa-campo" id="fz-buscar" placeholder="Buscar comprador, artículo, detalle…" /></label>
+      <select class="sa-campo" id="fz-filtro" aria-label="Filtrar"></select>
+      <span class="sep"></span>
+      <span class="ayuda">Tocá una fila para editarla · Enter guarda · Esc cancela</span>
+      <button type="button" class="sa-boton" id="fz-nueva"><i data-lucide="plus"></i><span id="fz-nueva-txt">Nueva venta</span></button>
+    </div>
+    <div class="fz-grilla"><table><thead id="fz-cab"></thead><tbody id="fz-cuerpo"></tbody><tfoot id="fz-pie"></tfoot></table></div>
+    <p class="fz-nota" id="fz-nota-web"><i data-lucide="globe"></i><span>Las filas marcadas <b>Web</b> son pedidos de la tienda: aparecen solas cuando el pago se confirma, así no hay que tipearlas.</span></p>
+    <div id="fz-listas"></div>
+  </div>
+
+  <div id="vista-resumen">
 
   <section class="sa-panel">
     <div class="cifras">
@@ -219,6 +299,7 @@
         </table>
       </div>
     </section>
+  </div>
   </div>
 </main>
 
@@ -388,7 +469,7 @@ function renderPills() {
 function renderTodo() {
   const ventasMes = [
     ...pedidosQueCuentan().filter(p => esPeriodo(p.fecha))
-      .map(p => ({ id: p.id, tipo: 'auto', fecha: p.fecha, desc: p.cliente || 'Pedido web', canal: p.origen === 'whatsapp' ? 'WhatsApp' : 'Web', importe: num(p.total) })),
+      .map(p => ({ id: p.id, tipo: 'auto', fecha: p.fecha, desc: p.cliente || 'Pedido web', canal: p.origen === 'whatsapp' ? 'WhatsApp' : 'Página Web', importe: filaPedido(p).total })),
     ...todasVentas.filter(v => esPeriodo(v.fecha))
   ].sort((a, b) => fechaLocal(b.fecha) - fechaLocal(a.fecha));
   const gastosMes = todosGastos.filter(g => esPeriodo(g.fecha)).sort((a, b) => fechaLocal(b.fecha) - fechaLocal(a.fecha));
@@ -420,6 +501,7 @@ function renderTodo() {
   renderChartMeses();
   renderChartPlat(ventasMes);
   renderChartGastos(gastosMes, comprasMes.filter(sumaCompra));
+  if (vista !== 'resumen' && !grillaEditando) { llenarListas(); renderGrilla(); }
 }
 
 function renderStockUI() {
@@ -495,7 +577,7 @@ function renderChartMeses() {
   destroyChart('meses');
   const vPM = Array(12).fill(0), gPM = Array(12).fill(0);
   const delAño = f => { const d = fechaLocal(f); return !isNaN(d) && d.getFullYear() === AÑO; };
-  [...pedidosQueCuentan().filter(p => delAño(p.fecha)).map(p => ({ fecha: p.fecha, importe: num(p.total) })),
+  [...pedidosQueCuentan().filter(p => delAño(p.fecha)).map(p => ({ fecha: p.fecha, importe: filaPedido(p).total })),
    ...todasVentas.filter(v => delAño(v.fecha))]
     .forEach(v => { vPM[fechaLocal(v.fecha).getMonth()] += num(v.importe); });
   [...todosGastos.filter(g => delAño(g.fecha)).map(g => ({ fecha: g.fecha, importe: num(g.importe) })),
@@ -708,7 +790,9 @@ function leerPlanilla(wb) {
       desc: [texto(row['ARTICULO']), texto(row['GRUPO'])].filter(Boolean).join(' — ') || 'Venta',
       canal: texto(row['PLATAFORMA DE COMPRA'] || row['PLATAFORMA']) || 'Planilla',
       forma_pago: texto(row['FORMA DE PAGO']), grupo: texto(row['GRUPO']), comprador: texto(row['COMPRADOR']),
-      cantidad: numPlanilla(row['CANTIDAD']) || 1, descuento: numPlanilla(row['DESCUENTOS']) || 0, tipo: 'manual', importado: true };
+      cantidad: numPlanilla(row['CANTIDAD']) || 1, descuento: numPlanilla(row['DESCUENTOS']) || 0, tipo: 'manual', importado: true,
+      articulo: texto(row['ARTICULO']), precio: numPlanilla(row['PRECIO UNIT']), comision: numPlanilla(row['COMISIÓN MP'] ?? row['COMISION MP']),
+      envio_a: texto(row['ENVÍO A CARGO DE'] ?? row['ENVIO A CARGO DE']), envio_precio: numPlanilla(row['ENVÍO PRECIO'] ?? row['ENVIO PRECIO']) };
   }).filter(Boolean);
   const gastos = hoja(n => /GASTO/i.test(n)).map(row => {
     const fecha = fechaPlanilla(row['FECHA']), importe = numPlanilla(row['TOTAL']);
@@ -762,6 +846,175 @@ async function procesarImport(file) {
     prog.hidden = true;
   }
 }
+
+// ── Planilla dentro de la página: pestañas Ventas y Gastos ──────────────
+// Las mismas columnas que la planilla de Lore. Se carga y se edita en la tabla (Enter guarda, Esc cancela).
+// Ventas a mano o importadas → ventas_manual. Pedidos de la tienda → se muestran solos (marca "Web"), no se tipean.
+let vista = 'resumen', grillaFiltro = '', grillaBusca = '', grillaEditando = null, grillaRecien = null;
+const PAGO_PEDIDO = { tarjeta: 'Mercado Pago', mercadopago: 'Mercado Pago', transferencia: 'Transferencia', efectivo: 'Efectivo' };
+const subtotalV = r => r.precio ? num(r.cantidad || 1) * num(r.precio) : num(r.total) + num(r.descuento);
+// Lo importado trae el TOTAL VENTAS de la planilla (puede tener obsequios): se respeta tal cual
+const totalV = r => r.importado || !r.precio ? num(r.total) : subtotalV(r) - num(r.descuento);
+const conEnvioV = r => totalV(r) + num(r.envioPrecio);
+
+// Cada fila en el formato de la planilla
+function filaVenta(v) {
+  return { id: v.id, origen: 'manual', importado: !!v.importado, fecha: String(v.fecha || '').slice(0, 10), plataforma: v.canal || '', comprador: v.comprador || '',
+    pago: v.forma_pago || '', grupo: v.grupo || '', articulo: v.articulo || v.desc || '', cantidad: num(v.cantidad) || 1, precio: num(v.precio),
+    descuento: num(v.descuento), total: num(v.importe), comision: num(v.comision), envioA: v.envio_a || '', envioPrecio: num(v.envio_precio) };
+}
+function filaPedido(p) {
+  const prods = Array.isArray(p.productos) ? p.productos : [];
+  const envioTxt = String(p.envio || '');
+  const envio = num((/\$\s?(\d[\d.]*)/.exec(envioTxt) || [])[1]?.replace(/\./g, ''));
+  const d = fechaLocal(String(p.fecha || '').slice(0, 10));
+  return { id: 'pedido-' + p.id, origen: 'web', fecha: `${d.getFullYear()}-${dosDig(d.getMonth() + 1)}-${dosDig(d.getDate())}`, plataforma: 'Página Web',
+    comprador: p.cliente || '', pago: PAGO_PEDIDO[p.metodo_pago] || 'Mercado Pago', grupo: '',
+    articulo: prods.map(x => `${x.nombre || ''}${x.variante ? ' ' + x.variante : ''}`).join(', '), cantidad: prods.reduce((s, x) => s + (num(x.qty) || 1), 0) || 1,
+    precio: 0, descuento: 0, total: num(p.total) - envio, comision: 0, envioA: envioTxt.split('·')[0].trim(), envioPrecio: envio };
+}
+function filaGasto(g) {
+  return { id: g.id, origen: 'manual', importado: !!g.importado, fecha: String(g.fecha || '').slice(0, 10), pago: g.forma_pago || '', proveedor: g.proveedor || '',
+    grupo: g.categoria || '', detalle: g.detalle || '', total: num(g.importe) };
+}
+
+const COLS_GRILLA = {
+  ventas: [
+    { k: 'fecha', t: 'Fecha', tipo: 'date' }, { k: 'plataforma', t: 'Plataforma', dl: 'plataforma' }, { k: 'comprador', t: 'Comprador', dl: 'comprador' },
+    { k: 'pago', t: 'Forma de pago', dl: 'pago' }, { k: 'grupo', t: 'Grupo', dl: 'grupo' }, { k: 'articulo', t: 'Artículo', dl: 'articulo' },
+    { k: 'cantidad', t: 'Cant.', n: 1 }, { k: 'precio', t: 'Precio unit.', n: 1, $: 1 }, { k: 'subtotal', t: 'Subtotal', n: 1, $: 1, calc: subtotalV },
+    { k: 'descuento', t: 'Descuento', n: 1, $: 1 }, { k: 'total', t: 'Total ventas', n: 1, $: 1, calc: totalV },
+    { k: 'comision', t: 'Comisión MP', n: 1, $: 1 }, { k: 'envioA', t: 'Envío a cargo de', dl: 'envioA' }, { k: 'envioPrecio', t: 'Envío $', n: 1, $: 1 },
+    { k: 'conEnvio', t: 'Total con envío', n: 1, $: 1, calc: conEnvioV }
+  ],
+  gastos: [
+    { k: 'fecha', t: 'Fecha', tipo: 'date' }, { k: 'pago', t: 'Forma de pago', dl: 'pago' }, { k: 'proveedor', t: 'Proveedor', dl: 'proveedor' },
+    { k: 'grupo', t: 'Grupo', dl: 'grupoGasto' }, { k: 'detalle', t: 'Detalle del gasto' }, { k: 'total', t: 'Total', n: 1, $: 1 }
+  ]
+};
+function todasLasFilas() {
+  return vista === 'ventas'
+    ? [...todasVentas.map(filaVenta), ...pedidosQueCuentan().map(filaPedido)]
+    : todosGastos.map(filaGasto);
+}
+// Listas desplegables: lo que ya se usó (así aparecen los mismos nombres que en la planilla)
+function llenarListas() {
+  const usados = (arr, k) => [...new Set(arr.map(r => String(r[k] || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  const v = todasVentas.map(filaVenta), g = todosGastos.map(filaGasto);
+  const listas = { plataforma: usados(v, 'plataforma'), comprador: usados(v, 'comprador'), pago: usados([...v, ...g], 'pago'), grupo: usados(v, 'grupo'),
+    articulo: usados(v, 'articulo'), envioA: usados(v, 'envioA'), proveedor: usados(g, 'proveedor'), grupoGasto: usados(g, 'grupo') };
+  $('fz-listas').innerHTML = Object.entries(listas).map(([k, l]) => `<datalist id="fz-dl-${k}">${l.map(x => `<option value="${esc(x)}">`).join('')}</datalist>`).join('');
+}
+
+function renderGrilla() {
+  if (vista === 'resumen') return;
+  const cols = COLS_GRILLA[vista];
+  const esVentas = vista === 'ventas';
+  const todas = todasLasFilas();
+  const opciones = [...new Set(todas.map(r => esVentas ? r.plataforma : r.grupo).filter(Boolean))].sort();
+  $('fz-filtro').innerHTML = `<option value="">${esVentas ? 'Todas las plataformas' : 'Todos los grupos'}</option>` + opciones.map(o => `<option${o === grillaFiltro ? ' selected' : ''}>${esc(o)}</option>`).join('');
+  $('fz-nueva-txt').textContent = esVentas ? 'Nueva venta' : 'Nuevo gasto';
+  $('fz-nota-web').hidden = !esVentas;
+  const lista = todas.filter(r => esPeriodo(r.fecha))
+    .filter(r => !grillaFiltro || (esVentas ? r.plataforma : r.grupo) === grillaFiltro)
+    .filter(r => !grillaBusca || Object.values(r).join(' ').toLowerCase().includes(grillaBusca))
+    .sort((a, b) => b.fecha.localeCompare(a.fecha));
+
+  const suma = f => lista.reduce((t, r) => t + f(r), 0);
+  const cifra = (a, b, c) => `<div><small>${esc(a)}</small><b>${b}</b><span>${esc(c)}</span></div>`;
+  if (esVentas) {
+    const web = lista.filter(r => r.origen === 'web' || r.plataforma === 'Página Web').length;
+    $('fz-cifras').innerHTML = cifra('Total ventas', fmt(suma(totalV)), `${lista.length} ventas · ${web} por la web`) + cifra('Descuentos', fmt(suma(r => num(r.descuento))), 'regalos y rebajas')
+      + cifra('Comisiones MP', fmt(suma(r => num(r.comision))), 'Mercado Pago y Mercado Libre') + cifra('Envíos cobrados', fmt(suma(r => num(r.envioPrecio))), 'a cargo del cliente')
+      + cifra('Ticket promedio', lista.length ? fmt(suma(totalV) / lista.length) : '$0', 'por venta');
+  } else {
+    const porGrupo = {};
+    lista.forEach(g => { porGrupo[g.grupo || 'Otros'] = (porGrupo[g.grupo || 'Otros'] || 0) + g.total; });
+    $('fz-cifras').innerHTML = cifra('Total gastos', fmt(suma(r => r.total)), `${lista.length} gastos`)
+      + Object.entries(porGrupo).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([g, m]) => cifra(g, fmt(m), 'en el período')).join('');
+  }
+
+  const valor = (c, r) => {
+    const v = c.calc ? c.calc(r) : r[c.k];
+    if (c.k === 'fecha') return fmtF(v);
+    if (c.$) return v ? fmt(v) : '—';
+    return esc(v || '');
+  };
+  const editor = (c, r) => c.calc
+    ? `<td class="n calc" data-calc="${c.k}">${fmt(c.calc(r))}</td>`
+    : `<td><input ${c.n ? 'class="n" type="number" step="any" inputmode="decimal"' : c.tipo === 'date' ? 'type="date"' : 'type="text"'} data-k="${c.k}" value="${esc(c.n && !r[c.k] ? '' : r[c.k] ?? '')}"${c.dl ? ` list="fz-dl-${c.dl}"` : ''} aria-label="${esc(c.t)}" /></td>`;
+  const nueva = grillaEditando === 'nueva'
+    ? [{ id: 'nueva', fecha: hoyTexto(), ...(esVentas ? { cantidad: 1, plataforma: 'Instagram', pago: 'Prex Edgardo', grupo: 'Gorro' } : { pago: 'Prex Edgardo' }) }] : [];
+  $('fz-cab').innerHTML = '<tr>' + cols.map(c => `<th class="${c.n ? 'n' : ''}${c.calc ? ' calc' : ''}">${c.t}</th>`).join('') + '<th></th></tr>';
+  $('fz-cuerpo').innerHTML = [...nueva, ...lista].map(r => (r.id === grillaEditando)
+    ? `<tr class="editando" data-id="${esc(r.id)}">${cols.map(c => editor(c, r)).join('')}<td class="acc"><button type="button" class="ok" data-ok><i data-lucide="check"></i>Guardar</button> <button type="button" class="no" data-no>Cancelar</button>${r.id !== 'nueva' ? ' <button type="button" class="del" data-del aria-label="Borrar"><i data-lucide="trash-2"></i></button>' : ''}</td></tr>`
+    : `<tr class="fila${r.origen === 'web' ? ' web' : ''}${r.id === grillaRecien ? ' recien' : ''}" data-id="${esc(r.id)}"${r.origen === 'web' ? ' title="Pedido de la tienda: se carga solo. Para cambiarlo, andá a Pedidos."' : ''}>${cols.map((c, i) => `<td class="${c.n ? 'n' : ''}${c.calc ? ' calc' : ''}">${valor(c, r)}${i === 0 && r.origen === 'web' ? '<span class="etq web">Web</span>' : ''}</td>`).join('')}<td></td></tr>`
+  ).join('') || `<tr><td colspan="${cols.length + 1}" class="vacia">No hay nada cargado en este período.</td></tr>`;
+  $('fz-pie').innerHTML = '<tr>' + cols.map((c, i) => i === 0 ? `<td>${lista.length} filas</td>`
+    : (!c.$ || c.k === 'precio') ? '<td></td>' : `<td class="n">${fmt(lista.reduce((s, r) => s + num(c.calc ? c.calc(r) : r[c.k]), 0))}</td>`).join('') + '<td></td></tr>';
+  panel.iconos();
+  const primera = document.querySelector('#fz-cuerpo tr.editando input');
+  if (primera && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('tr.editando'))) primera.focus();
+}
+
+function mostrarVista(v) {
+  vista = v; grillaEditando = null; grillaFiltro = '';
+  document.querySelectorAll('#fz-tabs [data-vista]').forEach(b => { const si = b.dataset.vista === v; b.classList.toggle('activa', si); b.setAttribute('aria-selected', si); });
+  $('vista-resumen').hidden = v !== 'resumen';
+  $('vista-grilla').hidden = v === 'resumen';
+  $('pagina-finanzas').classList.toggle('con-grilla', v !== 'resumen');
+  if (v !== 'resumen') { llenarListas(); renderGrilla(); }
+}
+async function guardarFila(tr) {
+  const d = {};
+  tr.querySelectorAll('[data-k]').forEach(i => { d[i.dataset.k] = i.type === 'number' ? (i.value === '' ? 0 : Number(i.value)) : i.value.trim(); });
+  if (!d.fecha) return panel.aviso('Falta la fecha.', true);
+  const esVentas = vista === 'ventas';
+  const dato = esVentas
+    ? { fecha: d.fecha, canal: d.plataforma, comprador: d.comprador, forma_pago: d.pago, grupo: d.grupo, articulo: d.articulo, desc: d.articulo || d.grupo || 'Venta',
+        cantidad: d.cantidad || 1, precio: d.precio, descuento: d.descuento, comision: d.comision, envio_a: d.envioA, envio_precio: d.envioPrecio,
+        importe: Math.round(((d.cantidad || 1) * d.precio - d.descuento) * 100) / 100, tipo: 'manual' }
+    : { fecha: d.fecha, forma_pago: d.pago, proveedor: d.proveedor, categoria: d.grupo || 'Varios', detalle: d.detalle, importe: d.total };
+  if (esVentas && !dato.precio) return panel.aviso('Falta el precio.', true);
+  if (!esVentas && !dato.importe) return panel.aviso('Falta el total.', true);
+  const ruta = esVentas ? 'ventas_manual' : 'gastos';
+  try {
+    if (tr.dataset.id === 'nueva') { const ref = db.ref(ruta).push(); await ref.set(dato); grillaRecien = ref.key; }
+    else { await db.ref(`${ruta}/${tr.dataset.id}`).update(dato); grillaRecien = tr.dataset.id; }
+    // Si la fila es de otro mes, se pasa a ese mes para que se vea
+    const m = fechaLocal(dato.fecha).getMonth();
+    if (mesFiltro !== -1 && m !== mesFiltro) { mesFiltro = m; renderPills(); }
+    grillaEditando = null;
+    panel.aviso(tr.dataset.id === 'nueva' ? (esVentas ? 'Venta agregada' : 'Gasto agregado') : 'Guardado');
+    renderTodo();
+  } catch (err) { panel.aviso('No se pudo guardar: ' + err.message, true); }
+}
+$('fz-tabs').addEventListener('click', e => { const b = e.target.closest('[data-vista]'); if (b && !b.disabled) mostrarVista(b.dataset.vista); });
+$('fz-filtro').addEventListener('change', e => { grillaFiltro = e.target.value; renderGrilla(); });
+$('fz-buscar').addEventListener('input', e => { grillaBusca = e.target.value.trim().toLowerCase(); renderGrilla(); });
+$('fz-nueva').addEventListener('click', () => { grillaEditando = 'nueva'; renderGrilla(); });
+$('fz-cuerpo').addEventListener('click', async e => {
+  const tr = e.target.closest('tr'); if (!tr) return;
+  if (e.target.closest('[data-ok]')) return guardarFila(tr);
+  if (e.target.closest('[data-no]')) { grillaEditando = null; return renderGrilla(); }
+  if (e.target.closest('[data-del]')) {
+    if (!await panel.confirmar({ titulo: '¿Borrar esta fila?', texto: 'Se borra de Finanzas.', boton: 'Borrar', peligro: true })) return;
+    await db.ref(`${vista === 'ventas' ? 'ventas_manual' : 'gastos'}/${tr.dataset.id}`).remove();
+    grillaEditando = null; panel.aviso('Borrado'); return;
+  }
+  if (tr.classList.contains('fila') && !tr.classList.contains('web') && grillaEditando !== tr.dataset.id) { grillaEditando = tr.dataset.id; renderGrilla(); }
+});
+// Mientras se escribe se recalculan subtotal, total y total con envío
+$('fz-cuerpo').addEventListener('input', e => {
+  const tr = e.target.closest('tr.editando'); if (!tr || vista !== 'ventas') return;
+  const r = {}; tr.querySelectorAll('[data-k]').forEach(i => { r[i.dataset.k] = i.type === 'number' ? Number(i.value) || 0 : i.value; });
+  tr.querySelectorAll('[data-calc]').forEach(td => { td.textContent = fmt(COLS_GRILLA.ventas.find(c => c.k === td.dataset.calc).calc(r)); });
+});
+$('fz-cuerpo').addEventListener('keydown', e => {
+  const tr = e.target.closest('tr.editando'); if (!tr) return;
+  if (e.key === 'Enter') { e.preventDefault(); guardarFila(tr); }
+  if (e.key === 'Escape') { grillaEditando = null; renderGrilla(); }
+});
 
 // ── Eventos ────────────────────────────────────────────────
 $('meses').addEventListener('click', e => {
