@@ -3,6 +3,7 @@ import { notificarAdmins, enviarWhatsAppConfirmacion, enviarEmailConfirmacion, l
 import { nuevoCodigo, enlaceSeguimiento, emailValido, anotarAvisos } from './_seguimiento.js';
 import { cerrarCarritos } from './_carritos.js';
 import { usarCodigo } from './_pedido.js';
+import { descontarStock } from './_stock.js';
 
 const DB_URL = 'https://sendera-34791-default-rtdb.firebaseio.com';
 
@@ -127,6 +128,8 @@ export default async function handler(req, res) {
     }
     const guardado = await fbPost('pedidos', pedido, fbToken);
     const pedidoId = guardado && guardado.name;
+    // Pago aprobado y completo: sus productos salen del stock (una sola vez por pedido)
+    if (pedidoId) await descontarStock({ id: pedidoId, pedido, token: fbToken }).catch(e => console.error('mp-webhook stock:', e.message));
 
     // Marcar pago como procesado para evitar duplicados
     await fetch(`${DB_URL}/pedidos_mp_ids/${data.id}.json`, {

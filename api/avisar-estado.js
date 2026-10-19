@@ -5,6 +5,7 @@
 import { DB_URL, getFirebaseToken } from './_pedido.js';
 import { emailDeSesion, esAdmin, tokenDeSesion } from './_admin.js';
 import { enviarCompraMeta } from './_meta.js';
+import { descontarStock } from './_stock.js';
 import { enviarEmailEstado, enviarEmailComprobanteEnvio, lineasProductos } from './_notificaciones.js';
 import {
   idValido, emailValido, pasoAvisable, asegurarCodigo, enlaceSeguimiento, marcarAviso, desmarcarAviso,
@@ -54,6 +55,8 @@ export default async function handler(req, res) {
 
     // Si el pedido ya es una venta (pagado o confirmado), se le avisa a Meta (una sola vez por pedido)
     await enviarCompraMeta({ id, pedido, token }).catch(e => console.error('avisar-estado Meta:', e.message));
+    // Y sus productos salen del stock (una sola vez por pedido): transferencia o efectivo confirmados a mano
+    await descontarStock({ id, pedido, token }).catch(e => console.error('avisar-estado stock:', e.message));
 
     const paso = pasoAvisable(pedido.estado);
     if (!paso) return res.status(200).json({ ok: true, enviado: false, motivo: 'estado' });

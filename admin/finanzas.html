@@ -223,7 +223,7 @@
       <button type="button" class="sa-boton" id="fz-nueva"><i data-lucide="plus"></i><span id="fz-nueva-txt">Nueva venta</span></button>
     </div>
     <div class="fz-grilla"><table><thead id="fz-cab"></thead><tbody id="fz-cuerpo"></tbody><tfoot id="fz-pie"></tfoot></table></div>
-    <p class="fz-nota" id="fz-nota-web"><i data-lucide="globe"></i><span>Las filas marcadas <b>Web</b> son pedidos de la tienda: aparecen solas cuando el pago se confirma, así no hay que tipearlas.</span></p>
+    <p class="fz-nota" id="fz-nota-web"><i data-lucide="globe"></i><span>Las filas marcadas <b>Web</b> son pedidos de la tienda: aparecen solas cuando el pago se confirma y salen solas del stock. Las ventas de afuera: elegí el artículo de la lista (producto y color) y también se descuentan del stock.</span></p>
     <div id="fz-listas"></div>
   </div>
 
@@ -898,11 +898,25 @@ function todasLasFilas() {
     : todosGastos.map(filaGasto);
 }
 // Listas desplegables: lo que ya se usó (así aparecen los mismos nombres que en la planilla)
+// Producto + color del catálogo → código de stock: la venta cargada a mano con un artículo del catálogo sale del stock
+const normArt = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+function catalogoStock() {
+  const mapa = new Map();
+  Object.values(productosFirebase || {}).forEach(p => (Array.isArray(p.variantes) ? p.variantes : Object.values(p.variantes || {})).forEach((v, i) => {
+    if (!v || typeof v !== 'object') return;
+    const nombre = `${p.nombre || ''} ${v.nombre || ''}`.trim();
+    mapa.set(normArt(nombre), { id: v.stockId || `${p.id}-${i}`, nombre });
+  }));
+  return mapa;
+}
+const stockMas = (id, n) => db.ref('stock/' + id).transaction(v => (Number(v) || 0) + n);
+const stockMenos = (id, n) => db.ref('stock/' + id).transaction(v => Math.max(0, (Number(v) || 0) - n));
+
 function llenarListas() {
   const usados = (arr, k) => [...new Set(arr.map(r => String(r[k] || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
   const v = todasVentas.map(filaVenta), g = todosGastos.map(filaGasto);
   const listas = { plataforma: usados(v, 'plataforma'), comprador: usados(v, 'comprador'), pago: usados([...v, ...g], 'pago'), grupo: usados(v, 'grupo'),
-    articulo: usados(v, 'articulo'), envioA: usados(v, 'envioA'), proveedor: usados(g, 'proveedor'), grupoGasto: usados(g, 'grupo') };
+    articulo: [...new Set([...[...catalogoStock().values()].map(c => c.nombre), ...usados(v, 'articulo')])], envioA: usados(v, 'envioA'), proveedor: usados(g, 'proveedor'), grupoGasto: usados(g, 'grupo') };
   $('fz-listas').innerHTML = Object.entries(listas).map(([k, l]) => `<datalist id="fz-dl-${k}">${l.map(x => `<option value="${esc(x)}">`).join('')}</datalist>`).join('');
 }
 
@@ -978,14 +992,25 @@ async function guardarFila(tr) {
   if (esVentas && !dato.precio) return panel.aviso('Falta el precio.', true);
   if (!esVentas && !dato.importe) return panel.aviso('Falta el total.', true);
   const ruta = esVentas ? 'ventas_manual' : 'gastos';
+  // Stock: si el artículo es del catálogo, la venta sale del stock. Al corregirla, lo anterior vuelve y lo nuevo sale.
+  // Lo importado del Excel no toca el stock (ese stock ya estaba contado).
+  const previa = tr.dataset.id !== 'nueva' ? todasVentas.find(v => v.id === tr.dataset.id) : null;
+  const tocaStock = esVentas && !(previa && previa.importado);
+  const delCatalogo = tocaStock ? catalogoStock().get(normArt(d.articulo)) : null;
+  if (esVentas && tocaStock) dato.productoId = delCatalogo ? delCatalogo.id : null;
   try {
     if (tr.dataset.id === 'nueva') { const ref = db.ref(ruta).push(); await ref.set(dato); grillaRecien = ref.key; }
     else { await db.ref(`${ruta}/${tr.dataset.id}`).update(dato); grillaRecien = tr.dataset.id; }
+    if (tocaStock) {
+      if (previa && previa.productoId && num(previa.cantidad) > 0) await stockMas(previa.productoId, num(previa.cantidad));
+      if (delCatalogo) await stockMenos(delCatalogo.id, dato.cantidad || 1);
+    }
     // Si la fila es de otro mes, se pasa a ese mes para que se vea
     const m = fechaLocal(dato.fecha).getMonth();
     if (mesFiltro !== -1 && m !== mesFiltro) { mesFiltro = m; renderPills(); }
     grillaEditando = null;
-    panel.aviso(tr.dataset.id === 'nueva' ? (esVentas ? 'Venta agregada' : 'Gasto agregado') : 'Guardado');
+    panel.aviso((tr.dataset.id === 'nueva' ? (esVentas ? 'Venta agregada' : 'Gasto agregado') : 'Guardado')
+      + (delCatalogo ? ` · ${dato.cantidad || 1} ${delCatalogo.nombre} ${previa ? 'ajustado en' : 'salió del'} stock` : ''));
     renderTodo();
   } catch (err) { panel.aviso('No se pudo guardar: ' + err.message, true); }
 }
@@ -998,8 +1023,11 @@ $('fz-cuerpo').addEventListener('click', async e => {
   if (e.target.closest('[data-ok]')) return guardarFila(tr);
   if (e.target.closest('[data-no]')) { grillaEditando = null; return renderGrilla(); }
   if (e.target.closest('[data-del]')) {
-    if (!await panel.confirmar({ titulo: '¿Borrar esta fila?', texto: 'Se borra de Finanzas.', boton: 'Borrar', peligro: true })) return;
+    const venta = vista === 'ventas' ? todasVentas.find(v => v.id === tr.dataset.id) : null;
+    const vuelve = venta && !venta.importado && venta.productoId && num(venta.cantidad) > 0;
+    if (!await panel.confirmar({ titulo: '¿Borrar esta fila?', texto: 'Se borra de Finanzas.' + (vuelve ? ' Lo vendido vuelve al stock.' : ''), boton: 'Borrar', peligro: true })) return;
     await db.ref(`${vista === 'ventas' ? 'ventas_manual' : 'gastos'}/${tr.dataset.id}`).remove();
+    if (vuelve) await stockMas(venta.productoId, num(venta.cantidad));
     grillaEditando = null; panel.aviso('Borrado'); return;
   }
   if (tr.classList.contains('fila') && !tr.classList.contains('web') && grillaEditando !== tr.dataset.id) { grillaEditando = tr.dataset.id; renderGrilla(); }

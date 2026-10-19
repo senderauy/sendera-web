@@ -813,14 +813,18 @@
   }
 
   async function eliminarPedido(p) {
+    // Si el pedido ya había salido del stock (venta confirmada), al borrarlo esos productos vuelven
+    const devolver = Object.entries((p.stock_descontado && p.stock_descontado.items) || {}).filter(([id, n]) => /^[A-Za-z0-9_-]{1,80}$/.test(id) && num(n) > 0);
+    const unidades = devolver.reduce((s, [, n]) => s + num(n), 0);
     const si = await panel.confirmar({
       titulo: `¿Eliminar el pedido de ${p.cliente || 'este cliente'}?`,
-      texto: 'Se borra del panel y no se puede recuperar.',
+      texto: 'Se borra del panel y no se puede recuperar.' + (unidades ? ` ${unidades === 1 ? 'El producto que se había descontado vuelve' : `Los ${unidades} productos que se habían descontado vuelven`} al stock.` : ''),
       boton: 'Eliminar pedido',
       peligro: true
     });
     if (!si) return;
     try {
+      for (const [id, n] of devolver) await db.ref('stock/' + id).transaction(v => (Number(v) || 0) + num(n));
       await db.ref('pedidos/' + p.id).remove();
       cerrarDetalle();
       panel.aviso(`Pedido de ${primerNombre(p.cliente)} eliminado`);
