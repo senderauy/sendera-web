@@ -44,7 +44,7 @@
     dialog.encuadre-col { width: min(460px, calc(100% - 32px)); }
     .marco { position: relative; width: min(300px, 70vw, calc((100dvh - 280px) * 0.56)); aspect-ratio: 0.56; margin: 4px auto 0; border-radius: 18px; overflow: hidden; background: #222; cursor: grab; touch-action: none; user-select: none; }
     .marco.arrastrando { cursor: grabbing; }
-    .marco img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; -webkit-user-drag: none; }
+    .marco img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; -webkit-user-drag: none; will-change: transform; }
     .marco .sombra { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.25) 32%, rgba(0, 0, 0, 0) 55%); pointer-events: none; }
     .marco .nombre { position: absolute; left: 16px; right: 16px; bottom: 16px; color: #fff; font: 800 1.35rem/0.95 var(--sa-sans); letter-spacing: -0.03em; pointer-events: none; }
     .zoom-col { display: flex; align-items: center; gap: 6px; margin-top: 12px; }
@@ -322,6 +322,9 @@
     $('zoom-txt').textContent = Math.round(enc.z * 100) + ' %';
   }
   const limitar = (v, a, b) => Math.min(b, Math.max(a, v));
+  // Mientras se arrastra se pinta una vez por cuadro de pantalla (no en cada evento del mouse)
+  let cuadro = 0;
+  const pedirPintar = () => { if (!cuadro) cuadro = requestAnimationFrame(() => { cuadro = 0; pintarEncuadre(); }); };
   function abrirEncuadre(cat) {
     const datos = estado.colecciones[cat] || {};
     if (!datos.foto) return;
@@ -337,7 +340,8 @@
   const zoomA = z => { enc.z = Math.round(limitar(z, 1, 3) * 100) / 100; pintarEncuadre(); };
   $('zoom').addEventListener('input', e => zoomA(Number(e.target.value)));
   document.querySelectorAll('[data-paso]').forEach(b => b.addEventListener('click', () => zoomA(enc.z + Number(b.dataset.paso))));
-  $('marco').addEventListener('wheel', e => { e.preventDefault(); zoomA(enc.z * (e.deltaY < 0 ? 1.08 : 1 / 1.08)); }, { passive: false });
+  // Zoom proporcional al giro: un clic de ruedita ≈ 16 %, y el trackpad (pasos chiquitos) queda suave
+  $('marco').addEventListener('wheel', e => { e.preventDefault(); zoomA(enc.z * Math.exp(-e.deltaY * 0.0015)); }, { passive: false });
   // Arrastrar mueve el punto fijo (al revés del dedo, como mover la foto debajo del marco); dos dedos hacen zoom
   const punteros = new Map();
   let distInicial = 0, zoomInicial = 1;
@@ -356,10 +360,14 @@
       if (distInicial) zoomA(zoomInicial * Math.hypot(a.x - b.x, a.y - b.y) / distInicial);
       return;
     }
-    const r = $('marco').getBoundingClientRect();
-    enc.x = limitar(enc.x - (ahora.x - antes.x) / r.width * 100 / enc.z, 0, 100);
-    enc.y = limitar(enc.y - (ahora.y - antes.y) / r.height * 100 / enc.z, 0, 100);
-    pintarEncuadre();
+    // La foto sigue al dedo: se mueve lo que sobra de la foto (ya agrandada), no el ancho del marco
+    const r = $('marco').getBoundingClientRect(), img = $('marco-img');
+    const k = Math.max(r.width / (img.naturalWidth || r.width), r.height / (img.naturalHeight || r.height));
+    const sobraX = (img.naturalWidth || r.width) * k * enc.z - r.width;
+    const sobraY = (img.naturalHeight || r.height) * k * enc.z - r.height;
+    if (sobraX > 0.5) enc.x = limitar(enc.x - (ahora.x - antes.x) * 100 / sobraX, 0, 100);
+    if (sobraY > 0.5) enc.y = limitar(enc.y - (ahora.y - antes.y) * 100 / sobraY, 0, 100);
+    pedirPintar();
   });
   const soltar = e => { punteros.delete(e.pointerId); if (punteros.size < 2) distInicial = 0; if (!punteros.size) $('marco').classList.remove('arrastrando'); };
   $('marco').addEventListener('pointerup', soltar);
