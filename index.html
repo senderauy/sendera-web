@@ -497,12 +497,14 @@
       }
 
       // Mobile: transform controlado por flechas
-      let idx = 0;
       const cards = Array.from(track.querySelectorAll('.coleccion-card'));
       const total = cards.length;
+      // Si se vuelve a armar, sigue en la tarjeta donde estaba (no vuelve a la primera)
+      let idx = Math.min(track._colIdxGuardado || 0, Math.max(0, total - 1));
 
       function goTo(i) {
         idx = Math.max(0, Math.min(total - 1, i));
+        track._colIdxGuardado = idx;
         const cardW = (cards[0] ? cards[0].offsetWidth : 0) + 12;
         track.style.transform = 'translateX(' + (-idx * cardW) + 'px)';
         prev.style.opacity = idx === 0 ? '0.35' : '1';
@@ -511,7 +513,10 @@
 
       prev.addEventListener('click', () => goTo(idx - 1));
       next.addEventListener('click', () => goTo(idx + 1));
-      goTo(0);
+      track.style.transition = 'none';
+      goTo(idx);
+      void track.offsetWidth;
+      track.style.transition = '';
 
       // Deslizar con el dedo: la tarjeta sigue al dedo y al soltar se acomoda en la más cercana.
       // Los handlers usan la función goTo del último render, guardada en el track.
@@ -519,9 +524,9 @@
       track._colIdx = () => idx;
       if (track._colSwipe) return;
       track._colSwipe = true;
-      let x0 = 0, y0 = 0, dx = 0, arrastrando = false, decidido = false;
+      let x0 = 0, y0 = 0, t0 = 0, dx = 0, arrastrando = false, decidido = false;
       track.addEventListener('touchstart', e => {
-        x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+        x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = Date.now();
         dx = 0; arrastrando = false; decidido = false;
       }, { passive: true });
       track.addEventListener('touchmove', e => {
@@ -533,7 +538,10 @@
         }
         if (!arrastrando) return;
         e.preventDefault();
-        dx = mx;
+        // En la primera y la última tarjeta se estira con resistencia, en vez de seguir de largo
+        const ultimo = track.querySelectorAll('.coleccion-card').length - 1;
+        const enBorde = (track._colIdx() === 0 && mx > 0) || (track._colIdx() >= ultimo && mx < 0);
+        dx = enBorde ? mx * 0.3 : mx;
         const card = track.querySelector('.coleccion-card');
         const cardW = (card ? card.offsetWidth : 0) + 12;
         track.style.transform = 'translateX(' + (-track._colIdx() * cardW + dx) + 'px)';
@@ -541,7 +549,9 @@
       track.addEventListener('touchend', () => {
         if (!arrastrando) return;
         track.style.transition = '';
-        const paso = Math.abs(dx) > 50 ? (dx < 0 ? 1 : -1) : 0;
+        // Pasa de tarjeta si se arrastró bastante o si fue un toque rápido (deslizar con impulso)
+        const rapido = Math.abs(dx) > 12 && Math.abs(dx) / Math.max(1, Date.now() - t0) > 0.35;
+        const paso = Math.abs(dx) > 50 || rapido ? (dx < 0 ? 1 : -1) : 0;
         track._colGoTo(track._colIdx() + paso);
       }, { passive: true });
       // Si fue un deslizamiento, que no abra la categoría
@@ -569,7 +579,7 @@
       const todasCats = [...catsOrdenadas, ...extras.map(c => [c, []])];
       if (!todasCats.length) return;
 
-      grid.innerHTML = todasCats.map(([cat, prods], idx) => {
+      const html = todasCats.map(([cat, prods], idx) => {
         const foto = fotosColecciones[cat] || (prods || []).flatMap(p => (p.variantes || []).map(v => v.foto).filter(Boolean))[0];
         const pos = posicionesColecciones[cat] || '50% 50%';
         const solidBg = COLECCION_BG_FALLBACK[idx % COLECCION_BG_FALLBACK.length];
@@ -586,7 +596,11 @@
           </a>
         `;
       }).join('');
-      grid.scrollLeft = 0;
+      // Los datos llegan varias veces (stock, productos, colecciones): si las tarjetas no cambiaron, no se tocan.
+      // Si se redibujaban, el carrusel volvía a la primera mientras el cliente lo estaba pasando.
+      if (grid._html === html) return;
+      grid._html = html;
+      grid.innerHTML = html;
       setupColeccionesCarousel();
     }
 
