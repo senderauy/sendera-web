@@ -77,6 +77,14 @@
     <label class="sa-buscador"><i data-lucide="search"></i><input id="buscar" type="search" placeholder="Producto o color" aria-label="Buscar producto o color" autocomplete="off" /></label>
   </header>
 
+  <!-- USO ÚNICO (18/10): igualar el stock del panel con la planilla de Lore. Sacar después de aplicarlo. -->
+  <section class="sa-panel" id="igualar" style="margin-bottom:20px;border-color:var(--sa-ambar);background:var(--sa-ambar-fondo)">
+    <div class="sa-panel-titulo"><h2>Igualar con la planilla de Lore</h2><small style="color:var(--sa-tinta-2)">uso único</small></div>
+    <p style="font-size:.86rem;color:var(--sa-tinta-2);margin-bottom:12px">Pone en el panel las cantidades de la pestaña Stock de "SENDERA 2026" (las filas del mismo artículo, sumadas). Solo cambian estos colores:</p>
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.84rem" id="igualar-tabla"></table></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:14px"><button type="button" class="sa-boton" id="igualar-btn">Igualar stock</button></div>
+  </section>
+
   <div class="sa-cifras" aria-live="polite">
     <div><small>Colores a la venta</small><b id="r-total">—</b></div>
     <div><small>Unidades en total</small><b id="r-unidades">—</b></div>
@@ -247,6 +255,41 @@
     estado.cargado.stock = true;
     if (primeraVez) dibujarCatalogo();
     else pintarStock();
+  });
+
+  // ── USO ÚNICO (18/10): igualar con la planilla de Lore. Sacar después de aplicarlo. ──
+  const PLANILLA_18_10 = [
+    ['-Ouy-1Pq_FiGb7Ua5Com-0', 'Go One More Blanco', 6], ['-Ouy-1Pq_FiGb7Ua5Com-1', 'Go One More Rosa', 3],
+    ['-Ouy-1Pq_FiGb7Ua5Com-2', 'Go One More Verde', 0], ['-Ouy-1Pq_FiGb7Ua5Com-3', 'Go One More Violeta', 5],
+    ['-Ouy-1eR7BXR1ErmZfUB-0', 'Trail Cap Azul', 12], ['-Ouy-1eR7BXR1ErmZfUB-1', 'Trail Cap Negro', 11],
+    ['-Ouy-1nlIWe59kiyDDxc-0', 'Sunset Flower Rojo / Amarillo', 2], ['-Ouy-1nlIWe59kiyDDxc-1', 'Sunset Flower Gris / Verde', 7],
+    ['-Ouy-1wyIGduQLAIMaCg-0', 'Gorro Lana Montaña Azul', 0], ['-Ouy-1wyIGduQLAIMaCg-1', 'Gorro Lana Montaña Rosa', 7],
+    ['-Ouy-2EV7myra3AlJuUT-0', 'Riñonera Running', 3], ['-Ouy-2Nl2Pe3ZO4-GKBg-0', 'Medallero RUN', 4],
+    ['-Ouy-2Tvv9SMTqAxUC_J-0', 'Porta Celular', 2],
+    ['-OwobF6IuIyxs1d0taNV-0', 'Sendera Original Gris', 23], ['-OwobF6IuIyxs1d0taNV-1', 'Sendera Original Rosado', 27],
+    ['-OwobF6IuIyxs1d0taNV-2', 'Sendera Original Blanco', 12], ['-OwobF6IuIyxs1d0taNV-3', 'Sendera Original Lila (Violeta en la planilla)', 8],
+    ['-OwobF6IuIyxs1d0taNV-4', 'Sendera Original Verde', 13],
+    ['-P1g4CCj4MGADv4dz3Fh-0', 'Anth Co. Negro', 3], ['-P1g4CCj4MGADv4dz3Fh-1', 'Anth Co. Blanco rosado negro (compra de agosto)', 1],
+    ['-P1g4CCj4MGADv4dz3Fh-2', 'Anth Co. Gris negro', 4], ['-P1g4CCj4MGADv4dz3Fh-3', 'Anth Co. Azul naranja fucsia (Rosa/naranja/negro)', 10],
+    ['-P1g4CCj4MGADv4dz3Fh-4', 'Anth Co. Blanco rosado negro (compra de octubre)', 10], ['-P1g4CCj4MGADv4dz3Fh-5', 'Anth Co. Negro verde y plateado (letras verdes)', 10],
+    ['-P3WxwXQOGLWXscVnZts-0', 'Sofar Solucky beige/mostaza/gris', 3], ['-P3WxwXQOGLWXscVnZts-1', 'Sofar Solucky azul/rojo/negro', 3],
+    ['-P3X3wzkMTtIZfk3XIRx-0', 'Wangee negra/azul/blanca', 5], ['-P3X3wzkMTtIZfk3XIRx-1', 'Wangee gris/rosado/marrón', 5]
+  ];
+  function pintarIgualar(stock) {
+    const cambios = PLANILLA_18_10.filter(([id, , n]) => (Number(stock[id]) || 0) !== n);
+    $('igualar-tabla').innerHTML = cambios.length
+      ? '<tr><th style="text-align:left;padding:6px 8px">Color</th><th style="text-align:right;padding:6px 8px">Panel hoy</th><th style="text-align:right;padding:6px 8px">Planilla</th></tr>' +
+        cambios.map(([id, nombre, n]) => `<tr style="border-top:1px solid var(--sa-linea)"><td style="padding:6px 8px">${esc(nombre)}</td><td style="text-align:right;padding:6px 8px">${Number(stock[id]) || 0}</td><td style="text-align:right;padding:6px 8px;font-weight:700">${n}</td></tr>`).join('')
+      : '<tr><td style="padding:6px 8px;color:var(--sa-verde);font-weight:600">Listo: el panel ya está igual que la planilla.</td></tr>';
+    $('igualar-btn').hidden = !cambios.length;
+  }
+  db.ref('stock').on('value', snap => pintarIgualar(snap.val() || {}));
+  $('igualar-btn').addEventListener('click', async () => {
+    if (!await panel.confirmar({ titulo: '¿Igualar el stock con la planilla?', texto: 'Se ponen las cantidades de la tabla. Lo demás no cambia.', boton: 'Igualar' })) return;
+    try {
+      await db.ref('stock').update(Object.fromEntries(PLANILLA_18_10.map(([id, , n]) => [id, n])));
+      panel.aviso('Stock igualado con la planilla');
+    } catch (e) { panel.aviso('No se pudo guardar: ' + e.message, true); }
   });
 </script>
 </body>
