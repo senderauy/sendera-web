@@ -52,9 +52,28 @@ async function portada(res, lado) {
     console.error('foto: no se pudo leer la portada', e.message);
   }
   const aparte = FOTO_APARTE.exec(guardada);
-  // El navegador lo guarda una hora (así entra sin esperas); Vercel lo da al instante y se actualiza por detrás.
-  // Una portada nueva se ve enseguida en quien entra por primera vez y en hasta una hora en quien ya había entrado.
-  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=60, stale-while-revalidate=31536000');
+  // Se manda la foto directo (antes era una redirección, que Vercel no guardaba: dos viajes y una función cada vez).
+  // El navegador la guarda una hora; Vercel la da al instante desde el servidor más cercano y se actualiza por detrás.
+  // Una portada nueva se ve en unos minutos en quien entra por primera vez y en hasta una hora en quien ya había entrado.
+  const cache = 'public, max-age=3600, s-maxage=300, stale-while-revalidate=31536000';
+  try {
+    if (aparte) {
+      const r = await fetch(`${DB_URL}/imagenes/${aparte[1]}.json`);
+      if (r.ok && mandarBase64(res, await r.json(), cache)) return;
+    } else {
+      const r = await fetch(SITIO + PORTADA_ORIGINAL[lado]);
+      const tipo = r.headers.get('content-type') || '';
+      if (r.ok && /^image\/(jpeg|png|webp|avif)$/.test(tipo)) {
+        res.setHeader('Content-Type', tipo);
+        res.setHeader('Cache-Control', cache);
+        return res.status(200).send(Buffer.from(await r.arrayBuffer()));
+      }
+    }
+  } catch (e) {
+    console.error('foto: no se pudo mandar la portada', e.message);
+  }
+  // Si algo falla, como antes: que el navegador la vaya a buscar
+  res.setHeader('Cache-Control', 'public, max-age=60');
   return res.redirect(302, aparte ? `/api/foto?h=${aparte[1]}` : PORTADA_ORIGINAL[lado]);
 }
 
