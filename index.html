@@ -63,7 +63,7 @@
   <!-- La foto de portada se pide de entrada, antes de leer los estilos: así no se ve el fondo negro mientras carga -->
   <link rel="preload" as="image" href="/api/foto?portada=compu" media="(min-width: 721px)" fetchpriority="high" />
   <link rel="preload" as="image" href="/api/foto?portada=celular" media="(max-width: 720px)" fetchpriority="high" />
-  <link rel="stylesheet" href="style.css?v=82" />
+  <link rel="stylesheet" href="style.css?v=83" />
   <link rel="stylesheet" href="carrito.css?v=4" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
 </head>
@@ -464,6 +464,7 @@
     // Las fotos y encuadres de las colecciones llegan por dos lados: la copia rápida de Vercel (con los productos)
     // y Firebase en vivo. Dentro de Instagram Firebase a veces tarda mucho: sin la copia rápida quedaban fotos de repuesto.
     let coleccionesEnVivo = false;
+    let ultimasCatsOrdenadas = null;   // las categorías del último dibujo (para redibujar solo las colecciones)
     function aplicarColecciones(val) {
       fotosColecciones = {};
       posicionesColecciones = {};
@@ -476,7 +477,8 @@
         if (data && data.orientacion) orientacionesColecciones[cat] = data.orientacion;
       });
       catsExtraColecciones = Object.keys(val);
-      if (ultimosProductos.length) { renderCategorias(ultimosProductos); initCardCarousels(); }
+      // Solo cambia el carrusel de colecciones: las filas de productos no se tocan
+      if (ultimasCatsOrdenadas) renderColecciones(ultimasCatsOrdenadas);
     }
     db.ref('colecciones').on('value', snap => { coleccionesEnVivo = true; aplicarColecciones(snap.val() || {}); });
 
@@ -659,12 +661,13 @@
       let filtroActivo = 'todos';
       const catsUnicas = Object.keys(cats);
       const filtrosCont = document.getElementById('filtros-tienda');
-      filtrosCont.innerHTML = ['todos', ...catsUnicas].map(cat => `
+      const htmlFiltros = ['todos', ...catsUnicas].map(cat => `
         <button class="filtro-cat-btn ${cat === 'todos' ? 'active' : ''}"
           onclick="filtrarCategoria('${cat}', this)">
           ${cat === 'todos' ? 'Todos' : cat}
         </button>
       `).join('');
+      if (filtrosCont._html !== htmlFiltros) { filtrosCont._html = htmlFiltros; filtrosCont.innerHTML = htmlFiltros; }
 
       window.filtrarCategoria = function(cat, btn) {
         filtroActivo = cat;
@@ -684,10 +687,11 @@
         return ia - ib;
       });
 
+      ultimasCatsOrdenadas = catsOrdenadas;
       renderColecciones(catsOrdenadas);
 
       const cont = document.getElementById('categorias-firebase');
-      cont.innerHTML = catsOrdenadas.map(([cat, prods]) => {
+      const htmlCats = catsOrdenadas.map(([cat, prods]) => {
         const porSubgrupo = {};
         prods.forEach(p => {
           const sg = p.subgrupo || '';
@@ -759,6 +763,9 @@
           : `${opciones} ${opciones === 1 ? 'producto' : 'productos'}`;
         return `<div class="bloque-categoria" data-cat="${cat}"><div class="categoria-cabeza"><h2 class="categoria-titulo">${cat}</h2><span class="categoria-cuenta">${cuenta}</span></div>${html}</div>`;
       }).join('');
+      // Si las filas ya están iguales no se tocan: rearmarlas (casi 1.500 elementos y todas las fotos) trababa
+      // el celular y hacía saltar la página, sobre todo dentro de Instagram, donde los datos llegan mientras se baja
+      if (cont._html !== htmlCats) { cont._html = htmlCats; cont.innerHTML = htmlCats; }
 
       // Revisar stock de los nuevos productos
       checkStockOnLoad();

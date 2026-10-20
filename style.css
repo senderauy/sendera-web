@@ -44,8 +44,7 @@ body {
 
 .navbar.scrolled {
   background-color: #1d3524; /* sólido: igual a la franja del reloj del iPhone (theme-color), sin corte */
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  /* sin desenfoque de fondo: con la barra sólida no se ve, y el iPhone lo recalculaba en cada cuadro al bajar */
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
