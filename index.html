@@ -478,12 +478,16 @@
     let zoomColecciones = {};
     let orientacionesColecciones = {};
 
-    db.ref('colecciones').on('value', snap => {
+    // Las fotos y encuadres de las colecciones llegan por dos lados: la copia rápida de Vercel (con los productos)
+    // y Firebase en vivo. Dentro de Instagram Firebase tarda: sin la copia rápida se veía la foto de repuesto
+    // (por ejemplo el Go One More Blanco) hasta que llegaba.
+    let coleccionesEnVivo = false;
+    let ultimasCatsOrdenadas = null;
+    function aplicarColecciones(val) {
       fotosColecciones = {};
       posicionesColecciones = {};
       zoomColecciones = {};
       orientacionesColecciones = {};
-      const val = snap.val() || {};
       Object.entries(val).forEach(([cat, data]) => {
         if (data && data.foto) fotosColecciones[cat] = data.foto;
         if (data && data.posicion) posicionesColecciones[cat] = data.posicion;
@@ -491,8 +495,10 @@
         if (data && data.orientacion) orientacionesColecciones[cat] = data.orientacion;
       });
       catsExtraColecciones = Object.keys(val);
-      if (ultimosProductos.length) { renderCategorias(ultimosProductos); initCardCarousels(); }
-    });
+      // Solo cambia el carrusel de colecciones: las filas de productos no se tocan
+      if (ultimasCatsOrdenadas) renderColecciones(ultimasCatsOrdenadas);
+    }
+    db.ref('colecciones').on('value', snap => { coleccionesEnVivo = true; aplicarColecciones(snap.val() || {}); });
 
     function setupColeccionesCarousel() {
       const track = document.getElementById('colecciones-grid');
@@ -586,7 +592,7 @@
       const todasCats = [...catsOrdenadas, ...extras.map(c => [c, []])];
       if (!todasCats.length) return;
 
-      grid.innerHTML = todasCats.map(([cat, prods], idx) => {
+      const html = todasCats.map(([cat, prods], idx) => {
         const foto = fotosColecciones[cat] || (prods || []).flatMap(p => (p.variantes || []).map(v => v.foto).filter(Boolean))[0];
         const pos = posicionesColecciones[cat] || '50% 50%';
         const solidBg = COLECCION_BG_FALLBACK[idx % COLECCION_BG_FALLBACK.length];
@@ -603,6 +609,10 @@
           </a>
         `;
       }).join('');
+      // Los datos llegan varias veces (copia rápida, Firebase, stock): si las tarjetas no cambiaron, no se tocan
+      if (grid._html === html) return;
+      grid._html = html;
+      grid.innerHTML = html;
       grid.scrollLeft = 0;
       setupColeccionesCarousel();
     }
@@ -659,12 +669,13 @@
       let filtroActivo = 'todos';
       const catsUnicas = Object.keys(cats);
       const filtrosCont = document.getElementById('filtros-tienda');
-      filtrosCont.innerHTML = ['todos', ...catsUnicas].map(cat => `
+      const htmlFiltros = ['todos', ...catsUnicas].map(cat => `
         <button class="filtro-cat-btn ${cat === 'todos' ? 'active' : ''}"
           onclick="filtrarCategoria('${cat}', this)">
           ${cat === 'todos' ? 'Todos' : cat}
         </button>
       `).join('');
+      if (filtrosCont._html !== htmlFiltros) { filtrosCont._html = htmlFiltros; filtrosCont.innerHTML = htmlFiltros; }
 
       window.filtrarCategoria = function(cat, btn) {
         filtroActivo = cat;
@@ -684,10 +695,11 @@
         return ia - ib;
       });
 
+      ultimasCatsOrdenadas = catsOrdenadas;
       renderColecciones(catsOrdenadas);
 
       const cont = document.getElementById('categorias-firebase');
-      cont.innerHTML = catsOrdenadas.map(([cat, prods]) => {
+      const htmlCats = catsOrdenadas.map(([cat, prods]) => {
         const porSubgrupo = {};
         prods.forEach(p => {
           const sg = p.subgrupo || '';
@@ -759,6 +771,8 @@
           : `${opciones} ${opciones === 1 ? 'producto' : 'productos'}`;
         return `<div class="bloque-categoria" data-cat="${cat}"><div class="categoria-cabeza"><h2 class="categoria-titulo">${cat}</h2><span class="categoria-cuenta">${cuenta}</span></div>${html}</div>`;
       }).join('');
+      // Si las filas ya están iguales no se tocan: rearmarlas (casi 1.500 elementos y todas las fotos) trababa el celular
+      if (cont._html !== htmlCats) { cont._html = htmlCats; cont.innerHTML = htmlCats; }
 
       // Revisar stock de los nuevos productos
       checkStockOnLoad();
@@ -833,7 +847,11 @@
       if (completo) saveCart();
     }
     try { recibirProductos(JSON.parse(localStorage.getItem('sendera_productos') || 'null')); } catch (e) {}
-    (window.__productosRapidos || Promise.resolve(null)).then(d => d && recibirProductos(d.productos));
+    (window.__productosRapidos || Promise.resolve(null)).then(d => {
+      if (!d) return;
+      if (d.colecciones && !coleccionesEnVivo) aplicarColecciones(d.colecciones);
+      recibirProductos(d.productos);
+    });
     db.ref('productos').on('value', snapshot => {
       const datos = snapshot.val() || {};
       recibirProductos(datos);
