@@ -190,7 +190,7 @@ export default async function handler(req, res) {
   }
   try {
     // productos y stock se leen sin clave, igual que la tienda
-    const [productos, stock] = await Promise.all(['productos', 'stock'].map(async ruta => {
+    const [productos, stock, colecciones] = await Promise.all(['productos', 'stock', 'colecciones'].map(async ruta => {
       const r = await fetch(`${DB_URL}/${ruta}.json`);
       if (!r.ok) throw new Error(`${ruta}: ${r.status}`);
       return r.json();
@@ -198,7 +198,7 @@ export default async function handler(req, res) {
     // La tienda pide los productos acá para mostrarlos enseguida (después se actualizan en vivo con Firebase)
     if (req.query?.formato === 'json') {
       res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30, stale-while-revalidate=86400');
-      return res.status(200).json({ productos: productos || {}, stock: stock || {} });
+      return res.status(200).json({ productos: productos || {}, stock: stock || {}, colecciones: colecciones || {} });
     }
     // Mapa del sitio para Google (/sitemap.xml): el inicio y una página por cada color de cada producto
     if (req.query?.formato === 'sitemap') {

@@ -63,7 +63,7 @@
   <!-- La foto de portada se pide de entrada, antes de leer los estilos: así no se ve el fondo negro mientras carga -->
   <link rel="preload" as="image" href="/api/foto?portada=compu" media="(min-width: 721px)" fetchpriority="high" />
   <link rel="preload" as="image" href="/api/foto?portada=celular" media="(max-width: 720px)" fetchpriority="high" />
-  <link rel="stylesheet" href="style.css?v=81" />
+  <link rel="stylesheet" href="style.css?v=82" />
   <link rel="stylesheet" href="carrito.css?v=4" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
 </head>
@@ -461,12 +461,14 @@
     let zoomColecciones = {};
     let orientacionesColecciones = {};
 
-    db.ref('colecciones').on('value', snap => {
+    // Las fotos y encuadres de las colecciones llegan por dos lados: la copia rápida de Vercel (con los productos)
+    // y Firebase en vivo. Dentro de Instagram Firebase a veces tarda mucho: sin la copia rápida quedaban fotos de repuesto.
+    let coleccionesEnVivo = false;
+    function aplicarColecciones(val) {
       fotosColecciones = {};
       posicionesColecciones = {};
       zoomColecciones = {};
       orientacionesColecciones = {};
-      const val = snap.val() || {};
       Object.entries(val).forEach(([cat, data]) => {
         if (data && data.foto) fotosColecciones[cat] = data.foto;
         if (data && data.posicion) posicionesColecciones[cat] = data.posicion;
@@ -475,7 +477,8 @@
       });
       catsExtraColecciones = Object.keys(val);
       if (ultimosProductos.length) { renderCategorias(ultimosProductos); initCardCarousels(); }
-    });
+    }
+    db.ref('colecciones').on('value', snap => { coleccionesEnVivo = true; aplicarColecciones(snap.val() || {}); });
 
     function setupColeccionesCarousel() {
       const track = document.getElementById('colecciones-grid');
@@ -537,7 +540,7 @@
           if (arrastrando) track.style.transition = 'none';
         }
         if (!arrastrando) return;
-        e.preventDefault();
+        // (escucha pasiva + touch-action: pan-y en el CSS: la página no espera a este código para bajar)
         // En la primera y la última tarjeta se estira con resistencia, en vez de seguir de largo
         const ultimo = track.querySelectorAll('.coleccion-card').length - 1;
         const enBorde = (track._colIdx() === 0 && mx > 0) || (track._colIdx() >= ultimo && mx < 0);
@@ -545,7 +548,7 @@
         const card = track.querySelector('.coleccion-card');
         const cardW = (card ? card.offsetWidth : 0) + 12;
         track.style.transform = 'translateX(' + (-track._colIdx() * cardW + dx) + 'px)';
-      }, { passive: false });
+      }, { passive: true });
       track.addEventListener('touchend', () => {
         if (!arrastrando) return;
         track.style.transition = '';
@@ -830,7 +833,11 @@
       if (completo) saveCart();
     }
     try { recibirProductos(JSON.parse(localStorage.getItem('sendera_productos') || 'null')); } catch (e) {}
-    (window.__productosRapidos || Promise.resolve(null)).then(d => d && recibirProductos(d.productos));
+    (window.__productosRapidos || Promise.resolve(null)).then(d => {
+      if (!d) return;
+      if (d.colecciones && !coleccionesEnVivo) aplicarColecciones(d.colecciones);
+      recibirProductos(d.productos);
+    });
     db.ref('productos').on('value', snapshot => {
       const datos = snapshot.val() || {};
       recibirProductos(datos);
@@ -1108,14 +1115,15 @@
           sy = e.touches[0].clientY;
           swiping = false;
         }, { passive: true });
+        // Escucha "pasiva": la página nunca espera a este código para bajar (antes se trababa, sobre todo en Instagram).
+        // El gesto de costado lo reserva el CSS (touch-action: pan-y), así que no hace falta frenar nada desde acá.
         carousel.addEventListener('touchmove', e => {
           const dx = e.touches[0].clientX - sx;
           const dy = e.touches[0].clientY - sy;
           if (!swiping && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 6) {
             swiping = true;
           }
-          if (swiping) e.preventDefault();
-        }, { passive: false });
+        }, { passive: true });
         carousel.addEventListener('touchend', e => {
           const dx = e.changedTouches[0].clientX - sx;
           const dy = e.changedTouches[0].clientY - sy;
