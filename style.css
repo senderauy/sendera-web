@@ -44,7 +44,8 @@ body {
 
 .navbar.scrolled {
   background-color: #1d3524; /* sólido: igual a la franja del reloj del iPhone (theme-color), sin corte */
-  /* sin desenfoque de fondo: con la barra sólida no se ve, y el iPhone lo recalculaba en cada cuadro al bajar */
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
@@ -650,7 +651,6 @@ nav a:hover::after {
     width: 100%;
     transition: transform 0.38s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     will-change: transform;
-    touch-action: pan-y; /* de costado pasa de colección; para abajo la página baja sin esperar al código */
   }
   .coleccion-card {
     flex: 0 0 65vw;
@@ -1155,7 +1155,6 @@ nav a:hover::after {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  touch-action: pan-y; /* de costado cambia la foto (lo maneja el código); para abajo la página baja sin esperar */
 }
 .card-carousel-track {
   display: flex;
