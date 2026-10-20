@@ -2,6 +2,23 @@
 <html lang="es">
 <head>
   <script>
+    // Alto de pantalla fijo. Dentro de Instagram la barra de abajo aparece y desaparece al bajar y cambia el alto
+    // de la pantalla: con medidas en vh la portada crecía y se achicaba y la página se movía al revés del dedo.
+    // Solo se vuelve a medir si cambia el ancho (por ejemplo, al girar el celular).
+    (function () {
+      var raiz = document.documentElement, ancho = 0;
+      function fijar(forzar) {
+        var alto = window.innerHeight;
+        if (!alto || (!forzar && window.innerWidth === ancho)) return;
+        ancho = window.innerWidth;
+        raiz.style.setProperty('--pantalla', alto + 'px');
+      }
+      fijar(true);
+      // Al terminar de cargar se mide de nuevo (en el <head> algunos navegadores todavía no tienen la medida final)
+      document.addEventListener('DOMContentLoaded', function () { fijar(true); });
+      window.addEventListener('load', function () { fijar(true); });
+      window.addEventListener('resize', function () { fijar(false); });
+    })();
     // Si una foto falla al cargar (por ejemplo, un corte de conexión en el celular), se vuelve a pedir una vez
     document.addEventListener('error', e => {
       const img = e.target;
@@ -63,7 +80,7 @@
   <!-- La foto de portada se pide de entrada, antes de leer los estilos: así no se ve el fondo negro mientras carga -->
   <link rel="preload" as="image" href="/api/foto?portada=compu" media="(min-width: 721px)" fetchpriority="high" />
   <link rel="preload" as="image" href="/api/foto?portada=celular" media="(max-width: 720px)" fetchpriority="high" />
-  <link rel="stylesheet" href="style.css?v=84" />
+  <link rel="stylesheet" href="style.css?v=85" />
   <link rel="stylesheet" href="carrito.css?v=4" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
 </head>

@@ -140,7 +140,7 @@ nav a:hover::after {
 
 /* HERO */
 .hero {
-  min-height: 100vh;
+  min-height: var(--pantalla, 100vh); /* alto fijo: ver el script del <head> en index.html */
   background: url('/api/foto?portada=compu') center 40% / cover no-repeat;
   display: flex;
   align-items: flex-start;
@@ -2429,7 +2429,7 @@ nav a:hover::after {
 .vidriera-inner {
   max-width: 1180px;
   margin: 0 auto;
-  min-height: 78svh;
+  min-height: calc(var(--pantalla, 100svh) * 0.78);
   display: grid;
   grid-template-columns: minmax(280px, 0.8fr) 1.2fr;
   align-items: center;
@@ -2491,7 +2491,7 @@ nav a:hover::after {
   .vidriera { padding: 48px 16px 40px; }
   .vidriera-inner { grid-template-columns: 1fr; min-height: 0; gap: 14px; }
   .vidriera-foto { order: -1; }
-  .vidriera-img { width: min(100%, 42svh); touch-action: pan-y; }
+  .vidriera-img { width: min(100%, calc(var(--pantalla, 100svh) * 0.42)); touch-action: pan-y; }
   .vidriera-flecha { width: 38px; height: 38px; font-size: 1.5rem; }
   .vidriera-flecha.prev { left: 0; }
   .vidriera-flecha.next { right: 0; }
