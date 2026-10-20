@@ -585,14 +585,21 @@ function checkStockOnLoad() {
     if (!stockId) return;
     const stock = getStock(stockId);
     if (stock === 0) {
+      // Una sola vez por tarjeta: esto corre cada vez que llegan datos, y mover tarjetas dentro de una fila
+      // deslizable mientras la persona baja hacía saltar la página en el iPhone (sobre todo dentro de Instagram)
+      if (card.dataset.sinStock) return;
+      card.dataset.sinStock = '1';
       const plusBtn = card.querySelector('.qty-plus');
       const qtyControl = card.querySelector('.qty-control');
       if (plusBtn) plusBtn.disabled = true;
       if (qtyControl) {
         qtyControl.innerHTML = '<span class="sin-stock-label">Sin stock</span>';
       }
+      // Al final de la fila, solo si todavía tiene detrás alguna con stock
       const grid = card.closest('.productos-grid');
-      if (grid) grid.appendChild(card);
+      let sig = card.nextElementSibling;
+      while (sig && sig.dataset.sinStock) sig = sig.nextElementSibling;
+      if (grid && sig) grid.appendChild(card);
     }
   });
 }
